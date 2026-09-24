@@ -1,0 +1,112 @@
+import { Link, useRouterState } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+import { useGym } from "@/store/gym-store";
+
+const NAV = [
+  { to: "/", label: "Início", icon: HomeIcon },
+  { to: "/rotinas", label: "Rotinas", icon: LayersIcon },
+  { to: "/exercicios", label: "Exercícios", icon: DumbbellIcon },
+  { to: "/historico", label: "Histórico", icon: ChartIcon },
+] as const;
+
+export function AppShell({
+  children,
+  title,
+  back,
+  action,
+}: {
+  children: ReactNode;
+  title?: string;
+  back?: { to: string; params?: Record<string, string> };
+  action?: ReactNode;
+}) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { state } = useGym();
+  const active = state.activeSession;
+
+  return (
+    <div className="mx-auto flex min-h-screen w-full max-w-lg flex-col bg-background">
+      {(title || back) && (
+        <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur">
+          {back && (
+            <Link
+              to={back.to}
+              params={back.params as never}
+              className="-ml-1 flex h-9 w-9 items-center justify-center rounded-full bg-card text-muted-foreground tap active:scale-95"
+              aria-label="Voltar"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+          )}
+          <h1 className="min-w-0 flex-1 truncate text-lg font-semibold">{title}</h1>
+          {action}
+        </header>
+      )}
+
+      <main className="flex-1 px-4 pb-32 pt-4">{children}</main>
+
+      {active && !pathname.startsWith("/executar") && (
+        <Link
+          to="/executar/$workoutId"
+          params={{ workoutId: active.workoutId }}
+          className="fixed bottom-[76px] left-1/2 z-30 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 rounded-xl accent-gradient px-4 py-3 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)]"
+        >
+          Treino em andamento · {active.workoutName} →
+        </Link>
+      )}
+
+      <nav className="fixed bottom-0 left-1/2 z-20 w-full max-w-lg -translate-x-1/2 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+        <ul className="grid grid-cols-4">
+          {NAV.map(({ to, label, icon: Icon }) => {
+            const isActive = to === "/" ? pathname === "/" : pathname.startsWith(to);
+            return (
+              <li key={to}>
+                <Link
+                  to={to}
+                  className={`flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium tap ${
+                    isActive ? "text-primary" : "text-muted-foreground"
+                  }`}
+                >
+                  <Icon />
+                  {label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </div>
+  );
+}
+
+function HomeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function LayersIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="m12 3 9 5-9 5-9-5z" strokeLinejoin="round" />
+      <path d="m3 14 9 5 9-5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function DumbbellIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12" strokeLinecap="round" />
+    </svg>
+  );
+}
+function ChartIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" strokeLinecap="round" />
+    </svg>
+  );
+}

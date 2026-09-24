@@ -10,33 +10,68 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RotinasRouteImport } from './routes/rotinas'
+import { Route as ExecutarWorkoutIdRouteImport } from './routes/executar.$workoutId'
+import { Route as TreinoWorkoutIdRouteImport } from './routes/treino.$workoutId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RotinasRoute = RotinasRouteImport.update({
+  id: '/rotinas',
+  path: '/rotinas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExecutarWorkoutIdRoute = ExecutarWorkoutIdRouteImport.update({
+  id: '/executar/$workoutId',
+  path: '/executar/$workoutId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TreinoWorkoutIdRoute = TreinoWorkoutIdRouteImport.update({
+  id: '/treino/$workoutId',
+  path: '/treino/$workoutId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/rotinas': typeof RotinasRoute
+  '/executar/$workoutId': typeof ExecutarWorkoutIdRoute
+  '/treino/$workoutId': typeof TreinoWorkoutIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/rotinas': typeof RotinasRoute
+  '/executar/$workoutId': typeof ExecutarWorkoutIdRoute
+  '/treino/$workoutId': typeof TreinoWorkoutIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/rotinas': typeof RotinasRoute
+  '/executar/$workoutId': typeof ExecutarWorkoutIdRoute
+  '/treino/$workoutId': typeof TreinoWorkoutIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/rotinas' | '/executar/$workoutId' | '/treino/$workoutId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/rotinas' | '/executar/$workoutId' | '/treino/$workoutId'
+  id:
+    | '__root__'
+    | '/'
+    | '/rotinas'
+    | '/executar/$workoutId'
+    | '/treino/$workoutId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  RotinasRoute: typeof RotinasRoute
+  ExecutarWorkoutIdRoute: typeof ExecutarWorkoutIdRoute
+  TreinoWorkoutIdRoute: typeof TreinoWorkoutIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +83,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rotinas': {
+      id: '/rotinas'
+      path: '/rotinas'
+      fullPath: '/rotinas'
+      preLoaderRoute: typeof RotinasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/executar/$workoutId': {
+      id: '/executar/$workoutId'
+      path: '/executar/$workoutId'
+      fullPath: '/executar/$workoutId'
+      preLoaderRoute: typeof ExecutarWorkoutIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/treino/$workoutId': {
+      id: '/treino/$workoutId'
+      path: '/treino/$workoutId'
+      fullPath: '/treino/$workoutId'
+      preLoaderRoute: typeof TreinoWorkoutIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  RotinasRoute: RotinasRoute,
+  ExecutarWorkoutIdRoute: ExecutarWorkoutIdRoute,
+  TreinoWorkoutIdRoute: TreinoWorkoutIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
