@@ -10,33 +10,115 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ExerciciosRouteImport } from './routes/exercicios'
+import { Route as HistoricoRouteImport } from './routes/historico'
+import { Route as RotinasRouteImport } from './routes/rotinas'
+import { Route as ExecutarWorkoutIdRouteImport } from './routes/executar.$workoutId'
+import { Route as ExercicioExerciseIdRouteImport } from './routes/exercicio.$exerciseId'
+import { Route as TreinoWorkoutIdRouteImport } from './routes/treino.$workoutId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExerciciosRoute = ExerciciosRouteImport.update({
+  id: '/exercicios',
+  path: '/exercicios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoricoRoute = HistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RotinasRoute = RotinasRouteImport.update({
+  id: '/rotinas',
+  path: '/rotinas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExecutarWorkoutIdRoute = ExecutarWorkoutIdRouteImport.update({
+  id: '/executar/$workoutId',
+  path: '/executar/$workoutId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExercicioExerciseIdRoute = ExercicioExerciseIdRouteImport.update({
+  id: '/exercicio/$exerciseId',
+  path: '/exercicio/$exerciseId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TreinoWorkoutIdRoute = TreinoWorkoutIdRouteImport.update({
+  id: '/treino/$workoutId',
+  path: '/treino/$workoutId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/exercicios': typeof ExerciciosRoute
+  '/historico': typeof HistoricoRoute
+  '/rotinas': typeof RotinasRoute
+  '/executar/$workoutId': typeof ExecutarWorkoutIdRoute
+  '/exercicio/$exerciseId': typeof ExercicioExerciseIdRoute
+  '/treino/$workoutId': typeof TreinoWorkoutIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/exercicios': typeof ExerciciosRoute
+  '/historico': typeof HistoricoRoute
+  '/rotinas': typeof RotinasRoute
+  '/executar/$workoutId': typeof ExecutarWorkoutIdRoute
+  '/exercicio/$exerciseId': typeof ExercicioExerciseIdRoute
+  '/treino/$workoutId': typeof TreinoWorkoutIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/exercicios': typeof ExerciciosRoute
+  '/historico': typeof HistoricoRoute
+  '/rotinas': typeof RotinasRoute
+  '/executar/$workoutId': typeof ExecutarWorkoutIdRoute
+  '/exercicio/$exerciseId': typeof ExercicioExerciseIdRoute
+  '/treino/$workoutId': typeof TreinoWorkoutIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/exercicios'
+    | '/historico'
+    | '/rotinas'
+    | '/executar/$workoutId'
+    | '/exercicio/$exerciseId'
+    | '/treino/$workoutId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/exercicios'
+    | '/historico'
+    | '/rotinas'
+    | '/executar/$workoutId'
+    | '/exercicio/$exerciseId'
+    | '/treino/$workoutId'
+  id:
+    | '__root__'
+    | '/'
+    | '/exercicios'
+    | '/historico'
+    | '/rotinas'
+    | '/executar/$workoutId'
+    | '/exercicio/$exerciseId'
+    | '/treino/$workoutId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ExerciciosRoute: typeof ExerciciosRoute
+  HistoricoRoute: typeof HistoricoRoute
+  RotinasRoute: typeof RotinasRoute
+  ExecutarWorkoutIdRoute: typeof ExecutarWorkoutIdRoute
+  ExercicioExerciseIdRoute: typeof ExercicioExerciseIdRoute
+  TreinoWorkoutIdRoute: typeof TreinoWorkoutIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +130,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/exercicios': {
+      id: '/exercicios'
+      path: '/exercicios'
+      fullPath: '/exercicios'
+      preLoaderRoute: typeof ExerciciosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/historico': {
+      id: '/historico'
+      path: '/historico'
+      fullPath: '/historico'
+      preLoaderRoute: typeof HistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rotinas': {
+      id: '/rotinas'
+      path: '/rotinas'
+      fullPath: '/rotinas'
+      preLoaderRoute: typeof RotinasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/executar/$workoutId': {
+      id: '/executar/$workoutId'
+      path: '/executar/$workoutId'
+      fullPath: '/executar/$workoutId'
+      preLoaderRoute: typeof ExecutarWorkoutIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/exercicio/$exerciseId': {
+      id: '/exercicio/$exerciseId'
+      path: '/exercicio/$exerciseId'
+      fullPath: '/exercicio/$exerciseId'
+      preLoaderRoute: typeof ExercicioExerciseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/treino/$workoutId': {
+      id: '/treino/$workoutId'
+      path: '/treino/$workoutId'
+      fullPath: '/treino/$workoutId'
+      preLoaderRoute: typeof TreinoWorkoutIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ExerciciosRoute: ExerciciosRoute,
+  HistoricoRoute: HistoricoRoute,
+  RotinasRoute: RotinasRoute,
+  ExecutarWorkoutIdRoute: ExecutarWorkoutIdRoute,
+  ExercicioExerciseIdRoute: ExercicioExerciseIdRoute,
+  TreinoWorkoutIdRoute: TreinoWorkoutIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
