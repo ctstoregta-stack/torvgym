@@ -12,7 +12,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Peito",
     equipment: "Halteres",
     gif_url:
-      "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0N3J0Z3k4dWZ0MTk1bTRpYTNpaXN0Mms0Y2hxNWpjdW5yMG9vYiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7qE0g9g9gi07X97y/giphy.gif",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Incline-Dumbbell-Press.gif",
     execution:
       "Regule o banco a 30-45 graus. Deite-se e empurre os halteres verticalmente a partir da linha do peito superior até a extensão total dos braços.",
     primary_muscles: ["Peitoral Maior (Superior)"],
@@ -24,7 +24,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Peito",
     equipment: "Máquina",
     gif_url:
-      "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3ZocnVpOTl4NXhnbWR0OHZib2M2ZmlyeGg1b2g4am13cDY2eWZ3biZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o6Zt8bS2Z3wZ00N2o/giphy.gif",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pec-Deck-Fly.gif",
     execution:
       "Sente-se com as costas totalmente apoiadas. Segure as hastes verticais e feche os braços em frente ao corpo, esmagando o peitoral no ponto máximo.",
     primary_muscles: ["Peitoral Maior"],
@@ -36,7 +36,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Peito",
     equipment: "Polia",
     gif_url:
-      "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Low-Cable-Crossover.gif",
     execution:
       "Posicione as polias embaixo. Puxe os cabos de baixo para cima e para o centro, encontrando as mãos na altura do peito superior.",
     primary_muscles: ["Peitoral Maior (Superior)", "Deltóide Anterior"],
@@ -48,7 +48,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Peito",
     equipment: "Polia",
     gif_url:
-      "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Crossover.gif",
     execution:
       "Ajuste as polias no topo. Traga os cabos de cima para baixo cruzando-os levemente à frente da cintura, focando na porção inferior do peito.",
     primary_muscles: ["Peitoral Maior (Inferior)"],
@@ -60,7 +60,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Braços",
     equipment: "Polia",
     gif_url:
-      "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/06/Rope-Pushdown.gif",
     execution:
       "Mantenha os cotovelos fixos ao lado do corpo. Estenda completamente os braços empurrando a barra ou corda em direção ao chão.",
     primary_muscles: ["Tríceps Braquial"],
@@ -72,7 +72,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Braços",
     equipment: "Halteres",
     gif_url:
-      "https://images.unsplash.com/photo-1605296867304-46d5465a25f1?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Triceps-Extension.gif",
     execution:
       "Segure o halter acima da cabeça com as duas mãos. Flexione os cotovelos descendo o peso atrás da nuca e estenda de volta para o topo.",
     primary_muscles: ["Tríceps Braquial (Cabeça Longa)"],
@@ -84,7 +84,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Braços",
     equipment: "Barras",
     gif_url:
-      "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2022/02/Barbell-Lying-Close-grip-Triceps-Extension.gif",
     execution:
       "Deitado no banco, segure a barra com os braços estendidos. Flexione apenas os cotovelos trazendo a barra em direção à testa.",
     primary_muscles: ["Tríceps Braquial"],
@@ -96,7 +96,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Braços",
     equipment: "Corporal",
     gif_url:
-      "https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Bench-Dips.gif",
     execution:
       "Apoie as mãos na borda do banco com as pernas estendidas à frente. Desça o quadril flexionando os cotovelos até 90 graus e empurre.",
     primary_muscles: ["Tríceps Braquial"],
@@ -108,7 +108,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Costas",
     equipment: "Polia",
     gif_url:
-      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Seated-Cable-Row.gif",
     execution:
       "Segure a barra longa com pegada aberta na polia baixa. Puxe em direção ao abdômen superior abrindo os cotovelos e retraindo as escápulas.",
     primary_muscles: ["Latíssimo do Dorso", "Deltoide Posterior"],
@@ -120,7 +120,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Costas",
     equipment: "Polia",
     gif_url:
-      "https://images.unsplash.com/photo-1605296867424-35fc25c9542d?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Seated-Cable-Row.gif",
     execution:
       "Use o puxador triângulo. Puxe a carga rente ao corpo trazendo o triângulo em direção ao umbigo mantendo os cotovelos fechados.",
     primary_muscles: ["Latíssimo do Dorso", "Grande Dorsal"],
@@ -132,7 +132,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Costas",
     equipment: "Máquina",
     gif_url:
-      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Lat-Pulldown.gif",
     execution:
       "Ajuste o banco e os apoios de coxa. Segure as manoplas superiores e puxe verticalmente para baixo direcionando os cotovelos aos quadris.",
     primary_muscles: ["Latíssimo do Dorso"],
@@ -144,7 +144,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Braços",
     equipment: "Barras",
     gif_url:
-      "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Z-Bar-Preacher-Curl.gif",
     execution:
       "Apoie os braços completamente na almofada do banco Scott. Segure a barra W e faça a flexão dos cotovelos sem tirar os braços do apoio.",
     primary_muscles: ["Bíceps Braquial (Foco Cabeça Longa)"],
@@ -156,7 +156,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Braços",
     equipment: "Halteres",
     gif_url:
-      "https://images.unsplash.com/photo-1605296867304-46d5465a25f1?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Concentration-Curl.gif",
     execution:
       "Sentado, apoie o cotovelo na parte interna da coxa correspondente. Flexione o braço trazendo o halter em direção ao ombro de forma isolada.",
     primary_muscles: ["Bíceps Braquial"],
@@ -168,7 +168,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Braços",
     equipment: "Halteres",
     gif_url:
-      "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Hammer-Curl.gif",
     execution:
       "De pé ou sentado, segure os halteres com a pegada neutra (palmas voltadas para dentro). Flexione os cotovelos mantendo a pegada fixa.",
     primary_muscles: ["Braquiorradial", "Bíceps Braquial"],
@@ -180,7 +180,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Pernas",
     equipment: "Máquina",
     gif_url:
-      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2022/07/Smith-Machine-Leg-Press.gif",
     execution:
       "Apoie as costas no assento e posicione os pés na plataforma. Destrave o peso, flexione os joelhos até 90 graus e empurre sem estender totalmente.",
     primary_muscles: ["Quadríceps Femoral"],
@@ -192,7 +192,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Pernas",
     equipment: "Máquina",
     gif_url:
-      "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/LEG-EXTENSION.gif",
     execution:
       "Sente-se e ajuste o rolo de espuma sobre o tornozelo. Estenda completamente as pernas para cima, contraindo o quadríceps, e retorne devagar.",
     primary_muscles: ["Quadríceps Femoral"],
@@ -204,7 +204,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Pernas",
     equipment: "Barras",
     gif_url:
-      "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/BARBELL-SQUAT.gif",
     execution:
       "Apoie a barra no trapézio. Afaste os pés na largura dos ombros, agache empurrando o quadril para trás até as coxas ficarem paralelas ao chão e suba.",
     primary_muscles: ["Quadríceps Femoral", "Glúteo Máximo"],
@@ -216,7 +216,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Pernas",
     equipment: "Máquina",
     gif_url:
-      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2022/05/Lying-leg-curl.gif",
     execution:
       "Deite de bruços na mesa e posicione o rolo atrás dos calcanhares. Flexione os joelhos trazendo os calcanhares em direção ao glúteo.",
     primary_muscles: ["Isquiocrurais (Posteriores de Coxa)"],
@@ -240,7 +240,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Braços",
     equipment: "Barras",
     gif_url:
-      "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Reverse-Curl.gif",
     execution:
       "Segure a barra W com pegada pronada (palmas para baixo). Flexione os cotovelos elevando a barra, focando na musculatura do antebraço.",
     primary_muscles: ["Braquiorradial", "Extensores dos Dedos/Punho"],
@@ -264,7 +264,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Braços",
     equipment: "Barras",
     gif_url:
-      "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/06/Dumbbell-Wrist-Curl.gif",
     execution:
       "Apoie os antebraços no banco com as palmas voltadas para cima. Flexione os punhos trazendo a barra para cima, contraindo a parte interna do antebraço.",
     primary_muscles: ["Flexores do Punho"],
@@ -276,7 +276,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Ombros",
     equipment: "Halteres",
     gif_url:
-      "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Lateral-Raise.gif",
     execution:
       "De pé, eleve os halteres lateralmente com os cotovelos levemente flexionados até que os braços fiquem paralelos ao chão.",
     primary_muscles: ["Deltóide Lateral"],
@@ -288,7 +288,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Ombros",
     equipment: "Halteres",
     gif_url:
-      "https://images.unsplash.com/photo-1605296867304-46d5465a25f1?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Shoulder-Press.gif",
     execution:
       "Sentado com apoio nas costas, inicie com os halteres na altura das orelhas e empurre-os verticalmente até estender os braços completamente.",
     primary_muscles: ["Deltóide Anterior", "Deltóide Lateral"],
@@ -300,7 +300,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Ombros",
     equipment: "Polia",
     gif_url:
-      "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Front-Raise.gif",
     execution:
       "De costas para a polia baixa, segure a corda por entre as pernas. Eleve os braços esticados à frente até a altura dos olhos.",
     primary_muscles: ["Deltóide Anterior"],
@@ -312,7 +312,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Ombros",
     equipment: "Halteres",
     gif_url:
-      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&q=80",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Reverse-Fly.gif",
     execution:
       "Incline o tronco para a frente mantendo a coluna reta. Abra os braços lateralmente erguendo os halteres e esmagando o deltoide posterior.",
     primary_muscles: ["Deltóide Posterior"],
