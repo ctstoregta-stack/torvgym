@@ -169,7 +169,7 @@ function Home() {
                       : "bg-elevated text-muted-foreground"
                   }`}
                 >
-                  {WEEKDAYS[d][0]}
+                  {WEEKDAYS[d]?.[0]}
                 </span>
               ))}
             </div>
