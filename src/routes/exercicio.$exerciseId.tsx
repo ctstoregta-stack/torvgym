@@ -171,13 +171,13 @@ function ExerciseDetail() {
                   <p className="mb-3 text-sm font-semibold">Evolução da carga máxima</p>
                   <div className="flex h-32 items-end gap-1.5">
                     {chart.map((h, i) => (
-                      <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                      <div key={i} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
                         <span className="text-[9px] text-muted-foreground tabular-nums">
                           {h.maxWeight}
                         </span>
                         <div
-                          className="w-full rounded-t accent-gradient"
-                          style={{ height: `${Math.max(6, (h.maxWeight / maxChart) * 100)}%` }}
+                          className="w-full shrink-0 rounded-t accent-gradient"
+                          style={{ height: `${Math.max(6, (h.maxWeight / maxChart) * 75)}%` }}
                         />
                         <span className="text-[9px] text-muted-foreground">
                           {new Date(h.date).toLocaleDateString("pt-BR", {
