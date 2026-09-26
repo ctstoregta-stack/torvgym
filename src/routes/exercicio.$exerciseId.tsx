@@ -176,8 +176,11 @@ function ExerciseDetail() {
                           {h.maxWeight}
                         </span>
                         <div
-                          className="w-full shrink-0 rounded-t accent-gradient"
-                          style={{ height: `${Math.max(6, (h.maxWeight / maxChart) * 75)}%` }}
+                          className="w-full shrink-0 rounded-t"
+                          style={{
+                            height: `${Math.max(6, (h.maxWeight / maxChart) * 75)}%`,
+                            backgroundImage: "var(--gradient-accent)",
+                          }}
                         />
                         <span className="text-[9px] text-muted-foreground">
                           {new Date(h.date).toLocaleDateString("pt-BR", {
