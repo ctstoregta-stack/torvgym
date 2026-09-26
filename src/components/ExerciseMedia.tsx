@@ -40,7 +40,7 @@ export function ExerciseMedia({
           loading="lazy"
           onError={() => setFailed(true)}
           onLoad={() => setLoaded(true)}
-          className={`h-full w-full object-${fit} transition-opacity duration-300 ${
+          className={`h-full w-full ${fit === "contain" ? "object-contain" : "object-cover"} transition-opacity duration-300 ${
             loaded ? "opacity-100" : "opacity-0"
           }`}
         />
