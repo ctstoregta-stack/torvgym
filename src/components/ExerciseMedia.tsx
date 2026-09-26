@@ -5,6 +5,7 @@ type Props = {
   exercise: Exercise;
   className?: string;
   rounded?: string;
+  fit?: "cover" | "contain";
 };
 
 /**
@@ -16,6 +17,7 @@ export function ExerciseMedia({
   exercise,
   className = "",
   rounded = "rounded-xl",
+  fit = "cover",
 }: Props) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -38,7 +40,7 @@ export function ExerciseMedia({
           loading="lazy"
           onError={() => setFailed(true)}
           onLoad={() => setLoaded(true)}
-          className={`h-full w-full object-cover transition-opacity duration-300 ${
+          className={`h-full w-full ${fit === "contain" ? "object-contain" : "object-cover"} transition-opacity duration-300 ${
             loaded ? "opacity-100" : "opacity-0"
           }`}
         />
