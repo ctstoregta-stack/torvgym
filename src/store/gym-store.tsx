@@ -98,7 +98,7 @@ type Ctx = {
   ) => void;
   addSet: (exerciseId: string) => void;
   removeSet: (exerciseId: string) => void;
-  finishSession: () => void;
+  finishSession: () => Session | null;
   discardSession: () => void;
   // analytics
   prFor: (exerciseId: string) => number | null;
@@ -253,6 +253,9 @@ export function GymProvider({ children }: { children: ReactNode }) {
         return {
           ...s,
           routines,
+          // evita sessão ativa órfã apontando para uma rotina excluída
+          activeSession:
+            s.activeSession?.routineId === id ? null : s.activeSession,
           activeRoutineId:
             s.activeRoutineId === id
               ? (routines[0]?.id ?? null)
@@ -288,6 +291,9 @@ export function GymProvider({ children }: { children: ReactNode }) {
           ...r,
           workouts: r.workouts.filter((w) => w.id !== workoutId),
         })),
+        // evita sessão ativa órfã apontando para um treino excluído
+        activeSession:
+          s.activeSession?.workoutId === workoutId ? null : s.activeSession,
       })),
     toggleWorkoutDay: (workoutId, day) =>
       mapWorkout(workoutId, (w) => ({
@@ -404,26 +410,31 @@ export function GymProvider({ children }: { children: ReactNode }) {
             }
           : s,
       ),
-    finishSession: () =>
-      setState((s) => {
-        if (!s.activeSession) return s;
-        const entries = s.activeSession.entries
+    finishSession: () => {
+      const current = state.activeSession;
+      let saved: Session | null = null;
+      if (current) {
+        const entries = current.entries
           .map((e) => ({ ...e, sets: e.sets.filter((x) => x.completed) }))
           .filter((e) => e.sets.length > 0);
-        if (!entries.length) return { ...s, activeSession: null };
+        if (entries.length) {
+          saved = {
+            ...current,
+            entries,
+            finishedAt: new Date().toISOString(),
+          };
+        }
+      }
+      setState((s) => {
+        if (!s.activeSession) return s;
         return {
           ...s,
-          sessions: [
-            ...s.sessions,
-            {
-              ...s.activeSession,
-              entries,
-              finishedAt: new Date().toISOString(),
-            },
-          ],
+          sessions: saved ? [...s.sessions, saved] : s.sessions,
           activeSession: null,
         };
-      }),
+      });
+      return saved;
+    },
     discardSession: () => setState((s) => ({ ...s, activeSession: null })),
 
     prFor,

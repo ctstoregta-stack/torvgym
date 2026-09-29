@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 import { GymProvider } from "@/store/gym-store";
@@ -123,6 +124,7 @@ function RootComponent() {
       <GymProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
+        <Toaster position="top-center" theme="dark" richColors closeButton={false} />
       </GymProvider>
     </QueryClientProvider>
   );
