@@ -291,6 +291,9 @@ export function GymProvider({ children }: { children: ReactNode }) {
           ...r,
           workouts: r.workouts.filter((w) => w.id !== workoutId),
         })),
+        // evita sessão ativa órfã apontando para um treino excluído
+        activeSession:
+          s.activeSession?.workoutId === workoutId ? null : s.activeSession,
       })),
     toggleWorkoutDay: (workoutId, day) =>
       mapWorkout(workoutId, (w) => ({
