@@ -398,6 +398,8 @@ function ExecutePage() {
         </Button>
       </div>
 
+      {rest && <div className="h-24" />}
+
       <RestTimer rest={rest} onChange={handleRestChange} onSkip={() => setRest(null)} />
 
       {/* Navegação entre exercícios */}
