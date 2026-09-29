@@ -1,9 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { ExerciseMedia } from "@/components/ExerciseMedia";
+import { RestTimer, formatClock, type RestState } from "@/components/RestTimer";
 import { Button, EmptyState, PRBadge } from "@/components/ui-kit";
 import { useGym } from "@/store/gym-store";
+import type { Session } from "@/lib/types";
+
+const DEFAULT_REST = 60;
 
 export const Route = createFileRoute("/executar/$workoutId")({
   head: () => ({
@@ -24,16 +29,21 @@ export const Route = createFileRoute("/executar/$workoutId")({
   component: ExecutePage,
 });
 
-function elapsed(startedAt: string, now: number) {
-  const secs = Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / 1000));
-  const m = Math.floor(secs / 60);
-  const s = secs % 60;
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+function elapsedSecs(startedAt: string, now: number) {
+  return Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / 1000));
 }
 
+type Summary = {
+  workoutName: string;
+  durationSecs: number;
+  sets: number;
+  volume: number;
+  prs: { name: string; weight: number }[];
+};
+
 function ExecutePage() {
-  const { workoutId } = Route.useParams();
   const navigate = useNavigate();
+  const { workoutId } = Route.useParams();
   const {
     ready,
     state,
@@ -48,12 +58,29 @@ function ExecutePage() {
   } = useGym();
 
   const [now, setNow] = useState(() => Date.now());
+  const [index, setIndex] = useState(0);
+  const [rest, setRest] = useState<RestState>(null);
+  const [summary, setSummary] = useState<Summary | null>(null);
+
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
 
+  const handleRestChange = useCallback((next: RestState) => {
+    setRest((current) => {
+      if (next && current && next.remaining === 0 && current.remaining > 0) {
+        toast.success("Descanso concluído");
+      }
+      return next;
+    });
+  }, []);
+
   const session = state.activeSession;
+
+  if (summary) {
+    return <SummaryScreen summary={summary} />;
+  }
 
   if (!ready) {
     return (
@@ -79,12 +106,16 @@ function ExecutePage() {
     );
   }
 
-  const totalSets = session.entries.reduce((a, e) => a + e.sets.length, 0);
-  const doneSets = session.entries.reduce(
+  const entries = session.entries;
+  const current = entries[Math.min(index, entries.length - 1)];
+  const currentIndex = Math.min(index, entries.length - 1);
+
+  const totalSets = entries.reduce((a, e) => a + e.sets.length, 0);
+  const doneSets = entries.reduce(
     (a, e) => a + e.sets.filter((s) => s.completed).length,
     0,
   );
-  const volume = session.entries.reduce(
+  const volume = entries.reduce(
     (a, e) =>
       a +
       e.sets
@@ -93,13 +124,58 @@ function ExecutePage() {
     0,
   );
 
+  const buildSummary = (saved: Session | null): Summary => {
+    const source = saved?.entries ?? [];
+    const prs: { name: string; weight: number }[] = [];
+    for (const entry of source) {
+      const ex = getExercise(entry.exerciseId);
+      for (const set of entry.sets) {
+        if (set.isPR && set.weight != null) {
+          prs.push({ name: ex?.name ?? entry.exerciseId, weight: set.weight });
+        }
+      }
+    }
+    return {
+      workoutName: session.workoutName,
+      durationSecs: elapsedSecs(session.startedAt, Date.now()),
+      sets: source.reduce((a, e) => a + e.sets.length, 0),
+      volume: source.reduce(
+        (a, e) =>
+          a + e.sets.reduce((v, s) => v + (s.weight ?? 0) * (s.reps ?? 0), 0),
+        0,
+      ),
+      prs,
+    };
+  };
+
+  const ex = current ? getExercise(current.exerciseId) : undefined;
+  const previous = current ? lastSetsFor(current.exerciseId) : null;
+  const storedPR = current ? prFor(current.exerciseId) : null;
+
   return (
-    <AppShell title={session.workoutName} back={{ to: "/" }}>
-      <div className="surface mb-4 grid grid-cols-3 divide-x divide-border p-3 text-center">
+    <AppShell
+      title={session.workoutName}
+      back={{ to: "/" }}
+      action={
+        <Button
+          className="px-3 py-2 text-xs"
+          disabled={doneSets === 0}
+          onClick={() => {
+            const saved = finishSession();
+            const data = buildSummary(saved);
+            toast.success("Treino salvo no histórico");
+            setSummary(data);
+          }}
+        >
+          Finalizar
+        </Button>
+      }
+    >
+      <div className="surface mb-3 grid grid-cols-3 divide-x divide-border p-3 text-center">
         <div>
           <p className="text-[11px] text-muted-foreground">Duração</p>
           <p className="text-base font-bold tabular-nums">
-            {elapsed(session.startedAt, now)}
+            {formatClock(elapsedSecs(session.startedAt, now))}
           </p>
         </div>
         <div>
@@ -110,150 +186,207 @@ function ExecutePage() {
         </div>
         <div>
           <p className="text-[11px] text-muted-foreground">Volume</p>
-          <p className="text-base font-bold tabular-nums">
-            {Math.round(volume)} kg
-          </p>
+          <p className="text-base font-bold tabular-nums">{Math.round(volume)} kg</p>
         </div>
       </div>
 
-      <div className="space-y-4">
-        {session.entries.map((entry) => {
-          const ex = getExercise(entry.exerciseId);
-          if (!ex) return null;
-          const previous = lastSetsFor(entry.exerciseId);
-          const storedPR = prFor(entry.exerciseId);
-
-          return (
-            <div key={entry.exerciseId} className="surface overflow-hidden">
-              <div className="flex items-center gap-3 border-b border-border p-3">
-                <Link to="/exercicio/$exerciseId" params={{ exerciseId: ex.id }}>
-                  <ExerciseMedia exercise={ex} className="h-12 w-12" rounded="rounded-lg" />
-                </Link>
-                <div className="min-w-0 flex-1">
-                  <Link to="/exercicio/$exerciseId" params={{ exerciseId: ex.id }}>
-                    <p className="truncate text-sm font-semibold">{ex.name}</p>
-                  </Link>
-                  <p className="text-xs text-muted-foreground">
-                    {storedPR != null ? `PR atual: ${storedPR} kg` : "Sem PR registrado"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-[38px_1fr_1fr_1fr_44px] items-center gap-2 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                <span>Série</span>
-                <span>Anterior</span>
-                <span>Carga</span>
-                <span>Reps</span>
-                <span className="text-center">✓</span>
-              </div>
-
-              {entry.sets.map((set, i) => {
-                const prev = previous?.[i];
-                const prevLabel = prev
-                  ? `${prev.weight ?? "-"}kg × ${prev.reps ?? "-"}`
-                  : "—";
-                return (
-                  <div
-                    key={i}
-                    className={`grid grid-cols-[38px_1fr_1fr_1fr_44px] items-center gap-2 px-3 py-1.5 ${
-                      set.completed ? "bg-success/10" : ""
-                    }`}
-                  >
-                    <span className="flex items-center gap-1 text-sm font-bold tabular-nums">
-                      {i + 1}
-                      {set.isPR && <PRBadge small />}
-                    </span>
-                    <span className="truncate text-xs text-muted-foreground tabular-nums">
-                      {prevLabel}
-                    </span>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      step="0.5"
-                      value={set.weight ?? ""}
-                      placeholder={prev?.weight != null ? String(prev.weight) : "0"}
-                      onChange={(e) =>
-                        updateSet(entry.exerciseId, i, {
-                          weight: e.target.value === "" ? null : Number(e.target.value),
-                        })
-                      }
-                      className="w-full rounded-lg border border-input bg-elevated px-2 py-2 text-center text-sm tabular-nums outline-none focus:border-primary"
-                    />
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      value={set.reps ?? ""}
-                      placeholder={prev?.reps != null ? String(prev.reps) : "0"}
-                      onChange={(e) =>
-                        updateSet(entry.exerciseId, i, {
-                          reps: e.target.value === "" ? null : Number(e.target.value),
-                        })
-                      }
-                      className="w-full rounded-lg border border-input bg-elevated px-2 py-2 text-center text-sm tabular-nums outline-none focus:border-primary"
-                    />
-                    <button
-                      aria-label={`Concluir série ${i + 1}`}
-                      onClick={() => {
-                        if (set.completed) {
-                          updateSet(entry.exerciseId, i, { completed: false, isPR: false });
-                          return;
-                        }
-                        const weight = set.weight ?? prev?.weight ?? null;
-                        const reps = set.reps ?? prev?.reps ?? null;
-                        const sessionBest = Math.max(
-                          0,
-                          ...entry.sets
-                            .filter((s) => s.completed && s.weight != null)
-                            .map((s) => s.weight!),
-                        );
-                        const best = Math.max(storedPR ?? 0, sessionBest);
-                        const isPR = weight != null && weight > best;
-                        updateSet(entry.exerciseId, i, {
-                          weight,
-                          reps,
-                          completed: true,
-                          isPR,
-                        });
-                      }}
-                      className={`mx-auto flex h-9 w-9 items-center justify-center rounded-lg tap active:scale-90 ${
-                        set.completed
-                          ? "bg-success text-background"
-                          : "bg-elevated text-muted-foreground"
-                      }`}
-                    >
-                      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="3">
-                        <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </button>
-                  </div>
-                );
-              })}
-
-              <div className="flex gap-2 p-3">
-                <Button
-                  variant="outline"
-                  className="flex-1 py-2 text-xs"
-                  onClick={() => addSet(entry.exerciseId)}
-                >
-                  + Série
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="flex-1 py-2 text-xs"
-                  onClick={() => removeSet(entry.exerciseId)}
-                >
-                  − Série
-                </Button>
-              </div>
-            </div>
-          );
-        })}
+      {/* Progresso do treino + atalhos por exercício */}
+      <div className="mb-3">
+        <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+          <p className="truncate text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Exercício {currentIndex + 1}/{entries.length}
+          </p>
+          <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+            {doneSets}/{totalSets} séries
+          </span>
+        </div>
+        <div className="flex gap-1">
+          {entries.map((e, i) => {
+            const allDone = e.sets.every((s) => s.completed);
+            return (
+              <button
+                key={e.exerciseId}
+                aria-label={`Ir para exercício ${i + 1}`}
+                onClick={() => setIndex(i)}
+                className={`h-1.5 flex-1 rounded-full tap ${
+                  i === currentIndex
+                    ? "bg-primary"
+                    : allDone
+                      ? "bg-success/70"
+                      : "bg-elevated"
+                }`}
+              />
+            );
+          })}
+        </div>
       </div>
 
-      <div className="fixed bottom-[72px] left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 gap-2">
+      {ex && current && (
+        <div className="surface overflow-hidden">
+          <div className="flex items-center gap-3 border-b border-border p-3">
+            <Link to="/exercicio/$exerciseId" params={{ exerciseId: ex.id }}>
+              <ExerciseMedia exercise={ex} className="h-16 w-16" rounded="rounded-xl" />
+            </Link>
+            <div className="min-w-0 flex-1">
+              <Link to="/exercicio/$exerciseId" params={{ exerciseId: ex.id }}>
+                <p className="text-base font-bold leading-tight">{ex.name}</p>
+              </Link>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {ex.equipment} ·{" "}
+                {storedPR != null ? `PR ${storedPR} kg` : "Sem PR registrado"}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-[34px_62px_1fr_1fr_52px] items-center gap-2 px-3 pt-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <span>Sér</span>
+            <span>Ant.</span>
+            <span className="text-center">Carga</span>
+            <span className="text-center">Reps</span>
+            <span className="text-center">✓</span>
+          </div>
+
+          <div className="space-y-2 p-3">
+            {current.sets.map((set, i) => {
+              const prev = previous?.[i];
+              const prevLabel = prev
+                ? `${prev.weight ?? "-"}×${prev.reps ?? "-"}`
+                : "—";
+              return (
+                <div
+                  key={i}
+                  className={`grid grid-cols-[34px_62px_1fr_1fr_52px] items-center gap-2 rounded-xl px-1 py-1 ${
+                    set.completed ? "bg-success/10" : ""
+                  }`}
+                >
+                  <span className="flex items-center gap-1 text-base font-bold tabular-nums">
+                    {i + 1}
+                    {set.isPR && <PRBadge small />}
+                  </span>
+                  <span className="truncate text-xs text-muted-foreground tabular-nums">
+                    {prevLabel}
+                  </span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.5"
+                    value={set.weight ?? ""}
+                    placeholder={prev?.weight != null ? String(prev.weight) : "0"}
+                    onChange={(e) =>
+                      updateSet(current.exerciseId, i, {
+                        weight: e.target.value === "" ? null : Number(e.target.value),
+                      })
+                    }
+                    className="h-12 w-full rounded-xl border border-input bg-elevated px-2 text-center text-lg font-semibold tabular-nums outline-none focus:border-primary"
+                  />
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    value={set.reps ?? ""}
+                    placeholder={prev?.reps != null ? String(prev.reps) : "0"}
+                    onChange={(e) =>
+                      updateSet(current.exerciseId, i, {
+                        reps: e.target.value === "" ? null : Number(e.target.value),
+                      })
+                    }
+                    className="h-12 w-full rounded-xl border border-input bg-elevated px-2 text-center text-lg font-semibold tabular-nums outline-none focus:border-primary"
+                  />
+                  <button
+                    aria-label={`Concluir série ${i + 1}`}
+                    onClick={() => {
+                      if (set.completed) {
+                        updateSet(current.exerciseId, i, {
+                          completed: false,
+                          isPR: false,
+                        });
+                        return;
+                      }
+                      const weight = set.weight ?? prev?.weight ?? null;
+                      const reps = set.reps ?? prev?.reps ?? null;
+                      const sessionBest = Math.max(
+                        0,
+                        ...current.sets
+                          .filter((s) => s.completed && s.weight != null)
+                          .map((s) => s.weight!),
+                      );
+                      const best = Math.max(storedPR ?? 0, sessionBest);
+                      const isPR = weight != null && weight > best;
+                      updateSet(current.exerciseId, i, {
+                        weight,
+                        reps,
+                        completed: true,
+                        isPR,
+                      });
+                      if (isPR) {
+                        toast.success(`Novo recorde! ${weight} kg em ${ex.name}`);
+                      } else {
+                        toast.success(`Série ${i + 1} concluída`);
+                      }
+                      setRest({
+                        total: DEFAULT_REST,
+                        remaining: DEFAULT_REST,
+                        running: true,
+                      });
+                    }}
+                    className={`mx-auto flex h-12 w-12 items-center justify-center rounded-xl tap active:scale-90 ${
+                      set.completed
+                        ? "bg-success text-background"
+                        : "bg-elevated text-muted-foreground"
+                    }`}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-6 w-6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                    >
+                      <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex gap-2 border-t border-border p-3">
+            <Button
+              variant="outline"
+              className="flex-1 py-2.5 text-xs"
+              onClick={() => addSet(current.exerciseId)}
+            >
+              + Série
+            </Button>
+            <Button
+              variant="ghost"
+              className="flex-1 py-2.5 text-xs"
+              onClick={() => removeSet(current.exerciseId)}
+            >
+              − Série
+            </Button>
+            {!rest && (
+              <Button
+                variant="outline"
+                className="flex-1 py-2.5 text-xs"
+                onClick={() =>
+                  setRest({
+                    total: DEFAULT_REST,
+                    remaining: DEFAULT_REST,
+                    running: true,
+                  })
+                }
+              >
+                Descanso
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-6 flex justify-center">
         <Button
           variant="danger"
-          className="px-4 py-3.5"
+          className="px-4 py-2.5 text-xs"
           onClick={() => {
             if (confirm("Descartar este treino? As séries não serão salvas.")) {
               discardSession();
@@ -261,18 +394,89 @@ function ExecutePage() {
             }
           }}
         >
-          Descartar
+          Descartar treino
+        </Button>
+      </div>
+
+      <RestTimer rest={rest} onChange={handleRestChange} onSkip={() => setRest(null)} />
+
+      {/* Navegação entre exercícios */}
+      <div className="fixed bottom-[72px] left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-lg gap-2 -translate-x-1/2">
+        <Button
+          variant="outline"
+          className="flex-1 py-3.5"
+          disabled={currentIndex === 0}
+          onClick={() => setIndex(currentIndex - 1)}
+        >
+          ← Anterior
         </Button>
         <Button
+          variant="outline"
           className="flex-1 py-3.5"
-          disabled={doneSets === 0}
-          onClick={() => {
-            finishSession();
-            navigate({ to: "/historico" });
-          }}
+          disabled={currentIndex >= entries.length - 1}
+          onClick={() => setIndex(currentIndex + 1)}
         >
-          Finalizar treino
+          Próximo →
         </Button>
+      </div>
+    </AppShell>
+  );
+}
+
+function SummaryScreen({ summary }: { summary: Summary }) {
+  return (
+    <AppShell title="Treino concluído">
+      <div className="surface p-5 text-center">
+        <p className="text-sm text-muted-foreground">{summary.workoutName}</p>
+        <p className="mt-1 text-2xl font-bold">Treino concluído</p>
+        <div className="mt-5 grid grid-cols-3 divide-x divide-border">
+          <div>
+            <p className="text-[11px] text-muted-foreground">Duração</p>
+            <p className="text-lg font-bold tabular-nums">
+              {formatClock(summary.durationSecs)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[11px] text-muted-foreground">Séries</p>
+            <p className="text-lg font-bold tabular-nums">{summary.sets}</p>
+          </div>
+          <div>
+            <p className="text-[11px] text-muted-foreground">Volume</p>
+            <p className="text-lg font-bold tabular-nums">
+              {Math.round(summary.volume)} kg
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {summary.prs.length > 0 && (
+        <div className="surface mt-4 p-4">
+          <p className="mb-2 text-sm font-semibold">Novos recordes</p>
+          <ul className="space-y-2">
+            {summary.prs.map((pr, i) => (
+              <li
+                key={`${pr.name}-${i}`}
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2"
+              >
+                <span className="truncate text-sm">{pr.name}</span>
+                <span className="flex shrink-0 items-center gap-2 text-sm font-bold text-gold tabular-nums">
+                  {pr.weight} kg <PRBadge small />
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="mt-6 flex gap-2">
+        <Link to="/" className="flex-1">
+          <Button variant="outline" className="w-full py-3.5">
+            Início
+          </Button>
+        </Link>
+        <Link to="/historico" className="flex-1">
+          <Button className="w-full py-3.5">Ver histórico</Button>
+        </Link>
       </div>
     </AppShell>
   );

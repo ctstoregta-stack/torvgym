@@ -123,6 +123,7 @@ function RootComponent() {
       <GymProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
+        <Toaster position="top-center" theme="dark" richColors closeButton={false} />
       </GymProvider>
     </QueryClientProvider>
   );
