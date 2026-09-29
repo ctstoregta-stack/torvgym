@@ -410,26 +410,31 @@ export function GymProvider({ children }: { children: ReactNode }) {
             }
           : s,
       ),
-    finishSession: () =>
-      setState((s) => {
-        if (!s.activeSession) return s;
-        const entries = s.activeSession.entries
+    finishSession: () => {
+      const current = state.activeSession;
+      let saved: Session | null = null;
+      if (current) {
+        const entries = current.entries
           .map((e) => ({ ...e, sets: e.sets.filter((x) => x.completed) }))
           .filter((e) => e.sets.length > 0);
-        if (!entries.length) return { ...s, activeSession: null };
+        if (entries.length) {
+          saved = {
+            ...current,
+            entries,
+            finishedAt: new Date().toISOString(),
+          };
+        }
+      }
+      setState((s) => {
+        if (!s.activeSession) return s;
         return {
           ...s,
-          sessions: [
-            ...s.sessions,
-            {
-              ...s.activeSession,
-              entries,
-              finishedAt: new Date().toISOString(),
-            },
-          ],
+          sessions: saved ? [...s.sessions, saved] : s.sessions,
           activeSession: null,
         };
-      }),
+      });
+      return saved;
+    },
     discardSession: () => setState((s) => ({ ...s, activeSession: null })),
 
     prFor,
