@@ -98,7 +98,7 @@ type Ctx = {
   ) => void;
   addSet: (exerciseId: string) => void;
   removeSet: (exerciseId: string) => void;
-  finishSession: () => void;
+  finishSession: () => Session | null;
   discardSession: () => void;
   // analytics
   prFor: (exerciseId: string) => number | null;
@@ -253,6 +253,9 @@ export function GymProvider({ children }: { children: ReactNode }) {
         return {
           ...s,
           routines,
+          // evita sessão ativa órfã apontando para uma rotina excluída
+          activeSession:
+            s.activeSession?.routineId === id ? null : s.activeSession,
           activeRoutineId:
             s.activeRoutineId === id
               ? (routines[0]?.id ?? null)
