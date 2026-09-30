@@ -25,14 +25,14 @@ export function AppShell({
   const active = state.activeSession;
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-lg flex-col bg-background">
+    <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col bg-background">
       {(title || back) && (
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur">
           {back && (
             <Link
               to={back.to}
               params={back.params as never}
-              className="-ml-1 flex h-9 w-9 items-center justify-center rounded-full bg-card text-muted-foreground tap active:scale-95"
+              className="-ml-1 flex h-9 w-9 items-center justify-center rounded-full bg-card text-muted-foreground tap active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
               aria-label="Voltar"
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
@@ -45,19 +45,19 @@ export function AppShell({
         </header>
       )}
 
-      <main className="flex-1 px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-4">{children}</main>
+      <main className="flex-1 px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 lg:px-8">{children}</main>
 
       {active && !pathname.startsWith("/executar") && (
         <Link
           to="/executar/$workoutId"
           params={{ workoutId: active.workoutId }}
-          className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] left-1/2 z-30 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 rounded-xl accent-gradient px-4 py-3 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)]"
+          className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] left-1/2 z-30 w-[calc(100%-2rem)] max-w-4xl -translate-x-1/2 rounded-xl accent-gradient px-4 py-3 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)]"
         >
           Treino em andamento · {active.workoutName} →
         </Link>
       )}
 
-      <nav className="fixed bottom-0 left-1/2 z-20 w-full max-w-lg -translate-x-1/2 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+      <nav className="fixed bottom-0 left-1/2 z-20 w-full max-w-6xl -translate-x-1/2 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
         <ul className="grid grid-cols-4">
           {NAV.map(({ to, label, icon: Icon }) => {
             const isActive = to === "/" ? pathname === "/" : pathname.startsWith(to);
