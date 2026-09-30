@@ -96,6 +96,7 @@ function ExecutePage() {
     discardSession,
     prFor,
     lastSetsFor,
+    updateSessionContext,
   } = useGym();
 
   const [now, setNow] = useState(() => Date.now());
@@ -103,6 +104,7 @@ function ExecutePage() {
   const [rest, setRest] = useState<RestState>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [discardConfirm, setDiscardConfirm] = useState(false);
+  const [finishConfirm, setFinishConfirm] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -111,14 +113,21 @@ function ExecutePage() {
 
   const handleRestChange = useCallback((next: RestState) => {
     setRest((current) => {
-      if (next && current && next.remaining === 0 && current.remaining > 0) {
-        toast.success("Descanso concluído");
+      if (next && current && next.remaining === 0 && current.remaining > 0) toast.success("Descanso concluído");
+      if (next) {
+        const isTick = !!current && next.remaining === current.remaining - 1 && next.total === current.total && next.running === current.running;
+        if (!isTick) updateSessionContext({ restStartedAt: next.running ? new Date(Date.now() - (next.total - next.remaining) * 1000).toISOString() : null, restTotal: next.total, restRemaining: next.remaining, restRunning: next.running });
+      } else {
+        updateSessionContext({ restStartedAt: null, restTotal: undefined, restRemaining: undefined, restRunning: false });
       }
       return next;
     });
-  }, []);
+  }, [updateSessionContext]);
 
-  const handleRestSkip = useCallback(() => setRest(null), []);
+  const handleRestSkip = useCallback(() => {
+    setRest(null);
+    updateSessionContext({ restStartedAt: null, restTotal: undefined, restRemaining: undefined, restRunning: false });
+  }, [updateSessionContext]);
 
   const handleSetUpdate = useCallback((exerciseId: string, setIndex: number, completed: boolean) => {
     updateSet(exerciseId, setIndex, { completed });
@@ -126,6 +135,20 @@ function ExecutePage() {
   }, [updateSet]);
 
   const session = state.activeSession;
+
+  useEffect(() => {
+    if (!session || session.workoutId !== workoutId) return;
+    const savedIndex = session.currentExerciseIndex;
+    if (savedIndex != null && savedIndex >= 0 && savedIndex < session.entries.length) setIndex(savedIndex);
+    else {
+      const firstPending = session.entries.findIndex((entry) => entry.sets.some((set) => !set.completed));
+      setIndex(firstPending >= 0 ? firstPending : 0);
+    }
+    if (session.restTotal && session.restRemaining != null) {
+      const remaining = session.restRunning && session.restStartedAt ? Math.max(0, session.restTotal - Math.floor((Date.now() - new Date(session.restStartedAt).getTime()) / 1000)) : session.restRemaining;
+      setRest({ total: session.restTotal, remaining, running: !!session.restRunning && remaining > 0 });
+    }
+  }, [session?.id, workoutId]);
 
   if (summary) {
     return <SummaryScreen summary={summary} />;
@@ -199,7 +222,7 @@ function ExecutePage() {
       back={{ to: "/" }}
       action={
         currentIndex === entries.length - 1 ? (
-          <Button className="px-3 py-2 text-xs" disabled={doneSets === 0} onClick={finish}>
+          <Button className="px-3 py-2 text-xs" disabled={doneSets === 0} onClick={() => setFinishConfirm(true)}>
             Finalizar
           </Button>
         ) : null
@@ -241,7 +264,7 @@ function ExecutePage() {
               <button
                 key={e.exerciseId}
                 aria-label={`Ir para exercício ${i + 1}`}
-                onClick={() => setIndex(i)}
+                onClick={() => { setIndex(i); updateSessionContext({ currentExerciseIndex: i }); }}
                 className={`h-1.5 flex-1 rounded-full tap ${
                   i === currentIndex
                     ? "bg-primary"
@@ -312,8 +335,8 @@ function ExecutePage() {
                     type="number"
                     inputMode="decimal"
                     step="0.5"
-                    value={set.weight ?? ""}
-                    placeholder={prev?.weight != null ? String(prev.weight) : "0"}
+                    value={set.weight ?? prev?.weight ?? ""}
+                    placeholder="0"
                     onChange={(e) =>
                       updateSet(current.exerciseId, i, {
                         weight: e.target.value === "" ? null : Number(e.target.value),
@@ -324,8 +347,8 @@ function ExecutePage() {
                   <input
                     type="number"
                     inputMode="numeric"
-                    value={set.reps ?? ""}
-                    placeholder={prev?.reps != null ? String(prev.reps) : "0"}
+                    value={set.reps ?? prev?.reps ?? ""}
+                    placeholder="0"
                     onChange={(e) =>
                       updateSet(current.exerciseId, i, {
                         reps: e.target.value === "" ? null : Number(e.target.value),
@@ -436,7 +459,7 @@ function ExecutePage() {
       </div>
 
 
-      <Dialog open={discardConfirm} onOpenChange={setDiscardConfirm}>
+      <Dialog open={finishConfirm} onOpenChange={setFinishConfirm}>\n        <DialogContent className="max-w-md rounded-2xl border-border bg-card">\n          <DialogHeader className="text-left">\n            <DialogTitle>{doneSets < totalSets ? "Há séries pendentes" : "Finalizar treino?"}</DialogTitle>\n            <DialogDescription>\n              {doneSets < totalSets\n                ? `Você concluiu ${doneSets} de ${totalSets} séries. Se finalizar agora, as séries pendentes não serão salvas no histórico.`\n                : "Todas as séries foram concluídas. Deseja salvar o treino no histórico?"}\n            </DialogDescription>\n          </DialogHeader>\n          <DialogFooter className="gap-2 pt-2">\n            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setFinishConfirm(false)}>Continuar treinando</Button>\n            <Button className="w-full sm:w-auto" onClick={() => { setFinishConfirm(false); finish(); }}>Finalizar treino</Button>\n          </DialogFooter>\n        </DialogContent>\n      </Dialog>\n\n      <Dialog open={discardConfirm} onOpenChange={setDiscardConfirm}>
         <DialogContent className="max-w-md rounded-2xl border-border bg-card">
           <DialogHeader className="text-left">
             <DialogTitle>Descartar treino?</DialogTitle>
@@ -472,15 +495,15 @@ function ExecutePage() {
 
       {/* Navegação entre exercícios */}
       <div className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-2xl gap-2 -translate-x-1/2 pb-1">
-        <Button variant="outline" className="flex-1 py-3.5" disabled={currentIndex === 0} onClick={() => setIndex(currentIndex - 1)}>
+        <Button variant="outline" className="flex-1 py-3.5" disabled={currentIndex === 0} onClick={() => { const nextIndex = currentIndex - 1; setIndex(nextIndex); updateSessionContext({ currentExerciseIndex: nextIndex }); }}>
           ← Anterior
         </Button>
         {currentIndex < entries.length - 1 ? (
-          <Button variant="outline" className="flex-1 py-3.5" onClick={() => setIndex(currentIndex + 1)}>
+          <Button variant="outline" className="flex-1 py-3.5" onClick={() => { const nextIndex = currentIndex + 1; setIndex(nextIndex); updateSessionContext({ currentExerciseIndex: nextIndex }); }}>
             Próximo →
           </Button>
         ) : (
-          <Button className="flex-1 py-3.5" disabled={doneSets === 0} onClick={finish}>
+          <Button className="flex-1 py-3.5" disabled={doneSets === 0} onClick={() => setFinishConfirm(true)}>
             Finalizar
           </Button>
         )}
