@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { useMemo } from "react";
 import { Button, Card, EmptyState, MutedTag, Tag } from "@/components/ui-kit";
 import { muscleGroupsOf, useGym } from "@/store/gym-store";
 import { WEEKDAYS, WEEKDAYS_FULL } from "@/lib/types";
@@ -28,6 +27,13 @@ function Home() {
   const { ready, state, activeRoutine, getExercise } = useGym();
   const today = new Date().getDay();
 
+  const workouts = activeRoutine?.workouts ?? [];
+  const todayWorkouts = workouts.filter((w) => w.days.includes(today));
+  const totalSessions = state.sessions.filter((s) => s.finishedAt).length;
+  const activeSession = state.activeSession;
+  const since = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const weeklySessions = state.sessions.filter((s) => s.finishedAt && new Date(s.finishedAt).getTime() >= since);
+
   if (!ready) {
     return (
       <AppShell>
@@ -35,15 +41,6 @@ function Home() {
       </AppShell>
     );
   }
-
-  const workouts = activeRoutine?.workouts ?? [];
-  const todayWorkouts = workouts.filter((w) => w.days.includes(today));
-  const totalSessions = state.sessions.filter((s) => s.finishedAt).length;
-  const activeSession = state.activeSession;
-  const weeklySessions = useMemo(() => {
-    const since = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    return state.sessions.filter((s) => s.finishedAt && new Date(s.finishedAt).getTime() >= since);
-  }, [state.sessions]);
   const weeklyVolume = weeklySessions.reduce(
     (acc, s) => acc + s.entries.reduce((a, e) => a + e.sets.reduce((v, x) => v + (x.weight ?? 0) * (x.reps ?? 0), 0), 0),
     0,
