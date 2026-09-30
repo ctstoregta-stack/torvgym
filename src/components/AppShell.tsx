@@ -45,13 +45,13 @@ export function AppShell({
         </header>
       )}
 
-      <main className="flex-1 px-4 pb-32 pt-4">{children}</main>
+      <main className="flex-1 px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-4">{children}</main>
 
       {active && !pathname.startsWith("/executar") && (
         <Link
           to="/executar/$workoutId"
           params={{ workoutId: active.workoutId }}
-          className="fixed bottom-[76px] left-1/2 z-30 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 rounded-xl accent-gradient px-4 py-3 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)]"
+          className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] left-1/2 z-30 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 rounded-xl accent-gradient px-4 py-3 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)]"
         >
           Treino em andamento · {active.workoutName} →
         </Link>
