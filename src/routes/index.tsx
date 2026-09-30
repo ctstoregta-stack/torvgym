@@ -7,13 +7,13 @@ import { WEEKDAYS, WEEKDAYS_FULL } from "@/lib/types";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Início · Forja — Acompanhamento de Treino" },
+      { title: "Início · TorvGym — Acompanhamento de Treino" },
       {
         name: "description",
         content:
           "Veja o treino do dia, acompanhe cargas, séries e recordes pessoais direto do celular.",
       },
-      { property: "og:title", content: "Forja — Acompanhamento de Treino" },
+      { property: "og:title", content: "TorvGym — Acompanhamento de Treino" },
       {
         property: "og:description",
         content: "Rotinas, execução de treino em poucos toques e evolução de cargas.",
