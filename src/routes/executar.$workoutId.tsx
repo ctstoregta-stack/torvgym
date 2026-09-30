@@ -76,6 +76,8 @@ function ExecutePage() {
     });
   }, []);
 
+  const handleRestSkip = useCallback(() => setRest(null), []);
+
   const session = state.activeSession;
 
   if (summary) {
@@ -360,7 +362,7 @@ function ExecutePage() {
 
       {rest && <div className="h-24" />}
 
-      <RestTimer rest={rest} onChange={handleRestChange} onSkip={() => setRest(null)} nextLabel={nextExerciseName} />
+      <RestTimer rest={rest} onChange={handleRestChange} onSkip={handleRestSkip} nextLabel={nextExerciseName} />
 
       {/* Navegação entre exercícios */}
       <div className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-lg gap-2 -translate-x-1/2 pb-1">
