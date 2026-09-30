@@ -132,7 +132,7 @@ function Home() {
                   : "Nenhum treino programado para hoje. Veja outros treinos abaixo ou atribua dias na rotina."}
               </Card>
             ) : (
-              <div className="space-y-3">
+              <div className="grid gap-3 md:grid-cols-2">
                 {todayWorkouts
                   .filter((w) => w.id !== activeSession?.workoutId)
                   .map((w) => <WorkoutCard key={w.id} workoutId={w.id} highlight />)}
@@ -229,11 +229,6 @@ function Home() {
               ))}
             </div>
           </div>
-          {active ? (
-            <div className="mt-3 inline-flex rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-              Em andamento · continue pela barra inferior
-            </div>
-          ) : null}
           <div className="mt-3 flex flex-wrap gap-1.5">
             {groups.length ? (
               groups.map((g) => <Tag key={g}>{g}</Tag>)
