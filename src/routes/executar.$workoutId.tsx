@@ -118,7 +118,7 @@ function ExecutePage() {
         const isTick = !!current && next.remaining === current.remaining - 1 && next.total === current.total && next.running === current.running;
         if (!isTick) updateSessionContext({ restStartedAt: next.running ? new Date(Date.now() - (next.total - next.remaining) * 1000).toISOString() : null, restTotal: next.total, restRemaining: next.remaining, restRunning: next.running });
       } else {
-        updateSessionContext({ restStartedAt: null, restTotal: undefined, restRemaining: undefined, restRunning: false });
+        updateSessionContext({ restStartedAt: null, restTotal: 0, restRemaining: 0, restRunning: false });
       }
       return next;
     });
@@ -126,7 +126,7 @@ function ExecutePage() {
 
   const handleRestSkip = useCallback(() => {
     setRest(null);
-    updateSessionContext({ restStartedAt: null, restTotal: undefined, restRemaining: undefined, restRunning: false });
+    updateSessionContext({ restStartedAt: null, restTotal: 0, restRemaining: 0, restRunning: false });
   }, [updateSessionContext]);
 
   const startRest = useCallback((seconds: number = DEFAULT_REST) => {
