@@ -185,18 +185,23 @@ export function GymProvider({ children }: { children: ReactNode }) {
     [finishedSessions],
   );
 
-  const prAnalyticsIndex = useMemo(
+  const activeAnalyticsIndex = useMemo(
     () =>
-      buildExerciseAnalyticsIndex([
-        ...finishedSessions,
-        ...(state.activeSession ? [state.activeSession] : []),
-      ]),
-    [finishedSessions, state.activeSession],
+      state.activeSession
+        ? buildExerciseAnalyticsIndex([state.activeSession])
+        : new Map(),
+    [state.activeSession],
   );
 
   const prFor = useCallback(
-    (exerciseId: string) => prAnalyticsIndex.get(exerciseId)?.pr ?? null,
-    [prAnalyticsIndex],
+    (exerciseId: string) => {
+      const historical = analyticsIndex.get(exerciseId)?.pr ?? null;
+      const active = activeAnalyticsIndex.get(exerciseId)?.pr ?? null;
+      if (historical == null) return active;
+      if (active == null) return historical;
+      return Math.max(historical, active);
+    },
+    [analyticsIndex, activeAnalyticsIndex],
   );
 
   const historyFor = useCallback(
