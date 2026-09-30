@@ -9,9 +9,9 @@ import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recha
 export const Route = createFileRoute("/historico")({
   head: () => ({
     meta: [
-      { title: "Histórico · Forja" },
+      { title: "Histórico · TorvGym" },
       { name: "description", content: "Acompanhe treinos, volume e recordes pessoais." },
-      { property: "og:title", content: "Histórico de treinos · Forja" },
+      { property: "og:title", content: "Histórico de treinos · TorvGym" },
       { property: "og:description", content: "Sessões concluídas, volume e progressão." },
     ],
   }),
