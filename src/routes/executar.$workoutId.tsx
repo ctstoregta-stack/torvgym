@@ -175,8 +175,17 @@ function ExecutePage() {
   const ex = current ? getExercise(current.exerciseId) : undefined;
   const previous = current ? lastSetsFor(current.exerciseId) : null;
   const storedPR = current ? prFor(current.exerciseId) : null;
+  const currentSetIndex = current ? current.sets.findIndex((set) => !set.completed) : -1;
+  const nextSetIndex = currentSetIndex >= 0 ? currentSetIndex : current ? current.sets.length : 0;
+  const hasNextSet = !!current && nextSetIndex < current.sets.length;
   const nextExercise = entries[currentIndex + 1];
   const nextExerciseName = nextExercise ? getExercise(nextExercise.exerciseId)?.name : undefined;
+  const nextLabel = hasNextSet
+    ? `${ex?.name ?? "Exercício"} — série ${nextSetIndex + 1}/${current?.sets.length ?? 0}`
+    : nextExerciseName
+      ? nextExerciseName
+      : undefined;
+  const nextLabelPrefix = hasNextSet ? "Próxima série" : "Próximo exercício";
   const finish = () => {
     const saved = finishSession();
     const data = buildSummary(saved, getExercise);
@@ -248,6 +257,14 @@ function ExecutePage() {
 
       {ex && current && (
         <div className="surface overflow-hidden">
+          <div className="border-b border-border bg-primary/5 px-3 py-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Série atual</p>
+            <p className="mt-0.5 text-sm font-bold tabular-nums">
+              {current.sets.findIndex((set) => !set.completed) >= 0
+                ? `Série ${current.sets.findIndex((set) => !set.completed) + 1} de ${current.sets.length}`
+                : "Todas as séries concluídas"}
+            </p>
+          </div>
           <div className="flex items-center gap-3 border-b border-border p-3">
             <Link to="/exercicio/$exerciseId" params={{ exerciseId: ex.id }}>
               <ExerciseMedia exercise={ex} className="h-16 w-16" rounded="rounded-xl" />
@@ -343,7 +360,7 @@ function ExecutePage() {
                         isPR,
                       });
                       if (isPR) {
-                        toast.success(`Novo recorde! ${weight} kg em ${ex.name}`);
+                        toast.success(`🏆 Novo recorde! ${weight} kg em ${ex.name}`, { duration: 2200 });
                       } else {
                         toast.success(`Série ${i + 1} concluída`);
                       }
@@ -445,7 +462,13 @@ function ExecutePage() {
       </Dialog>
       {rest && <div className="h-24" />}
 
-      <RestTimer rest={rest} onChange={handleRestChange} onSkip={handleRestSkip} nextLabel={nextExerciseName} />
+      <RestTimer
+        rest={rest}
+        onChange={handleRestChange}
+        onSkip={handleRestSkip}
+        nextLabel={nextLabel}
+        nextLabelPrefix={nextLabelPrefix}
+      />
 
       {/* Navegação entre exercícios */}
       <div className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-2xl gap-2 -translate-x-1/2 pb-1">
