@@ -2,6 +2,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button, Card, EmptyState, Input, MutedTag, Tag } from "@/components/ui-kit";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { muscleGroupsOf, useGym } from "@/store/gym-store";
 import { WEEKDAYS } from "@/lib/types";
 
@@ -43,6 +51,7 @@ function RoutinesPage() {
   const [newWorkout, setNewWorkout] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [pendingDelete, setPendingDelete] = useState<{ type: "routine" | "workout"; id: string; name: string; active: boolean } | null>(null);
 
   if (!ready) return <AppShell title="Rotinas"><div className="h-40 animate-pulse rounded-xl bg-card" /></AppShell>;
 
@@ -119,11 +128,12 @@ function RoutinesPage() {
                       variant="ghost"
                       className="px-2 text-xs text-destructive"
                       onClick={() => {
-                        const activeInRoutine = state.activeSession?.routineId === routine.id;
-                        const message = activeInRoutine
-                          ? `Existe um treino em andamento nesta rotina. Excluir "${routine.name}" poderá encerrar essa sessão. Deseja continuar?`
-                          : `Excluir a rotina "${routine.name}"?`;
-                        if (confirm(message)) deleteRoutine(routine.id);
+                        setPendingDelete({
+                          type: "routine",
+                          id: routine.id,
+                          name: routine.name,
+                          active: state.activeSession?.routineId === routine.id,
+                        });
                       }}
                     >
                       Excluir
@@ -162,11 +172,12 @@ function RoutinesPage() {
                         <button
                           className="text-xs font-semibold text-destructive"
                           onClick={() => {
-                            const activeWorkout = state.activeSession?.workoutId === w.id;
-                            const message = activeWorkout
-                              ? `Existe um treino em andamento. Excluir "${w.name}" poderá encerrar essa sessão. Deseja continuar?`
-                              : `Excluir o treino "${w.name}"?`;
-                            if (confirm(message)) deleteWorkout(w.id);
+                            setPendingDelete({
+                              type: "workout",
+                              id: w.id,
+                              name: w.name,
+                              active: state.activeSession?.workoutId === w.id,
+                            });
                           }}
                         >
                           Excluir
