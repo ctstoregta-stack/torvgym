@@ -99,6 +99,7 @@ type Ctx = {
   addSet: (exerciseId: string) => void;
   removeSet: (exerciseId: string) => void;
   finishSession: () => Session | null;
+  updateSessionContext: (patch: Partial<Pick<Session, "currentExerciseIndex" | "restStartedAt" | "restTotal" | "restRemaining" | "restRunning">>) => void;
   discardSession: () => void;
   // analytics
   prFor: (exerciseId: string) => number | null;
@@ -471,6 +472,12 @@ export function GymProvider({ children }: { children: ReactNode }) {
       });
       return saved;
     },
+    updateSessionContext: (patch) =>
+      setState((s) =>
+        s.activeSession
+          ? { ...s, activeSession: { ...s.activeSession, ...patch } }
+          : s,
+      ),
     discardSession: () => setState((s) => ({ ...s, activeSession: null })),
 
     prFor,
