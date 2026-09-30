@@ -17,7 +17,7 @@ export function RestTimer({
   rest: RestState;
   onChange: (next: RestState) => void;
   onSkip: () => void;
-  nextLabel?: string;
+  nextLabel?: string | undefined;
 }) {
   useEffect(() => {
     if (!rest || rest.remaining !== 0 || rest.running) return;
