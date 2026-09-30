@@ -54,14 +54,21 @@ function WorkoutPage() {
 
   const found = ready ? findWorkout(workoutId) : null;
 
+  const categories = useMemo(
+    () => Array.from(new Set(exercises.map((e) => e.category))).sort(),
+    [exercises],
+  );
+
   const filtered = useMemo(
     () =>
-      exercises.filter((e) =>
-        `${e.name} ${e.category} ${e.equipment}`
-          .toLowerCase()
-          .includes(query.toLowerCase()),
+      exercises.filter(
+        (e) =>
+          (!category || e.category === category) &&
+          `${e.name} ${e.category} ${e.equipment}`
+            .toLowerCase()
+            .includes(query.toLowerCase()),
       ),
-    [exercises, query],
+    [exercises, query, category],
   );
 
   if (!ready) {
