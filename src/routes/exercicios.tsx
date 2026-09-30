@@ -8,13 +8,13 @@ import { useGym } from "@/store/gym-store";
 export const Route = createFileRoute("/exercicios")({
   head: () => ({
     meta: [
-      { title: "Exercícios · Forja" },
+      { title: "Exercícios · TorvGym" },
       {
         name: "description",
         content:
           "Biblioteca de exercícios com animação em loop, execução e músculos trabalhados.",
       },
-      { property: "og:title", content: "Biblioteca de Exercícios · Forja" },
+      { property: "og:title", content: "Biblioteca de Exercícios · TorvGym" },
       {
         property: "og:description",
         content: "Animações em loop, instruções e ativação muscular de cada exercício.",
