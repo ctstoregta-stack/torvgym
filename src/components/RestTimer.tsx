@@ -18,6 +18,7 @@ export function RestTimer({
   onChange: (next: RestState) => void;
   onSkip: () => void;
   nextLabel?: string | undefined;
+  nextLabelPrefix?: string | undefined;
 }) {
   useEffect(() => {
     if (!rest || rest.remaining !== 0 || rest.running) return;
@@ -59,7 +60,7 @@ export function RestTimer({
           <p className="mt-1 text-base font-semibold">Hora de treinar</p>
           {nextLabel && (
             <p className="mt-1 truncate text-xs text-muted-foreground">
-              Próximo: {nextLabel}
+              {nextLabelPrefix ?? "Próximo"}: {nextLabel}
             </p>
           )}
           <button
