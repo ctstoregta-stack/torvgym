@@ -130,17 +130,22 @@ function RoutinesPage() {
                         {routine.workouts.length === 1 ? "" : "s"}
                         {isActive ? " · Rotina ativa" : ""}
                       </p>
+                      {routine.workouts.length > 0 && (
+                        <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground/80">
+                          {Array.from(new Set(routine.workouts.flatMap((workout) => muscleGroupsOf(workout.exerciseIds, getExercise)))).join(" · ") || "Sem grupos musculares definidos"}
+                        </p>
+                      )}
                     </span>
                   </button>
                 )}
                 {editing !== routine.id && (
                   <Button
                     variant="ghost"
-                    className="h-10 w-10 shrink-0 px-0"
+                    className="h-12 w-12 shrink-0 px-0"
                     aria-label="Configurações da rotina"
                     onClick={() => setSettingsRoutine(routine.id)}
                   >
-                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2">
                       <circle cx="12" cy="12" r="3" />
                       <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.7 1.7-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V20h-2.4v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L7 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H5v-2.4h.8a1.7 1.7 0 0 0 1.6-1A1.7 1.7 0 0 0 7.1 9L7 8.9l1.7-1.7.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V6H16v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L20.7 9l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1v2.4h-.1a1.7 1.7 0 0 0-1.6.6Z" />
                     </svg>
