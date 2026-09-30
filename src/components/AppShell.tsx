@@ -47,7 +47,7 @@ export function AppShell({
 
       <main className="flex-1 px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 lg:px-8">{children}</main>
 
-      {active && !pathname.startsWith("/executar") && (
+      {active && pathname !== "/" && !pathname.startsWith("/executar") && (
         <Link
           to="/executar/$workoutId"
           params={{ workoutId: active.workoutId }}
