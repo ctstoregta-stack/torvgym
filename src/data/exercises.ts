@@ -228,7 +228,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Pernas",
     equipment: "Máquina",
     gif_url:
-      "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=500&q=80",
+      "https://online.ironcult.ru/upragneniy/HIP-ADDUCTION-MACHINE.gif",
     execution:
       "Sente-se com as pernas afastadas apoiadas nas almofadas internas. Faça força para fechar as pernas aproximando os joelhos no centro.",
     primary_muscles: ["Adutores da Coxa"],
@@ -252,7 +252,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Braços",
     equipment: "Barras",
     gif_url:
-      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=500&q=80",
+      "https://media.giphy.com/media/ssVByClVV45ikx1N1M/giphy.gif",
     execution:
       "Apoie os antebraços em um banco deixando as mãos livres com as palmas para baixo. Movimente apenas os punhos para cima estendendo-os.",
     primary_muscles: ["Extensores do Punho"],
@@ -483,7 +483,7 @@ export const EXERCISE_DB: Exercise[] = [
     name: "Abdução de Quadril Deitado com Caneleira",
     category: "Glúteos",
     equipment: "Caneleira",
-    gif_url: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Side-Lying-Leg-Raise.gif",
+    gif_url: "https://pub-7c14918da31d450e8d6787a3c225c277.r2.dev/gifs/720/4051.webp",
     execution: "Deite-se de lado, mantenha a perna de cima estendida e eleve-a lateralmente contra a resistência da caneleira. Retorne lentamente.",
     primary_muscles: ["Glúteo Médio"],
     secondary_muscles: ["Glúteo Mínimo", "Tensor da Fáscia Lata"],
@@ -493,7 +493,7 @@ export const EXERCISE_DB: Exercise[] = [
     name: "Abdominal Supra com Halter",
     category: "Abdômen",
     equipment: "Halter",
-    gif_url: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Sit-Up.gif",
+    gif_url: "https://exercises.loadmuscle.com/gifs/720/4734.webp",
     execution: "Deitado, segure o halter junto ao peito. Flexione o tronco elevando as escápulas do banco/chão e retorne de forma controlada.",
     primary_muscles: ["Reto Abdominal"],
     secondary_muscles: ["Oblíquos", "Flexores do Quadril"],
@@ -503,7 +503,7 @@ export const EXERCISE_DB: Exercise[] = [
     name: "Bicicleta de Spinning",
     category: "Cardio",
     equipment: "Bicicleta de Spinning",
-    gif_url: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Stationary-Bike.gif",
+    gif_url: "https://gifdb.com/images/branded/high/spinning-stationary-bike-1gqvmeucgjr1y2qr.gif",
     execution: "Ajuste banco e guidão. Pedale mantendo cadência estável e resistência compatível com a intensidade planejada.",
     primary_muscles: ["Quadríceps Femoral"],
     secondary_muscles: ["Glúteo Máximo", "Isquiocrurais", "Panturrilhas"],
