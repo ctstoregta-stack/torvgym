@@ -47,6 +47,11 @@ export type Session = {
   startedAt: string;
   finishedAt: string | null;
   entries: ExerciseLog[];
+  currentExerciseIndex?: number;
+  restStartedAt?: string | null;
+  restTotal?: number;
+  restRemaining?: number;
+  restRunning?: boolean;
 };
 
 export type AppState = {
