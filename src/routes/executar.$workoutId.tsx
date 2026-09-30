@@ -229,7 +229,7 @@ function ExecutePage() {
       back={{ to: "/" }}
       action={
         currentIndex === entries.length - 1 ? (
-          <Button className="px-3 py-2 text-xs" disabled={doneSets === 0} onClick={() => setFinishConfirm(true)}>
+          <Button className="px-3 py-2 text-xs" disabled={doneSets === 0} onClick={doneSets >= totalSets ? finish : () => setFinishConfirm(true)}>
             Finalizar
           </Button>
         ) : null
@@ -519,7 +519,7 @@ function ExecutePage() {
             Próximo →
           </Button>
         ) : (
-          <Button className="flex-1 py-3.5" disabled={doneSets === 0} onClick={() => setFinishConfirm(true)}>
+          <Button className="flex-1 py-3.5" disabled={doneSets === 0} onClick={doneSets >= totalSets ? finish : () => setFinishConfirm(true)}>
             Finalizar
           </Button>
         )}
