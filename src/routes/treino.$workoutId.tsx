@@ -10,13 +10,13 @@ import { WEEKDAYS } from "@/lib/types";
 export const Route = createFileRoute("/treino/$workoutId")({
   head: () => ({
     meta: [
-      { title: "Treino · Forja" },
+      { title: "Treino · TorvGym" },
       {
         name: "description",
         content:
           "Monte os exercícios do treino, defina séries alvo e inicie a execução.",
       },
-      { property: "og:title", content: "Treino · Forja" },
+      { property: "og:title", content: "Treino · TorvGym" },
       {
         property: "og:description",
         content: "Exercícios, grupos musculares e séries alvo do seu treino.",
