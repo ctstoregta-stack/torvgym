@@ -118,7 +118,7 @@ function ExecutePage() {
         const isTick = !!current && next.remaining === current.remaining - 1 && next.total === current.total && next.running === current.running;
         if (!isTick) updateSessionContext({ restStartedAt: next.running ? new Date(Date.now() - (next.total - next.remaining) * 1000).toISOString() : null, restTotal: next.total, restRemaining: next.remaining, restRunning: next.running });
       } else {
-        updateSessionContext({ restStartedAt: null, restTotal: undefined, restRemaining: undefined, restRunning: false });
+        updateSessionContext({ restStartedAt: null, restTotal: 0, restRemaining: 0, restRunning: false });
       }
       return next;
     });
@@ -126,7 +126,7 @@ function ExecutePage() {
 
   const handleRestSkip = useCallback(() => {
     setRest(null);
-    updateSessionContext({ restStartedAt: null, restTotal: undefined, restRemaining: undefined, restRunning: false });
+    updateSessionContext({ restStartedAt: null, restTotal: 0, restRemaining: 0, restRunning: false });
   }, [updateSessionContext]);
 
   const startRest = useCallback((seconds: number = DEFAULT_REST) => {
@@ -458,7 +458,24 @@ function ExecutePage() {
       </div>
 
 
-      <Dialog open={finishConfirm} onOpenChange={setFinishConfirm}>\n        <DialogContent className="max-w-md rounded-2xl border-border bg-card">\n          <DialogHeader className="text-left">\n            <DialogTitle>{doneSets < totalSets ? "Há séries pendentes" : "Finalizar treino?"}</DialogTitle>\n            <DialogDescription>\n              {doneSets < totalSets\n                ? `Você concluiu ${doneSets} de ${totalSets} séries. Se finalizar agora, as séries pendentes não serão salvas no histórico.`\n                : "Todas as séries foram concluídas. Deseja salvar o treino no histórico?"}\n            </DialogDescription>\n          </DialogHeader>\n          <DialogFooter className="gap-2 pt-2">\n            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setFinishConfirm(false)}>Continuar treinando</Button>\n            <Button className="w-full sm:w-auto" onClick={() => { setFinishConfirm(false); finish(); }}>Finalizar treino</Button>\n          </DialogFooter>\n        </DialogContent>\n      </Dialog>\n\n      <Dialog open={discardConfirm} onOpenChange={setDiscardConfirm}>
+      <Dialog open={finishConfirm} onOpenChange={setFinishConfirm}>
+        <DialogContent className="max-w-md rounded-2xl border-border bg-card">
+          <DialogHeader className="text-left">
+            <DialogTitle>{doneSets < totalSets ? "Há séries pendentes" : "Finalizar treino?"}</DialogTitle>
+            <DialogDescription>
+              {doneSets < totalSets
+                ? `Você concluiu ${doneSets} de ${totalSets} séries. Se finalizar agora, as séries pendentes não serão salvas no histórico.`
+                : "Todas as séries foram concluídas. Deseja salvar o treino no histórico?"}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setFinishConfirm(false)}>Continuar treinando</Button>
+            <Button className="w-full sm:w-auto" onClick={() => { setFinishConfirm(false); finish(); }}>Finalizar treino</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={discardConfirm} onOpenChange={setDiscardConfirm}>
         <DialogContent className="max-w-md rounded-2xl border-border bg-card">
           <DialogHeader className="text-left">
             <DialogTitle>Descartar treino?</DialogTitle>

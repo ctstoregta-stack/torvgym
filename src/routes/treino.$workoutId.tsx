@@ -104,7 +104,7 @@ function WorkoutPage() {
     const nextIndex = index + direction;
     if (nextIndex < 0 || nextIndex >= workout.exerciseIds.length) return;
     const exerciseIds = [...workout.exerciseIds];
-    [exerciseIds[index], exerciseIds[nextIndex]] = [exerciseIds[nextIndex], exerciseIds[index]];
+    [exerciseIds[index], exerciseIds[nextIndex]] = [exerciseIds[nextIndex]!, exerciseIds[index]!];
     updateWorkout(workout.id, { exerciseIds });
   };
 
