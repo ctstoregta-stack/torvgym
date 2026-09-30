@@ -8,7 +8,7 @@ export function Button({
   variant?: "primary" | "ghost" | "outline" | "danger" | "success";
 }) {
   const base =
-    "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold tap active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100";
+    "inline-flex items-center justify-center gap-2 min-h-10 rounded-xl px-4 py-2.5 text-sm font-semibold tap active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100";
   const styles: Record<string, string> = {
     primary: "accent-gradient text-primary-foreground shadow-[var(--shadow-glow)]",
     ghost: "bg-transparent text-muted-foreground hover:text-foreground",
@@ -84,7 +84,7 @@ export function Input({
 }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`w-full rounded-xl border border-input bg-elevated px-3 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/70 focus:border-primary ${className}`}
+      className={`min-h-10 w-full rounded-xl border border-input bg-elevated px-3 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/70 transition-colors focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/40 ${className}`}
       {...props}
     />
   );
