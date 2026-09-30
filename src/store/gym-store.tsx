@@ -121,7 +121,16 @@ export function GymProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (ready) saveState(state);
+    if (!ready) return;
+    const save = window.setTimeout(() => saveState(state), 150);
+    return () => window.clearTimeout(save);
+  }, [state, ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+    const flush = () => saveState(state);
+    window.addEventListener("pagehide", flush);
+    return () => window.removeEventListener("pagehide", flush);
   }, [state, ready]);
 
   const exercises = useMemo(
@@ -129,9 +138,14 @@ export function GymProvider({ children }: { children: ReactNode }) {
     [state.customExercises],
   );
 
-  const getExercise = useCallback(
-    (id: string) => exercises.find((e) => e.id === id),
+  const exerciseById = useMemo(
+    () => new Map(exercises.map((exercise) => [exercise.id, exercise])),
     [exercises],
+  );
+
+  const getExercise = useCallback(
+    (id: string) => exerciseById.get(id),
+    [exerciseById],
   );
 
   const activeRoutine = useMemo(
