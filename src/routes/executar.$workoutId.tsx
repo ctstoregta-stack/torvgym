@@ -33,6 +33,46 @@ function elapsedSecs(startedAt: string, now: number) {
   return Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / 1000));
 }
 
+function buildSummary(
+  saved: Session | null,
+  getExercise: (id: string) => { name: string } | undefined,
+): Summary {
+  const entries = saved?.entries ?? [];
+  return {
+    workoutName: saved?.workoutName ?? "Treino",
+    durationSecs: saved
+      ? Math.max(
+          0,
+          Math.floor(
+            (new Date(saved.finishedAt ?? Date.now()).getTime() -
+              new Date(saved.startedAt).getTime()) /
+              1000,
+          ),
+        )
+      : 0,
+    sets: entries.reduce(
+      (acc, e) => acc + e.sets.filter((s) => s.completed).length,
+      0,
+    ),
+    volume: entries.reduce(
+      (acc, e) =>
+        acc +
+        e.sets
+          .filter((s) => s.completed && s.weight != null && s.reps != null)
+          .reduce((a, s) => a + s.weight! * s.reps!, 0),
+      0,
+    ),
+    prs: entries.flatMap((e) =>
+      e.sets
+        .filter((s) => s.completed && s.isPR && s.weight != null)
+        .map((s) => ({
+          name: getExercise(e.exerciseId)?.name ?? "Exercício",
+          weight: s.weight!,
+        })),
+    ),
+  };
+}
+
 type Summary = {
   workoutName: string;
   durationSecs: number;
