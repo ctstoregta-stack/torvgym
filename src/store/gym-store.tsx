@@ -9,6 +9,7 @@ import {
 } from "react";
 import { EXERCISE_DB } from "@/data/exercises";
 import { emptyState, loadState, saveState, uid } from "@/lib/storage";
+import { exerciseHistoryFor, lastExerciseSets, sessionPRFor } from "@/store/gym-analytics";
 import type {
   AppState,
   Exercise,
@@ -180,62 +181,17 @@ export function GymProvider({ children }: { children: ReactNode }) {
   );
 
   const prFor = useCallback(
-    (exerciseId: string) => {
-      let max: number | null = null;
-      const scan = (session: Session) => {
-        for (const entry of session.entries) {
-          if (entry.exerciseId !== exerciseId) continue;
-          for (const set of entry.sets) {
-            if (set.completed && set.weight != null) {
-              max = max == null ? set.weight : Math.max(max, set.weight);
-            }
-          }
-        }
-      };
-      for (const session of finishedSessions) scan(session);
-      if (state.activeSession) scan(state.activeSession);
-      return max;
-    },
+    (exerciseId: string) => sessionPRFor([...finishedSessions, ...(state.activeSession ? [state.activeSession] : [])], exerciseId),
     [finishedSessions, state.activeSession],
   );
 
   const historyFor = useCallback(
-    (exerciseId: string) =>
-      finishedSessions
-        .map((session) => {
-          const entry = session.entries.find(
-            (e) => e.exerciseId === exerciseId,
-          );
-          if (!entry) return null;
-          const sets = entry.sets.filter((s) => s.completed);
-          if (!sets.length) return null;
-          return {
-            date: session.finishedAt ?? session.startedAt,
-            sets,
-            maxWeight: Math.max(...sets.map((s) => s.weight ?? 0)),
-          };
-        })
-        .filter(Boolean)
-        .sort(
-          (a, b) =>
-            new Date(b!.date).getTime() - new Date(a!.date).getTime(),
-        ) as { date: string; sets: SetLog[]; maxWeight: number }[],
+    (exerciseId: string) => exerciseHistoryFor(finishedSessions, exerciseId),
     [finishedSessions],
   );
 
   const lastSetsFor = useCallback(
-    (exerciseId: string) => {
-      const sorted = [...finishedSessions].sort(
-        (a, b) =>
-          new Date(b.finishedAt!).getTime() - new Date(a.finishedAt!).getTime(),
-      );
-      for (const session of sorted) {
-        const entry = session.entries.find((e) => e.exerciseId === exerciseId);
-        const done = entry?.sets.filter((s) => s.completed) ?? [];
-        if (done.length) return done;
-      }
-      return null;
-    },
+    (exerciseId: string) => lastExerciseSets(finishedSessions, exerciseId),
     [finishedSessions],
   );
 
