@@ -240,6 +240,34 @@ function RoutinesPage() {
           Toque em um treino para editar exercícios e iniciar.
         </p>
       )}
+
+      <Dialog open={!!pendingDelete} onOpenChange={(open) => !open && setPendingDelete(null)}>
+        <DialogContent className="max-w-md rounded-2xl border-border bg-card">
+          <DialogHeader className="text-left">
+            <DialogTitle>{pendingDelete?.active ? "Treino em andamento" : "Confirmar exclusão"}</DialogTitle>
+            <DialogDescription>
+              {pendingDelete?.active
+                ? `Existe um treino em andamento. Excluir "${pendingDelete.name}" também encerrará a sessão atual e poderá apagar seu progresso.`
+                : `Excluir "${pendingDelete?.name}"? Esta ação não poderá ser desfeita.`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setPendingDelete(null)}>Cancelar</Button>
+            <Button
+              variant="danger"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                if (!pendingDelete) return;
+                if (pendingDelete.type === "routine") deleteRoutine(pendingDelete.id);
+                else deleteWorkout(pendingDelete.id);
+                setPendingDelete(null);
+              }}
+            >
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
