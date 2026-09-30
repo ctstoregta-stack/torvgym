@@ -9,7 +9,7 @@ import {
 } from "react";
 import { EXERCISE_DB } from "@/data/exercises";
 import { emptyState, loadState, saveState, uid } from "@/lib/storage";
-import { exerciseHistoryFor, lastExerciseSets, sessionPRFor } from "@/store/gym-analytics";
+import { buildExerciseAnalyticsIndex } from "@/store/gym-analytics";
 import type {
   AppState,
   Exercise,
@@ -180,19 +180,24 @@ export function GymProvider({ children }: { children: ReactNode }) {
     [state.sessions],
   );
 
+  const analyticsIndex = useMemo(
+    () => buildExerciseAnalyticsIndex(finishedSessions),
+    [finishedSessions],
+  );
+
   const prFor = useCallback(
-    (exerciseId: string) => sessionPRFor([...finishedSessions, ...(state.activeSession ? [state.activeSession] : [])], exerciseId),
-    [finishedSessions, state.activeSession],
+    (exerciseId: string) => analyticsIndex.get(exerciseId)?.pr ?? null,
+    [analyticsIndex],
   );
 
   const historyFor = useCallback(
-    (exerciseId: string) => exerciseHistoryFor(finishedSessions, exerciseId),
-    [finishedSessions],
+    (exerciseId: string) => analyticsIndex.get(exerciseId)?.history ?? [],
+    [analyticsIndex],
   );
 
   const lastSetsFor = useCallback(
-    (exerciseId: string) => lastExerciseSets(finishedSessions, exerciseId),
-    [finishedSessions],
+    (exerciseId: string) => analyticsIndex.get(exerciseId)?.lastSets ?? null,
+    [analyticsIndex],
   );
 
   const updateSessionContext = useCallback((patch: Partial<Pick<Session, "currentExerciseIndex" | "restStartedAt" | "restTotal" | "restRemaining" | "restRunning">>) => {
