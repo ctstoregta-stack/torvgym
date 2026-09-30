@@ -385,3 +385,32 @@ function SummaryScreen({ summary }: { summary: Summary }) {
   const navigate = useNavigate();
   return (
     <AppShell title="Treino concluído">
+      <div className="surface p-5 text-center">
+        <p className="text-sm text-muted-foreground">{summary.workoutName}</p>
+        <p className="mt-1 text-2xl font-bold">Treino concluído</p>
+        <div className="mt-5 grid grid-cols-3 divide-x divide-border">
+          <div><p className="text-[11px] text-muted-foreground">Duração</p><p className="text-lg font-bold tabular-nums">{formatClock(summary.durationSecs)}</p></div>
+          <div><p className="text-[11px] text-muted-foreground">Séries</p><p className="text-lg font-bold tabular-nums">{summary.sets}</p></div>
+          <div><p className="text-[11px] text-muted-foreground">Volume</p><p className="text-lg font-bold tabular-nums">{Math.round(summary.volume)} kg</p></div>
+        </div>
+      </div>
+      {summary.prs.length > 0 && (
+        <div className="surface mt-4 p-4">
+          <p className="mb-2 text-sm font-semibold">Novos recordes</p>
+          <ul className="space-y-2">
+            {summary.prs.map((pr, i) => (
+              <li key={pr.name + "-" + i} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                <span className="truncate text-sm">{pr.name}</span>
+                <span className="flex shrink-0 items-center gap-2 text-sm font-bold text-gold tabular-nums">{pr.weight} kg <PRBadge small /></span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <div className="mt-6 grid grid-cols-2 gap-2">
+        <Button variant="outline" className="min-h-12 w-full" onClick={() => navigate({ to: "/" })}>← Voltar ao início</Button>
+        <Button className="min-h-12 w-full" onClick={() => navigate({ to: "/historico" })}>Ver histórico</Button>
+      </div>
+    </AppShell>
+  );
+}
