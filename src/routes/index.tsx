@@ -152,7 +152,7 @@ function Home() {
             ) : (
               <details className="group">
                 <summary className="surface flex cursor-pointer list-none items-center justify-between p-4 text-sm font-semibold tap">
-                  <span>{otherWorkouts.length} treino{otherWorkouts.length === 1 ? "" : "s"} disponível{otherWorkouts.length === 1 ? "" : "is"}</span>
+                  <span>{otherWorkouts.length} treino{otherWorkouts.length === 1 ? "" : "s"} {otherWorkouts.length === 1 ? "disponível" : "disponíveis"}</span>
                   <span className="text-muted-foreground transition-transform group-open:rotate-180">⌄</span>
                 </summary>
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
