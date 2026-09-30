@@ -16,13 +16,13 @@ import { WEEKDAYS } from "@/lib/types";
 export const Route = createFileRoute("/rotinas")({
   head: () => ({
     meta: [
-      { title: "Rotinas · Forja" },
+      { title: "Rotinas · TorvGym" },
       {
         name: "description",
         content:
           "Crie rotinas, organize treinos por dia da semana e monte seus grupos musculares.",
       },
-      { property: "og:title", content: "Rotinas · Forja" },
+      { property: "og:title", content: "Rotinas · TorvGym" },
       {
         property: "og:description",
         content: "Organize rotinas e treinos da semana com grupos musculares automáticos.",
