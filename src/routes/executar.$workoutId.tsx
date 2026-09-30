@@ -1,5 +1,4 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-// buildSummary recebe getExercise para resolver nomes dos exercícios
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
@@ -173,7 +172,7 @@ function ExecutePage() {
   const nextExerciseName = nextExercise ? getExercise(nextExercise.exerciseId)?.name : undefined;
   const finish = () => {
     const saved = finishSession();
-    const data = buildSummary(saved);
+    const data = buildSummary(saved, getExercise);
     toast.success("Treino salvo no histórico");
     setSummary(data);
   };
