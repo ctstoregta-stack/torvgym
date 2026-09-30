@@ -139,7 +139,7 @@ function Home() {
               <div className="grid gap-3 md:grid-cols-2">
                 {workouts
                   .filter((w) => !todayWorkouts.some((todayWorkout) => todayWorkout.id === w.id))
-                  .map((w) => <WorkoutCard key={w.id} workoutId={w.id} />)}
+                  .map((w) => <WorkoutCard key={w.id} workoutId={w.id} active={activeSession?.workoutId === w.id} />)}
               </div>
             )}
           </section>
@@ -170,9 +170,11 @@ function Home() {
   function WorkoutCard({
     workoutId,
     highlight,
+    active,
   }: {
     workoutId: string;
     highlight?: boolean;
+    active?: boolean;
   }) {
     const workout = workouts.find((w) => w.id === workoutId)!;
     const groups = muscleGroupsOf(workout.exerciseIds, getExercise);
