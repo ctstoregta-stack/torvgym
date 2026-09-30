@@ -100,6 +100,14 @@ function WorkoutPage() {
   const activeOther =
     state.activeSession && state.activeSession.workoutId !== workout.id;
 
+  const moveExercise = (index: number, direction: -1 | 1) => {
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= workout.exerciseIds.length) return;
+    const exerciseIds = [...workout.exerciseIds];
+    [exerciseIds[index], exerciseIds[nextIndex]] = [exerciseIds[nextIndex], exerciseIds[index]];
+    updateWorkout(workout.id, { exerciseIds });
+  };
+
   return (
     <AppShell title={workout.name} back={{ to: "/" }}>
       <Card className="mb-4">
@@ -183,7 +191,7 @@ function WorkoutPage() {
         />
       ) : (
         <div className="space-y-2">
-          {workout.exerciseIds.map((id) => {
+          {workout.exerciseIds.map((id, index) => {
             const ex = getExercise(id);
             if (!ex) return null;
             const pr = prFor(id);
@@ -199,6 +207,7 @@ function WorkoutPage() {
                   <p className="text-xs text-muted-foreground">
                     {ex.category} · {ex.equipment}
                     {pr != null ? ` · PR ${pr}kg` : ""}
+                    {" · "}{workout.targetSets[id] ?? 3} séries
                   </p>
                   <div className="mt-1.5 flex items-center gap-2">
                     <span className="text-[11px] text-muted-foreground">Séries</span>
@@ -223,12 +232,29 @@ function WorkoutPage() {
                     </button>
                   </div>
                 </div>
-                <button
-                  className="shrink-0 text-xs font-semibold text-destructive"
-                  onClick={() => removeExerciseFromWorkout(workout.id, id)}
-                >
-                  Remover
-                </button>
+                <div className="flex shrink-0 flex-col gap-1">
+                  <button
+                    type="button"
+                    aria-label={`Mover ${ex.name} para cima`}
+                    disabled={index === 0}
+                    onClick={() => moveExercise(index, -1)}
+                    className="h-8 w-8 rounded-lg bg-card text-sm font-bold text-muted-foreground disabled:opacity-30"
+                  >↑</button>
+                  <button
+                    type="button"
+                    aria-label={`Mover ${ex.name} para baixo`}
+                    disabled={index === workout.exerciseIds.length - 1}
+                    onClick={() => moveExercise(index, 1)}
+                    className="h-8 w-8 rounded-lg bg-card text-sm font-bold text-muted-foreground disabled:opacity-30"
+                  >↓</button>
+                  <button
+                    type="button"
+                    className="mt-1 text-xs font-semibold text-destructive"
+                    onClick={() => removeExerciseFromWorkout(workout.id, id)}
+                  >
+                    Remover
+                  </button>
+                </div>
               </div>
             );
           })}
