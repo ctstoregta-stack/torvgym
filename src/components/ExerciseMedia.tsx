@@ -6,6 +6,7 @@ type Props = {
   className?: string;
   rounded?: string;
   fit?: "cover" | "contain";
+  loading?: "lazy" | "eager";
 };
 
 /**
@@ -18,6 +19,7 @@ export function ExerciseMedia({
   className = "",
   rounded = "rounded-xl",
   fit = "cover",
+  loading = "lazy",
 }: Props) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -37,7 +39,8 @@ export function ExerciseMedia({
         <img
           src={exercise.gif_url}
           alt={`Animação de execução: ${exercise.name}`}
-          loading="lazy"
+          loading={loading}
+          decoding="async"
           onError={() => setFailed(true)}
           onLoad={() => setLoaded(true)}
           className={`h-full w-full ${fit === "contain" ? "object-contain" : "object-cover"} transition-opacity duration-300 ${
