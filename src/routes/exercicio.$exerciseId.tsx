@@ -81,7 +81,7 @@ function ExerciseDetail() {
 
   return (
     <AppShell title={ex.name} back={{ to: "/exercicios" }}>
-      <ExerciseMedia exercise={ex} className="mb-4 aspect-video w-full" rounded="rounded-2xl" fit="contain" loading="eager" />
+      <ExerciseMedia exercise={ex} className="mb-4 aspect-video w-full" rounded="rounded-2xl" fit="contain" loading="lazy" />
 
       <h2 className="text-xl font-bold leading-tight">{ex.name}</h2>
       <div className="mt-2 flex flex-wrap gap-1.5">
