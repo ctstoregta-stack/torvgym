@@ -13,6 +13,7 @@ export function RestTimer({
   onChange,
   onSkip,
   nextLabel,
+  nextLabelPrefix,
 }: {
   rest: RestState;
   onChange: (next: RestState) => void;
