@@ -167,7 +167,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
   const prFor = useCallback(
     (exerciseId: string) => {
       let max: number | null = null;
-      for (const session of finishedSessions) {
+      const scan = (session: Session) => {
         for (const entry of session.entries) {
           if (entry.exerciseId !== exerciseId) continue;
           for (const set of entry.sets) {
@@ -176,10 +176,12 @@ export function GymProvider({ children }: { children: ReactNode }) {
             }
           }
         }
-      }
+      };
+      for (const session of finishedSessions) scan(session);
+      if (state.activeSession) scan(state.activeSession);
       return max;
     },
-    [finishedSessions],
+    [finishedSessions, state.activeSession],
   );
 
   const historyFor = useCallback(
@@ -355,19 +357,39 @@ export function GymProvider({ children }: { children: ReactNode }) {
     updateSet: (exerciseId, index, patch) =>
       setState((s) => {
         if (!s.activeSession) return s;
+
+        let historicalBest = 0;
+        for (const session of s.sessions) {
+          for (const entry of session.entries) {
+            if (entry.exerciseId !== exerciseId) continue;
+            for (const set of entry.sets) {
+              if (set.completed && set.weight != null) historicalBest = Math.max(historicalBest, set.weight);
+            }
+          }
+        }
+
+        const nextEntries = s.activeSession.entries.map((entry) =>
+          entry.exerciseId === exerciseId
+            ? { ...entry, sets: entry.sets.map((set, i) => i === index ? { ...set, ...patch } : set) }
+            : entry,
+        );
+        const target = nextEntries.find((entry) => entry.exerciseId === exerciseId);
+        if (!target) return { ...s, activeSession: { ...s.activeSession, entries: nextEntries } };
+
+        let runningBest = historicalBest;
+        const recalculated = target.sets.map((set) => {
+          if (!set.completed || set.weight == null) return { ...set, isPR: false };
+          const isPR = set.weight > runningBest;
+          runningBest = Math.max(runningBest, set.weight);
+          return { ...set, isPR };
+        });
+
         return {
           ...s,
           activeSession: {
             ...s.activeSession,
-            entries: s.activeSession.entries.map((entry) =>
-              entry.exerciseId === exerciseId
-                ? {
-                    ...entry,
-                    sets: entry.sets.map((set, i) =>
-                      i === index ? { ...set, ...patch } : set,
-                    ),
-                  }
-                : entry,
+            entries: nextEntries.map((entry) =>
+              entry.exerciseId === exerciseId ? { ...entry, sets: recalculated } : entry,
             ),
           },
         };
