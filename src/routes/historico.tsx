@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button, Card, EmptyState } from "@/components/ui-kit";
 import { useGym } from "@/store/gym-store";
+import type { Session } from "@/lib/types";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export const Route = createFileRoute("/historico")({
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/historico")({
   component: HistoryPage,
 });
 
-function sessionVolume(session: (typeof state.sessions)[number]) {
+function sessionVolume(session: Session) {
   return session.entries.reduce(
     (acc, entry) => acc + entry.sets.reduce((v, set) => v + (set.weight ?? 0) * (set.reps ?? 0), 0),
     0,
@@ -28,18 +29,17 @@ function HistoryPage() {
   const { ready, state, getExercise } = useGym();
   const [range, setRange] = useState<7 | 30 | 90 | 0>(0);
 
+  const allSessions = state.sessions
+    .filter((s) => s.finishedAt)
+    .sort((a, b) => new Date(b.finishedAt!).getTime() - new Date(a.finishedAt!).getTime());
+  const since = range ? Date.now() - range * 24 * 60 * 60 * 1000 : 0;
+  const sessions = range
+    ? allSessions.filter((s) => new Date(s.finishedAt!).getTime() >= since)
+    : allSessions;
+
   if (!ready) {
     return <AppShell title="Histórico"><div className="h-40 animate-pulse rounded-xl bg-card" /></AppShell>;
   }
-
-  const sessions = useMemo(() => {
-    const all = state.sessions
-      .filter((s) => s.finishedAt)
-      .sort((a, b) => new Date(b.finishedAt!).getTime() - new Date(a.finishedAt!).getTime());
-    if (!range) return all;
-    const since = Date.now() - range * 24 * 60 * 60 * 1000;
-    return all.filter((s) => new Date(s.finishedAt!).getTime() >= since);
-  }, [state.sessions, range]);
 
   const totalVolume = sessions.reduce((acc, session) => acc + sessionVolume(session), 0);
   const totalPRs = sessions.reduce(
