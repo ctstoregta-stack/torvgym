@@ -170,9 +170,11 @@ function Home() {
   function WorkoutCard({
     workoutId,
     highlight,
+    active,
   }: {
     workoutId: string;
     highlight?: boolean;
+    active?: boolean;
   }) {
     const workout = workouts.find((w) => w.id === workoutId)!;
     const groups = muscleGroupsOf(workout.exerciseIds, getExercise);
