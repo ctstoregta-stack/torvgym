@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ExerciseMedia } from "@/components/ExerciseMedia";
 import { Button, Card, EmptyState, Input, Tag } from "@/components/ui-kit";
 import { muscleGroupsOf, useGym } from "@/store/gym-store";
@@ -49,6 +50,7 @@ function WorkoutPage() {
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState("");
+  const [confirmStart, setConfirmStart] = useState(false);
 
   const found = ready ? findWorkout(workoutId) : null;
 
@@ -226,16 +228,15 @@ function WorkoutPage() {
         </div>
       )}
 
-      <div className="fixed bottom-[72px] left-1/2 z-20 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2">
+      <div className="fixed bottom-[72px] left-1/2 z-20 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2">
         <Button
           className="w-full py-3.5"
           disabled={workout.exerciseIds.length === 0}
           onClick={() => {
-            if (
-              activeOther &&
-              !confirm("Existe um treino em andamento. Descartar e iniciar este?")
-            )
+            if (activeOther) {
+              setConfirmStart(true);
               return;
+            }
             if (!state.activeSession || state.activeSession.workoutId !== workout.id) {
               startSession(workout.id);
             }
@@ -248,6 +249,31 @@ function WorkoutPage() {
         </Button>
       </div>
 
+
+      <Dialog open={confirmStart} onOpenChange={setConfirmStart}>
+        <DialogContent className="max-w-md rounded-2xl border-border bg-card">
+          <DialogHeader className="text-left">
+            <DialogTitle>Treino em andamento</DialogTitle>
+            <DialogDescription>
+              Você já tem outro treino em andamento. Iniciar este treino encerrará a sessão atual e poderá fazer você perder o progresso dela.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setConfirmStart(false)}>Cancelar</Button>
+            <Button
+              variant="danger"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                setConfirmStart(false);
+                startSession(workout.id);
+                navigate({ to: "/executar/$workoutId", params: { workoutId: workout.id } });
+              }}
+            >
+              Iniciar mesmo assim
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {picker && (
         <div className="fixed inset-0 z-40 flex items-end bg-black/70 backdrop-blur-sm">
           <div className="mx-auto flex h-[85vh] w-full max-w-2xl flex-col rounded-t-2xl border-t border-border bg-card">
