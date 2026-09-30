@@ -33,6 +33,16 @@ function Home() {
   const activeSession = state.activeSession;
   const since = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const weeklySessions = state.sessions.filter((s) => s.finishedAt && new Date(s.finishedAt).getTime() >= since);
+  const activeWorkout = activeSession ? workouts.find((w) => w.id === activeSession.workoutId) : undefined;
+  const activeDoneExercises = activeSession?.entries.filter((entry) =>
+    entry.sets.length > 0 && entry.sets.every((set) => set.completed),
+  ).length ?? 0;
+  const activeTotalExercises = activeSession?.entries.length ?? 0;
+  const otherWorkouts = workouts.filter(
+    (w) =>
+      !todayWorkouts.some((todayWorkout) => todayWorkout.id === w.id) &&
+      w.id !== activeSession?.workoutId,
+  );
 
   if (!ready) {
     return (
@@ -77,6 +87,36 @@ function Home() {
         />
       ) : (
         <>
+          {activeSession && activeWorkout ? (
+            <section className="mb-6">
+              <div className="mb-2 flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold text-muted-foreground">Treino em andamento</h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Continue exatamente de onde parou.</p>
+                </div>
+              </div>
+              <Link to="/executar/$workoutId" params={{ workoutId: activeSession.workoutId }} className="block">
+                <div className="surface border-primary/40 p-4 shadow-[var(--shadow-glow)] tap active:scale-[0.99]">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-base font-semibold">{activeSession.workoutName}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {activeDoneExercises}/{activeTotalExercises} exercícios concluídos
+                      </p>
+                    </div>
+                    <Button className="shrink-0 px-4 py-2 text-xs">Continuar</Button>
+                  </div>
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-elevated">
+                    <div
+                      className="h-full rounded-full bg-primary transition-[width]"
+                      style={{ width: `${activeTotalExercises ? (activeDoneExercises / activeTotalExercises) * 100 : 0}%` }}
+                    />
+                  </div>
+                </div>
+              </Link>
+            </section>
+          ) : null}
+
           <section className="mb-6">
             <div className="mb-2 flex items-center justify-between">
               <div>
@@ -85,43 +125,19 @@ function Home() {
               </div>
               <Link to="/rotinas" className="text-xs font-semibold text-primary">Gerenciar</Link>
             </div>
-            {todayWorkouts.length === 0 ? (
+            {todayWorkouts.filter((w) => w.id !== activeSession?.workoutId).length === 0 ? (
               <Card className="text-sm text-muted-foreground">
-                Nenhum treino programado para hoje. Escolha um treino abaixo ou atribua dias na rotina.
+                {activeSession?.workoutId && todayWorkouts.some((w) => w.id === activeSession.workoutId)
+                  ? "Seu treino de hoje já está em andamento. Continue acima."
+                  : "Nenhum treino programado para hoje. Veja outros treinos abaixo ou atribua dias na rotina."}
               </Card>
             ) : (
               <div className="space-y-3">
-                {todayWorkouts.map((w) => (
-                  <WorkoutCard
-                    key={w.id}
-                    workoutId={w.id}
-                    highlight
-                    active={activeSession?.workoutId === w.id}
-                  />
-                ))}
+                {todayWorkouts
+                  .filter((w) => w.id !== activeSession?.workoutId)
+                  .map((w) => <WorkoutCard key={w.id} workoutId={w.id} highlight />)}
               </div>
             )}
-          </section>
-
-          <section className="mb-6">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-muted-foreground">Resumo da semana</h2>
-              <span className="text-xs text-muted-foreground">últimos 7 dias</span>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <Card className="p-3">
-                <p className="text-[11px] text-muted-foreground">Treinos</p>
-                <p className="mt-1 text-xl font-bold tabular-nums">{weeklySessions.length}</p>
-              </Card>
-              <Card className="p-3">
-                <p className="text-[11px] text-muted-foreground">Volume</p>
-                <p className="mt-1 text-xl font-bold tabular-nums">{Math.round(weeklyVolume)}<span className="ml-1 text-xs font-medium text-muted-foreground">kg</span></p>
-              </Card>
-              <Card className="p-3">
-                <p className="text-[11px] text-muted-foreground">PRs</p>
-                <p className="mt-1 text-xl font-bold tabular-nums text-gold">{weeklyPRs}</p>
-              </Card>
-            </div>
           </section>
 
           <section>
@@ -129,18 +145,20 @@ function Home() {
               <h2 className="text-sm font-semibold text-muted-foreground">Outros treinos</h2>
               <Link to="/rotinas" className="text-xs font-semibold text-primary">Gerenciar</Link>
             </div>
-            {workouts.filter((w) => !todayWorkouts.some((todayWorkout) => todayWorkout.id === w.id)).length === 0 ? (
-              <EmptyState
-                title="Rotina sem treinos"
-                description="Adicione treinos (A, B, C...) a esta rotina para começar."
-                action={<Link to="/rotinas"><Button>Adicionar treino</Button></Link>}
-              />
+            {otherWorkouts.length === 0 ? (
+              <Card className="text-sm text-muted-foreground">
+                Não há outros treinos fora da programação de hoje.
+              </Card>
             ) : (
-              <div className="grid gap-3 md:grid-cols-2">
-                {workouts
-                  .filter((w) => !todayWorkouts.some((todayWorkout) => todayWorkout.id === w.id))
-                  .map((w) => <WorkoutCard key={w.id} workoutId={w.id} active={activeSession?.workoutId === w.id} />)}
-              </div>
+              <details className="group">
+                <summary className="surface flex cursor-pointer list-none items-center justify-between p-4 text-sm font-semibold tap">
+                  <span>{otherWorkouts.length} treino{otherWorkouts.length === 1 ? "" : "s"} disponível{otherWorkouts.length === 1 ? "" : "is"}</span>
+                  <span className="text-muted-foreground transition-transform group-open:rotate-180">⌄</span>
+                </summary>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  {otherWorkouts.map((w) => <WorkoutCard key={w.id} workoutId={w.id} />)}
+                </div>
+              </details>
             )}
           </section>
         </>
