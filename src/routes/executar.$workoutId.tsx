@@ -104,10 +104,26 @@ function ExecutePage() {
             </Link>
           }
         />
-      );
+      </AppShell>
+    );
   }
 
   const entries = session.entries;
+  const currentIndex = Math.min(index, Math.max(0, entries.length - 1));
+  const current = entries[currentIndex];
+  const doneSets = entries.reduce(
+    (acc, e) => acc + e.sets.filter((s) => s.completed).length,
+    0,
+  );
+  const totalSets = entries.reduce((acc, e) => acc + e.sets.length, 0);
+  const volume = entries.reduce(
+    (acc, e) =>
+      acc +
+      e.sets
+        .filter((s) => s.completed && s.weight != null && s.reps != null)
+        .reduce((a, s) => a + s.weight! * s.reps!, 0),
+    0,
+  );
 
   const ex = current ? getExercise(current.exerciseId) : undefined;
   const previous = current ? lastSetsFor(current.exerciseId) : null;
