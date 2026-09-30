@@ -24,9 +24,7 @@ export function RestTimer({
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate?.(120);
     }
-    const t = setTimeout(onSkip, 1700);
-    return () => clearTimeout(t);
-  }, [rest, onSkip]);
+  }, [rest?.remaining, rest?.running]);
 
   useEffect(() => {
     if (!rest || !rest.running) return;
