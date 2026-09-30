@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ExerciseMedia } from "@/components/ExerciseMedia";
 import { RestTimer, formatClock, type RestState } from "@/components/RestTimer";
 import { Button, EmptyState, PRBadge } from "@/components/ui-kit";
@@ -101,6 +102,7 @@ function ExecutePage() {
   const [index, setIndex] = useState(0);
   const [rest, setRest] = useState<RestState>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [discardConfirm, setDiscardConfirm] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -410,23 +412,43 @@ function ExecutePage() {
         <Button
           variant="danger"
           className="px-4 py-2.5 text-xs"
-          onClick={() => {
-            if (confirm("Descartar este treino? As séries não serão salvas.")) {
-              discardSession();
-              navigate({ to: "/" });
-            }
-          }}
+          onClick={() => setDiscardConfirm(true)}
         >
           Descartar treino
         </Button>
       </div>
 
+
+      <Dialog open={discardConfirm} onOpenChange={setDiscardConfirm}>
+        <DialogContent className="max-w-md rounded-2xl border-border bg-card">
+          <DialogHeader className="text-left">
+            <DialogTitle>Descartar treino?</DialogTitle>
+            <DialogDescription>
+              As séries desta sessão não serão salvas no histórico. Esta ação não poderá ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setDiscardConfirm(false)}>Continuar treinando</Button>
+            <Button
+              variant="danger"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                discardSession();
+                setDiscardConfirm(false);
+                navigate({ to: "/" });
+              }}
+            >
+              Descartar treino
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {rest && <div className="h-24" />}
 
       <RestTimer rest={rest} onChange={handleRestChange} onSkip={handleRestSkip} nextLabel={nextExerciseName} />
 
       {/* Navegação entre exercícios */}
-      <div className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-lg gap-2 -translate-x-1/2 pb-1">
+      <div className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-2xl gap-2 -translate-x-1/2 pb-1">
         <Button variant="outline" className="flex-1 py-3.5" disabled={currentIndex === 0} onClick={() => setIndex(currentIndex - 1)}>
           ← Anterior
         </Button>
