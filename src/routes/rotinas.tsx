@@ -105,14 +105,33 @@ function RoutinesPage() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="min-w-0">
-                    <p className="truncate text-base font-semibold">{routine.name}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {routine.workouts.length} treino
-                      {routine.workouts.length === 1 ? "" : "s"}
-                      {isActive ? " · Rotina ativa" : ""}
-                    </p>
-                  </div>
+                  <button
+                    type="button"
+                    className="flex min-w-0 flex-1 items-start gap-2 text-left tap"
+                    onClick={() =>
+                      setExpandedRoutines((current) => {
+                        const next = new Set(current);
+                        if (next.has(routine.id)) next.delete(routine.id);
+                        else next.add(routine.id);
+                        return next;
+                      })
+                    }
+                    aria-expanded={expandedRoutines.has(routine.id)}
+                  >
+                    <span className="mt-0.5 text-muted-foreground">
+                      <svg viewBox="0 0 24 24" className={`h-4 w-4 transition-transform ${expandedRoutines.has(routine.id) ? "rotate-90" : ""}`} fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="m9 18 6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                    <span className="min-w-0">
+                      <p className="truncate text-base font-semibold">{routine.name}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {routine.workouts.length} treino
+                        {routine.workouts.length === 1 ? "" : "s"}
+                        {isActive ? " · Rotina ativa" : ""}
+                      </p>
+                    </span>
+                  </button>
                 )}
                 {editing !== routine.id && (
                   <Button
