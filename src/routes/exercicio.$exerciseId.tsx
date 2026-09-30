@@ -8,13 +8,13 @@ import { estimate1RM, useGym } from "@/store/gym-store";
 export const Route = createFileRoute("/exercicio/$exerciseId")({
   head: () => ({
     meta: [
-      { title: "Detalhe do exercício · Forja" },
+      { title: "Detalhe do exercício · TorvGym" },
       {
         name: "description",
         content:
           "Animação em loop, execução, ativação muscular, histórico real e progressão de carga.",
       },
-      { property: "og:title", content: "Detalhe do exercício · Forja" },
+      { property: "og:title", content: "Detalhe do exercício · TorvGym" },
       {
         property: "og:description",
         content: "Execução, músculos trabalhados, PR, 1RM estimado e histórico de cargas.",
