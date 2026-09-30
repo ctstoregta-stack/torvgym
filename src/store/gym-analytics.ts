@@ -47,3 +47,61 @@ export function lastExerciseSets(sessions: Session[], exerciseId: string) {
   }
   return null;
 }
+
+
+export type ExerciseAnalytics = {
+  pr: number | null;
+  history: { date: string; sets: SetLog[]; maxWeight: number }[];
+  lastSets: SetLog[] | null;
+};
+
+export function buildExerciseAnalyticsIndex(sessions: Session[]) {
+  const index = new Map<string, ExerciseAnalytics>();
+
+  for (const session of sessions) {
+    for (const entry of session.entries) {
+      const completedSets = entry.sets.filter((set) => set.completed);
+      if (!completedSets.length) continue;
+
+      const current = index.get(entry.exerciseId) ?? {
+        pr: null,
+        history: [],
+        lastSets: null,
+      };
+
+      for (const set of completedSets) {
+        if (set.weight != null) {
+          current.pr = current.pr == null ? set.weight : Math.max(current.pr, set.weight);
+        }
+      }
+
+      current.history.push({
+        date: session.finishedAt ?? session.startedAt,
+        sets: completedSets,
+        maxWeight: Math.max(...completedSets.map((set) => set.weight ?? 0)),
+      });
+
+      if (
+        !current.lastSets ||
+        new Date(session.finishedAt ?? session.startedAt).getTime() >
+          new Date(
+            current.history.length > 1
+              ? current.history[current.history.length - 2].date
+              : session.startedAt,
+          ).getTime()
+      ) {
+        current.lastSets = completedSets;
+      }
+
+      index.set(entry.exerciseId, current);
+    }
+  }
+
+  for (const value of index.values()) {
+    value.history.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
+  }
+
+  return index;
+}
