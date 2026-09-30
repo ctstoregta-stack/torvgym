@@ -177,7 +177,10 @@ function Home() {
     const workout = workouts.find((w) => w.id === workoutId)!;
     const groups = muscleGroupsOf(workout.exerciseIds, getExercise);
     return (
-      <Link to="/treino/$workoutId" params={{ workoutId }}>
+      <Link
+        to={active ? "/executar/$workoutId" : "/treino/$workoutId"}
+        params={{ workoutId }}
+      >
         <div
           className={`surface p-4 tap active:scale-[0.99] ${
             highlight ? "border-primary/40 shadow-[var(--shadow-glow)]" : ""
