@@ -42,6 +42,7 @@ function HistoryPage() {
   }
 
   const totalVolume = sessions.reduce((acc, session) => acc + sessionVolume(session), 0);
+  const totalSets = sessions.reduce((acc, session) => acc + session.entries.reduce((sum, entry) => sum + entry.sets.length, 0), 0);
   const totalPRs = sessions.reduce(
     (acc, session) => acc + session.entries.reduce((a, entry) => a + entry.sets.filter((set) => set.isPR).length, 0),
     0,
@@ -75,7 +76,7 @@ function HistoryPage() {
             ))}
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Card className="p-3">
               <p className="text-[11px] text-muted-foreground">Treinos</p>
               <p className="mt-1 text-xl font-bold tabular-nums">{sessions.length}</p>
@@ -85,6 +86,10 @@ function HistoryPage() {
               <p className="mt-1 text-xl font-bold tabular-nums">
                 {Math.round(totalVolume).toLocaleString("pt-BR")}<span className="ml-1 text-xs font-medium text-muted-foreground">kg</span>
               </p>
+            </Card>
+            <Card className="p-3">
+              <p className="text-[11px] text-muted-foreground">Séries</p>
+              <p className="mt-1 text-xl font-bold tabular-nums">{totalSets}</p>
             </Card>
             <Card className="p-3">
               <p className="text-[11px] text-muted-foreground">PRs</p>
@@ -115,6 +120,11 @@ function HistoryPage() {
             {sessions.map((session) => {
               const volume = sessionVolume(session);
               const prs = session.entries.reduce((a, entry) => a + entry.sets.filter((set) => set.isPR).length, 0);
+              const completedSets = session.entries.reduce((a, entry) => a + entry.sets.length, 0);
+              const durationSecs = Math.max(0, Math.floor((new Date(session.finishedAt!).getTime() - new Date(session.startedAt).getTime()) / 1000));
+              const durationLabel = durationSecs >= 3600
+                ? `${Math.floor(durationSecs / 3600)}h ${Math.floor((durationSecs % 3600) / 60).toString().padStart(2, "0")}min`
+                : `${Math.floor(durationSecs / 60)} min`;
               return (
                 <Card key={session.id}>
                   <div className="flex items-start justify-between gap-2">
@@ -130,6 +140,10 @@ function HistoryPage() {
                       <p className="text-sm font-bold tabular-nums">{Math.round(volume)} kg</p>
                       {prs > 0 && <p className="text-[11px] font-bold text-gold">{prs} PR{prs > 1 ? "s" : ""} 👑</p>}
                     </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                    <span className="rounded-full bg-elevated px-2.5 py-1">{completedSets} séries</span>
+                    <span className="rounded-full bg-elevated px-2.5 py-1">{durationLabel}</span>
                   </div>
                   <div className="mt-3 space-y-2">
                     {session.entries.map((entry) => {
