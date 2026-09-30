@@ -45,6 +45,8 @@ function WorkoutPage() {
 
   const [picker, setPicker] = useState(false);
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<string | null>(null);
+  const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState("");
 
@@ -159,7 +161,7 @@ function WorkoutPage() {
         <h3 className="text-sm font-semibold text-muted-foreground">
           Exercícios ({workout.exerciseIds.length})
         </h3>
-        <Button variant="outline" className="px-3 py-1.5 text-xs" onClick={() => setPicker(true)}>
+        <Button variant="outline" className="px-3 py-1.5 text-xs" onClick={() => { setSelectedExercises([]); setQuery(""); setCategory(null); setPicker(true); }}>
           + Adicionar
         </Button>
       </div>
@@ -248,7 +250,7 @@ function WorkoutPage() {
 
       {picker && (
         <div className="fixed inset-0 z-40 flex items-end bg-black/70 backdrop-blur-sm">
-          <div className="mx-auto flex h-[85vh] w-full max-w-lg flex-col rounded-t-2xl border-t border-border bg-card">
+          <div className="mx-auto flex h-[85vh] w-full max-w-2xl flex-col rounded-t-2xl border-t border-border bg-card">
             <div className="flex items-center justify-between border-b border-border p-4">
               <p className="font-semibold">Adicionar exercício</p>
               <button className="text-sm text-primary" onClick={() => setPicker(false)}>
@@ -262,35 +264,56 @@ function WorkoutPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
+              <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
+                <button type="button" onClick={() => setCategory(null)} className={`min-h-9 shrink-0 rounded-full px-3 text-xs font-semibold ${category === null ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground"}`}>Todos</button>
+                {categories.map((item) => (
+                  <button type="button" key={item} onClick={() => setCategory(item)} className={`min-h-9 shrink-0 rounded-full px-3 text-xs font-semibold ${category === item ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground"}`}>
+                    {item}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="flex-1 space-y-2 overflow-y-auto p-4 pt-2">
               {filtered.map((ex) => {
                 const added = workout.exerciseIds.includes(ex.id);
+                const selected = selectedExercises.includes(ex.id);
                 return (
                   <button
                     key={ex.id}
+                    type="button"
                     disabled={added}
-                    onClick={() => addExerciseToWorkout(workout.id, ex.id)}
-                    className="flex w-full items-center gap-3 rounded-xl border border-border bg-elevated p-2.5 text-left disabled:opacity-40"
+                    onClick={() =>
+                      setSelectedExercises((current) =>
+                        current.includes(ex.id) ? current.filter((id) => id !== ex.id) : [...current, ex.id],
+                      )
+                    }
+                    className={`flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition-colors disabled:opacity-40 ${selected ? "border-primary/50 bg-primary/10" : "border-border bg-elevated"}`}
                   >
                     <ExerciseMedia exercise={ex} className="h-12 w-12 shrink-0" rounded="rounded-lg" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">{ex.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {ex.category} · {ex.equipment}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{ex.category} · {ex.equipment}</p>
                     </div>
-                    <span className="text-xs font-bold text-primary">
-                      {added ? "Adicionado" : "+"}
+                    <span className={`text-xs font-bold ${selected ? "text-primary" : "text-muted-foreground"}`}>
+                      {added ? "Adicionado" : selected ? "Selecionado" : "+"}
                     </span>
                   </button>
                 );
               })}
-              {filtered.length === 0 && (
-                <p className="py-8 text-center text-sm text-muted-foreground">
-                  Nenhum exercício encontrado.
-                </p>
-              )}
+              {filtered.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">Nenhum exercício encontrado.</p>}
+            </div>
+            <div className="border-t border-border bg-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+              <Button
+                className="w-full"
+                disabled={selectedExercises.length === 0}
+                onClick={() => {
+                  selectedExercises.forEach((id) => addExerciseToWorkout(workout.id, id));
+                  setSelectedExercises([]);
+                  setPicker(false);
+                }}
+              >
+                {selectedExercises.length > 0 ? `Adicionar ${selectedExercises.length} exercício${selectedExercises.length === 1 ? "" : "s"}` : "Selecione exercícios"}
+              </Button>
             </div>
           </div>
         </div>
