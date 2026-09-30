@@ -239,6 +239,10 @@ export function GymProvider({ children }: { children: ReactNode }) {
     [finishedSessions],
   );
 
+  const updateSessionContext = useCallback((patch: Partial<Pick<Session, "currentExerciseIndex" | "restStartedAt" | "restTotal" | "restRemaining" | "restRunning">>) => {
+    setState((s) => s.activeSession ? { ...s, activeSession: { ...s.activeSession, ...patch } } : s);
+  }, []);
+
   const value: Ctx = {
     ready,
     state,
@@ -472,12 +476,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
       });
       return saved;
     },
-    updateSessionContext: (patch) =>
-      setState((s) =>
-        s.activeSession
-          ? { ...s, activeSession: { ...s.activeSession, ...patch } }
-          : s,
-      ),
+    updateSessionContext,
     discardSession: () => setState((s) => ({ ...s, activeSession: null })),
 
     prFor,
