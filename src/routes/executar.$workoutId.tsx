@@ -97,42 +97,11 @@ function ExecutePage() {
           title="Nenhum treino em andamento"
           description="Abra o treino e toque em Iniciar Treino para registrar suas séries."
           action={
-            <Link to="/treino/$workoutId" params={{ workoutId }}>
-              <Button>Abrir treino</Button>
-            </Link>
-          }
-        />
-      </AppShell>
-    );
-  }
-
-  const entries = session.entries;
-  const current = entries[Math.min(index, entries.length - 1)];
-  const currentIndex = Math.min(index, entries.length - 1);
-
-  const totalSets = entries.reduce((a, e) => a + e.sets.length, 0);
-  const doneSets = entries.reduce(
-    (a, e) => a + e.sets.filter((s) => s.completed).length,
-    0,
-  );
-  const volume = entries.reduce(
-    (a, e) =>
-      a +
-      e.sets
-        .filter((s) => s.completed)
-        .reduce((v, s) => v + (s.weight ?? 0) * (s.reps ?? 0), 0),
-    0,
-  );
-
-  const buildSummary = (saved: Session | null): Summary => {
-    const source = saved?.entries ?? [];
-    const prs: { name: string; weight: number }[] = [];
-    for (const entry of source) {
-      const ex = getExercise(entry.exerciseId);
-      for (const set of entry.sets) {
-        if (set.isPR && set.weight != null) {
-          prs.push({ name: ex?.name ?? entry.exerciseId, weight: set.weight });
-        }
+        currentIndex === entries.length - 1 ? (
+          <Button className="px-3 py-2 text-xs" disabled={doneSets === 0} onClick={finish}>
+            Finalizar
+          </Button>
+        ) : null
       }
     }
     return {
@@ -151,6 +120,14 @@ function ExecutePage() {
   const ex = current ? getExercise(current.exerciseId) : undefined;
   const previous = current ? lastSetsFor(current.exerciseId) : null;
   const storedPR = current ? prFor(current.exerciseId) : null;
+  const nextExercise = entries[currentIndex + 1];
+  const nextExerciseName = nextExercise ? getExercise(nextExercise.exerciseId)?.name : undefined;
+  const finish = () => {
+    const saved = finishSession();
+    const data = buildSummary(saved);
+    toast.success("Treino salvo no histórico");
+    setSummary(data);
+  };
 
   return (
     <AppShell
@@ -400,86 +377,28 @@ function ExecutePage() {
 
       {rest && <div className="h-24" />}
 
-      <RestTimer rest={rest} onChange={handleRestChange} onSkip={() => setRest(null)} />
+      <RestTimer rest={rest} onChange={handleRestChange} onSkip={() => setRest(null)} nextLabel={nextExerciseName} />
 
       {/* Navegação entre exercícios */}
-      <div className="fixed bottom-[72px] left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-lg gap-2 -translate-x-1/2">
-        <Button
-          variant="outline"
-          className="flex-1 py-3.5"
-          disabled={currentIndex === 0}
-          onClick={() => setIndex(currentIndex - 1)}
-        >
+      <div className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-lg gap-2 -translate-x-1/2 pb-1">
+        <Button variant="outline" className="flex-1 py-3.5" disabled={currentIndex === 0} onClick={() => setIndex(currentIndex - 1)}>
           ← Anterior
         </Button>
-        <Button
-          variant="outline"
-          className="flex-1 py-3.5"
-          disabled={currentIndex >= entries.length - 1}
-          onClick={() => setIndex(currentIndex + 1)}
-        >
-          Próximo →
-        </Button>
+        {currentIndex < entries.length - 1 ? (
+          <Button variant="outline" className="flex-1 py-3.5" onClick={() => setIndex(currentIndex + 1)}>
+            Próximo →
+          </Button>
+        ) : (
+          <Button className="flex-1 py-3.5" disabled={doneSets === 0} onClick={finish}>
+            Finalizar
+          </Button>
+        )}
       </div>
     </AppShell>
   );
 }
 
 function SummaryScreen({ summary }: { summary: Summary }) {
+  const navigate = useNavigate();
   return (
     <AppShell title="Treino concluído">
-      <div className="surface p-5 text-center">
-        <p className="text-sm text-muted-foreground">{summary.workoutName}</p>
-        <p className="mt-1 text-2xl font-bold">Treino concluído</p>
-        <div className="mt-5 grid grid-cols-3 divide-x divide-border">
-          <div>
-            <p className="text-[11px] text-muted-foreground">Duração</p>
-            <p className="text-lg font-bold tabular-nums">
-              {formatClock(summary.durationSecs)}
-            </p>
-          </div>
-          <div>
-            <p className="text-[11px] text-muted-foreground">Séries</p>
-            <p className="text-lg font-bold tabular-nums">{summary.sets}</p>
-          </div>
-          <div>
-            <p className="text-[11px] text-muted-foreground">Volume</p>
-            <p className="text-lg font-bold tabular-nums">
-              {Math.round(summary.volume)} kg
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {summary.prs.length > 0 && (
-        <div className="surface mt-4 p-4">
-          <p className="mb-2 text-sm font-semibold">Novos recordes</p>
-          <ul className="space-y-2">
-            {summary.prs.map((pr, i) => (
-              <li
-                key={`${pr.name}-${i}`}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2"
-              >
-                <span className="truncate text-sm">{pr.name}</span>
-                <span className="flex shrink-0 items-center gap-2 text-sm font-bold text-gold tabular-nums">
-                  {pr.weight} kg <PRBadge small />
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="mt-6 flex gap-2">
-        <Link to="/" className="flex-1">
-          <Button variant="outline" className="w-full py-3.5">
-            Início
-          </Button>
-        </Link>
-        <Link to="/historico" className="flex-1">
-          <Button className="w-full py-3.5">Ver histórico</Button>
-        </Link>
-      </div>
-    </AppShell>
-  );
-}
