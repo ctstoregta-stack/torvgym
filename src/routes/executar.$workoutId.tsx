@@ -14,13 +14,13 @@ const DEFAULT_REST = 60;
 export const Route = createFileRoute("/executar/$workoutId")({
   head: () => ({
     meta: [
-      { title: "Executando treino · Forja" },
+      { title: "Executando treino · TorvGym" },
       {
         name: "description",
         content:
           "Registre carga, repetições e conclua séries em poucos toques, com detecção automática de recorde.",
       },
-      { property: "og:title", content: "Executando treino · Forja" },
+      { property: "og:title", content: "Executando treino · TorvGym" },
       {
         property: "og:description",
         content: "Planilha rápida de séries com referência do treino anterior e PR.",
