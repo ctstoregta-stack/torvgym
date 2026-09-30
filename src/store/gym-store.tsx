@@ -185,9 +185,18 @@ export function GymProvider({ children }: { children: ReactNode }) {
     [finishedSessions],
   );
 
+  const prAnalyticsIndex = useMemo(
+    () =>
+      buildExerciseAnalyticsIndex([
+        ...finishedSessions,
+        ...(state.activeSession ? [state.activeSession] : []),
+      ]),
+    [finishedSessions, state.activeSession],
+  );
+
   const prFor = useCallback(
-    (exerciseId: string) => analyticsIndex.get(exerciseId)?.pr ?? null,
-    [analyticsIndex],
+    (exerciseId: string) => prAnalyticsIndex.get(exerciseId)?.pr ?? null,
+    [prAnalyticsIndex],
   );
 
   const historyFor = useCallback(
