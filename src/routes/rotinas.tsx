@@ -119,8 +119,11 @@ function RoutinesPage() {
                       variant="ghost"
                       className="px-2 text-xs text-destructive"
                       onClick={() => {
-                        if (confirm(`Excluir a rotina "${routine.name}"?`))
-                          deleteRoutine(routine.id);
+                        const activeInRoutine = state.activeSession?.routineId === routine.id;
+                        const message = activeInRoutine
+                          ? `Existe um treino em andamento nesta rotina. Excluir "${routine.name}" poderá encerrar essa sessão. Deseja continuar?`
+                          : `Excluir a rotina "${routine.name}"?`;
+                        if (confirm(message)) deleteRoutine(routine.id);
                       }}
                     >
                       Excluir
@@ -159,7 +162,11 @@ function RoutinesPage() {
                         <button
                           className="text-xs font-semibold text-destructive"
                           onClick={() => {
-                            if (confirm(`Excluir o treino "${w.name}"?`)) deleteWorkout(w.id);
+                            const activeWorkout = state.activeSession?.workoutId === w.id;
+                            const message = activeWorkout
+                              ? `Existe um treino em andamento. Excluir "${w.name}" poderá encerrar essa sessão. Deseja continuar?`
+                              : `Excluir o treino "${w.name}"?`;
+                            if (confirm(message)) deleteWorkout(w.id);
                           }}
                         >
                           Excluir
