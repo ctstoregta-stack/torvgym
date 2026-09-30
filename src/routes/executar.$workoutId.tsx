@@ -118,6 +118,11 @@ function ExecutePage() {
 
   const handleRestSkip = useCallback(() => setRest(null), []);
 
+  const handleSetUpdate = useCallback((exerciseId: string, setIndex: number, completed: boolean) => {
+    updateSet(exerciseId, setIndex, { completed });
+    if (completed) toast.success("Série salva", { duration: 1000 });
+  }, [updateSet]);
+
   const session = state.activeSession;
 
   if (summary) {
@@ -295,7 +300,7 @@ function ExecutePage() {
                         weight: e.target.value === "" ? null : Number(e.target.value),
                       })
                     }
-                    className="h-12 w-full rounded-xl border border-input bg-elevated px-2 text-center text-lg font-semibold tabular-nums outline-none focus:border-primary"
+                    className="h-12 w-full rounded-xl border border-input bg-elevated px-2 text-center text-lg font-semibold tabular-nums outline-none transition-colors focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/40"
                   />
                   <input
                     type="number"
@@ -307,7 +312,7 @@ function ExecutePage() {
                         reps: e.target.value === "" ? null : Number(e.target.value),
                       })
                     }
-                    className="h-12 w-full rounded-xl border border-input bg-elevated px-2 text-center text-lg font-semibold tabular-nums outline-none focus:border-primary"
+                    className="h-12 w-full rounded-xl border border-input bg-elevated px-2 text-center text-lg font-semibold tabular-nums outline-none transition-colors focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/40"
                   />
                   <button
                     aria-label={`Concluir série ${i + 1}`}
