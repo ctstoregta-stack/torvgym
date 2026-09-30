@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { useMemo } from "react";
 import { Button, Card, EmptyState, MutedTag, Tag } from "@/components/ui-kit";
 import { muscleGroupsOf, useGym } from "@/store/gym-store";
 import { WEEKDAYS, WEEKDAYS_FULL } from "@/lib/types";
@@ -38,21 +39,51 @@ function Home() {
   const workouts = activeRoutine?.workouts ?? [];
   const todayWorkouts = workouts.filter((w) => w.days.includes(today));
   const totalSessions = state.sessions.filter((s) => s.finishedAt).length;
+  const activeSession = state.activeSession;
+  const weeklySessions = useMemo(() => {
+    const since = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    return state.sessions.filter((s) => s.finishedAt && new Date(s.finishedAt).getTime() >= since);
+  }, [state.sessions]);
+  const weeklyVolume = weeklySessions.reduce(
+    (acc, s) => acc + s.entries.reduce((a, e) => a + e.sets.reduce((v, x) => v + (x.weight ?? 0) * (x.reps ?? 0), 0), 0),
+    0,
+  );
+  const weeklyPRs = weeklySessions.reduce(
+    (acc, s) => acc + s.entries.reduce((a, e) => a + e.sets.filter((x) => x.isPR).length, 0),
+    0,
+  );
 
   return (
     <AppShell>
-      <div className="mb-5">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          {WEEKDAYS_FULL[today]}
-        </p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">
-          {activeRoutine ? activeRoutine.name : "Sem rotina ativa"}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {totalSessions} treino{totalSessions === 1 ? "" : "s"} concluído
-          {totalSessions === 1 ? "" : "s"}
-        </p>
+      <div className="mb-6 flex items-end justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{WEEKDAYS_FULL[today]}</p>
+          <h1 className="mt-1 truncate text-2xl font-bold tracking-tight">Olá, vamos treinar?</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {activeRoutine ? activeRoutine.name : "Configure sua rotina para começar"}
+          </p>
+        </div>
+        <span className="hidden rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary sm:inline-flex">
+          {totalSessions} concluído{totalSessions === 1 ? "" : "s"}
+        </span>
       </div>
+
+      {activeSession ? (
+        <section className="mb-6">
+          <div className="surface overflow-hidden border-primary/40 shadow-[var(--shadow-glow)]">
+            <div className="p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Treino em andamento</p>
+              <h2 className="mt-1 truncate text-xl font-bold">{activeSession.workoutName}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {activeSession.entries.length} exercício{activeSession.entries.length === 1 ? "" : "s"} · continue de onde parou
+              </p>
+              <Link to="/executar/$workoutId" params={{ workoutId: activeSession.workoutId }} className="mt-4 block">
+                <Button className="w-full">Continuar treino →</Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {!activeRoutine ? (
         <EmptyState
@@ -67,47 +98,59 @@ function Home() {
       ) : (
         <>
           <section className="mb-6">
-            <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
-              Treino de hoje
-            </h2>
+            <div className="mb-2 flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold text-muted-foreground">Treino de hoje</h2>
+                <p className="mt-0.5 text-xs text-muted-foreground">Sua próxima ação, sem complicação.</p>
+              </div>
+              <Link to="/rotinas" className="text-xs font-semibold text-primary">Gerenciar</Link>
+            </div>
             {todayWorkouts.length === 0 ? (
               <Card className="text-sm text-muted-foreground">
-                Nenhum treino programado para hoje. Escolha um treino abaixo ou
-                atribua dias na rotina.
+                Nenhum treino programado para hoje. Escolha um treino abaixo ou atribua dias na rotina.
               </Card>
             ) : (
               <div className="space-y-3">
-                {todayWorkouts.map((w) => (
-                  <WorkoutCard key={w.id} workoutId={w.id} highlight />
-                ))}
+                {todayWorkouts.map((w) => <WorkoutCard key={w.id} workoutId={w.id} highlight />)}
               </div>
             )}
           </section>
 
+          <section className="mb-6">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-muted-foreground">Resumo da semana</h2>
+              <span className="text-xs text-muted-foreground">últimos 7 dias</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <Card className="p-3">
+                <p className="text-[11px] text-muted-foreground">Treinos</p>
+                <p className="mt-1 text-xl font-bold tabular-nums">{weeklySessions.length}</p>
+              </Card>
+              <Card className="p-3">
+                <p className="text-[11px] text-muted-foreground">Volume</p>
+                <p className="mt-1 text-xl font-bold tabular-nums">{Math.round(weeklyVolume)}<span className="ml-1 text-xs font-medium text-muted-foreground">kg</span></p>
+              </Card>
+              <Card className="p-3">
+                <p className="text-[11px] text-muted-foreground">PRs</p>
+                <p className="mt-1 text-xl font-bold tabular-nums text-gold">{weeklyPRs}</p>
+              </Card>
+            </div>
+          </section>
+
           <section>
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-muted-foreground">
-                Todos os treinos
-              </h2>
-              <Link to="/rotinas" className="text-xs font-semibold text-primary">
-                Gerenciar
-              </Link>
+              <h2 className="text-sm font-semibold text-muted-foreground">Todos os treinos</h2>
+              <Link to="/rotinas" className="text-xs font-semibold text-primary">Gerenciar</Link>
             </div>
             {workouts.length === 0 ? (
               <EmptyState
                 title="Rotina sem treinos"
                 description="Adicione treinos (A, B, C...) a esta rotina para começar."
-                action={
-                  <Link to="/rotinas">
-                    <Button>Adicionar treino</Button>
-                  </Link>
-                }
+                action={<Link to="/rotinas"><Button>Adicionar treino</Button></Link>}
               />
             ) : (
-              <div className="space-y-3">
-                {workouts.map((w) => (
-                  <WorkoutCard key={w.id} workoutId={w.id} />
-                ))}
+              <div className="grid gap-3 md:grid-cols-2">
+                {workouts.map((w) => <WorkoutCard key={w.id} workoutId={w.id} />)}
               </div>
             )}
           </section>
