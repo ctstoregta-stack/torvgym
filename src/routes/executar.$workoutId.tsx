@@ -129,6 +129,13 @@ function ExecutePage() {
     updateSessionContext({ restStartedAt: null, restTotal: undefined, restRemaining: undefined, restRunning: false });
   }, [updateSessionContext]);
 
+  const startRest = useCallback((seconds: number = DEFAULT_REST) => {
+    const startedAt = new Date().toISOString();
+    const next = { total: seconds, remaining: seconds, running: true } as RestState;
+    setRest(next);
+    updateSessionContext({ restStartedAt: startedAt, restTotal: seconds, restRemaining: seconds, restRunning: true });
+  }, [updateSessionContext]);
+
   const handleSetUpdate = useCallback((exerciseId: string, setIndex: number, completed: boolean) => {
     updateSet(exerciseId, setIndex, { completed });
     if (completed) toast.success("Série salva", { duration: 1000 });
@@ -387,11 +394,7 @@ function ExecutePage() {
                       } else {
                         toast.success(`Série ${i + 1} concluída`);
                       }
-                      setRest({
-                        total: DEFAULT_REST,
-                        remaining: DEFAULT_REST,
-                        running: true,
-                      });
+                      startRest();
                     }}
                     className={`mx-auto flex h-12 w-12 items-center justify-center rounded-xl tap active:scale-90 ${
                       set.completed
@@ -434,11 +437,7 @@ function ExecutePage() {
                 variant="outline"
                 className="flex-1 py-2.5 text-xs"
                 onClick={() =>
-                  setRest({
-                    total: DEFAULT_REST,
-                    remaining: DEFAULT_REST,
-                    running: true,
-                  })
+                  startRest()
                 }
               >
                 Descanso
