@@ -60,9 +60,19 @@ function ExerciseDetail() {
   const history = historyFor(ex.id);
 
   let best1rm = 0;
+  let bestWeight = 0;
+  let bestRepsAtMaxWeight = 0;
   for (const h of history) {
     for (const s of h.sets) {
-      if (s.weight && s.reps) best1rm = Math.max(best1rm, estimate1RM(s.weight, s.reps));
+      if (s.weight && s.reps) {
+        best1rm = Math.max(best1rm, estimate1RM(s.weight, s.reps));
+        if (s.weight > bestWeight) {
+          bestWeight = s.weight;
+          bestRepsAtMaxWeight = s.reps;
+        } else if (s.weight === bestWeight) {
+          bestRepsAtMaxWeight = Math.max(bestRepsAtMaxWeight, s.reps);
+        }
+      }
     }
   }
 
@@ -141,13 +151,21 @@ function ExerciseDetail() {
 
         {tab === "Histórico & Gráfico" && (
           <>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <Card className="text-center">
                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
                   Carga máxima (PR)
                 </p>
                 <p className="mt-1 text-2xl font-bold text-gold tabular-nums">
                   {pr != null ? `${pr} kg` : "—"}
+                </p>
+              </Card>
+              <Card className="text-center">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                  Melhor série na maior carga
+                </p>
+                <p className="mt-1 text-2xl font-bold tabular-nums">
+                  {bestWeight ? `${bestWeight} kg × ${bestRepsAtMaxWeight}` : "—"}
                 </p>
               </Card>
               <Card className="text-center">
