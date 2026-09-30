@@ -57,8 +57,13 @@ export type ExerciseAnalytics = {
 
 export function buildExerciseAnalyticsIndex(sessions: Session[]) {
   const index = new Map<string, ExerciseAnalytics>();
+  const sortedSessions = [...sessions].sort(
+    (a, b) =>
+      new Date(b.finishedAt ?? b.startedAt).getTime() -
+      new Date(a.finishedAt ?? a.startedAt).getTime(),
+  );
 
-  for (const session of sessions) {
+  for (const session of sortedSessions) {
     for (const entry of session.entries) {
       const completedSets = entry.sets.filter((set) => set.completed);
       if (!completedSets.length) continue;
@@ -81,17 +86,7 @@ export function buildExerciseAnalyticsIndex(sessions: Session[]) {
         maxWeight: Math.max(...completedSets.map((set) => set.weight ?? 0)),
       });
 
-      if (
-        !current.lastSets ||
-        new Date(session.finishedAt ?? session.startedAt).getTime() >
-          new Date(
-            current.history.length > 1
-              ? current.history[current.history.length - 2].date
-              : session.startedAt,
-          ).getTime()
-      ) {
-        current.lastSets = completedSets;
-      }
+      if (!current.lastSets) current.lastSets = completedSets;
 
       index.set(entry.exerciseId, current);
     }
