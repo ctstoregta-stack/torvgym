@@ -97,25 +97,15 @@ function ExecutePage() {
           title="Nenhum treino em andamento"
           description="Abra o treino e toque em Iniciar Treino para registrar suas séries."
           action={
-        currentIndex === entries.length - 1 ? (
-          <Button className="px-3 py-2 text-xs" disabled={doneSets === 0} onClick={finish}>
-            Finalizar
-          </Button>
-        ) : null
-      }
-    }
-    return {
-      workoutName: session.workoutName,
-      durationSecs: elapsedSecs(session.startedAt, Date.now()),
-      sets: source.reduce((a, e) => a + e.sets.length, 0),
-      volume: source.reduce(
-        (a, e) =>
-          a + e.sets.reduce((v, s) => v + (s.weight ?? 0) * (s.reps ?? 0), 0),
-        0,
-      ),
-      prs,
-    };
-  };
+            <Link to="/treino/$workoutId" params={{ workoutId }}>
+              <Button>Abrir treino</Button>
+            </Link>
+          }
+        />
+      );
+  }
+
+  const entries = session.entries;
 
   const ex = current ? getExercise(current.exerciseId) : undefined;
   const previous = current ? lastSetsFor(current.exerciseId) : null;
@@ -134,18 +124,11 @@ function ExecutePage() {
       title={session.workoutName}
       back={{ to: "/" }}
       action={
-        <Button
-          className="px-3 py-2 text-xs"
-          disabled={doneSets === 0}
-          onClick={() => {
-            const saved = finishSession();
-            const data = buildSummary(saved);
-            toast.success("Treino salvo no histórico");
-            setSummary(data);
-          }}
-        >
-          Finalizar
-        </Button>
+        currentIndex === entries.length - 1 ? (
+          <Button className="px-3 py-2 text-xs" disabled={doneSets === 0} onClick={finish}>
+            Finalizar
+          </Button>
+        ) : null
       }
     >
       <div className="surface mb-3 grid grid-cols-3 divide-x divide-border p-3 text-center">
