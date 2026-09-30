@@ -239,14 +239,14 @@ function WorkoutPage() {
                     disabled={index === 0}
                     onClick={() => moveExercise(index, -1)}
                     className="h-8 w-8 rounded-lg bg-card text-sm font-bold text-muted-foreground disabled:opacity-30"
-                  >↑</button>
+                  ><span aria-hidden="true">⌃</span></button>
                   <button
                     type="button"
                     aria-label={`Mover ${ex.name} para baixo`}
                     disabled={index === workout.exerciseIds.length - 1}
                     onClick={() => moveExercise(index, 1)}
                     className="h-8 w-8 rounded-lg bg-card text-sm font-bold text-muted-foreground disabled:opacity-30"
-                  >↓</button>
+                  ><span aria-hidden="true">⌄</span></button>
                   <button
                     type="button"
                     className="mt-1 text-xs font-semibold text-destructive"
