@@ -33,6 +33,46 @@ function elapsedSecs(startedAt: string, now: number) {
   return Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / 1000));
 }
 
+function buildSummary(
+  saved: Session | null,
+  getExercise: (id: string) => { name: string } | undefined,
+): Summary {
+  const entries = saved?.entries ?? [];
+  return {
+    workoutName: saved?.workoutName ?? "Treino",
+    durationSecs: saved
+      ? Math.max(
+          0,
+          Math.floor(
+            (new Date(saved.finishedAt ?? Date.now()).getTime() -
+              new Date(saved.startedAt).getTime()) /
+              1000,
+          ),
+        )
+      : 0,
+    sets: entries.reduce(
+      (acc, e) => acc + e.sets.filter((s) => s.completed).length,
+      0,
+    ),
+    volume: entries.reduce(
+      (acc, e) =>
+        acc +
+        e.sets
+          .filter((s) => s.completed && s.weight != null && s.reps != null)
+          .reduce((a, s) => a + s.weight! * s.reps!, 0),
+      0,
+    ),
+    prs: entries.flatMap((e) =>
+      e.sets
+        .filter((s) => s.completed && s.isPR && s.weight != null)
+        .map((s) => ({
+          name: getExercise(e.exerciseId)?.name ?? "Exercício",
+          weight: s.weight!,
+        })),
+    ),
+  };
+}
+
 type Summary = {
   workoutName: string;
   durationSecs: number;
@@ -104,10 +144,26 @@ function ExecutePage() {
             </Link>
           }
         />
-      );
+      </AppShell>
+    );
   }
 
   const entries = session.entries;
+  const currentIndex = Math.min(index, Math.max(0, entries.length - 1));
+  const current = entries[currentIndex];
+  const doneSets = entries.reduce(
+    (acc, e) => acc + e.sets.filter((s) => s.completed).length,
+    0,
+  );
+  const totalSets = entries.reduce((acc, e) => acc + e.sets.length, 0);
+  const volume = entries.reduce(
+    (acc, e) =>
+      acc +
+      e.sets
+        .filter((s) => s.completed && s.weight != null && s.reps != null)
+        .reduce((a, s) => a + s.weight! * s.reps!, 0),
+    0,
+  );
 
   const ex = current ? getExercise(current.exerciseId) : undefined;
   const previous = current ? lastSetsFor(current.exerciseId) : null;
@@ -116,7 +172,7 @@ function ExecutePage() {
   const nextExerciseName = nextExercise ? getExercise(nextExercise.exerciseId)?.name : undefined;
   const finish = () => {
     const saved = finishSession();
-    const data = buildSummary(saved);
+    const data = buildSummary(saved, getExercise);
     toast.success("Treino salvo no histórico");
     setSummary(data);
   };
