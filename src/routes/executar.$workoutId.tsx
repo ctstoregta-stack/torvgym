@@ -95,7 +95,7 @@ function ExecutePage() {
     finishSession,
     discardSession,
     prFor,
-    lastSetsFor,
+    lastSetsForWorkout,
     updateSessionContext,
   } = useGym();
 
@@ -209,7 +209,7 @@ function ExecutePage() {
   );
 
   const ex = current ? getExercise(current.exerciseId) : undefined;
-  const previous = current ? lastSetsFor(current.exerciseId) : null;
+  const previous = current ? lastSetsForWorkout(session.workoutId, current.exerciseId) : null;
   const storedPR = current ? prFor(current.exerciseId) : null;
   const currentSetIndex = current ? current.sets.findIndex((set) => !set.completed) : -1;
   const nextSetIndex = currentSetIndex >= 0 ? currentSetIndex : current ? current.sets.length : 0;
