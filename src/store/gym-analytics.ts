@@ -100,3 +100,29 @@ export function buildExerciseAnalyticsIndex(sessions: Session[]) {
 
   return index;
 }
+export type WorkoutExerciseAnalytics = {
+  lastSets: SetLog[] | null;
+};
+
+export function buildWorkoutExerciseAnalyticsIndex(sessions: Session[]) {
+  const index = new Map<string, WorkoutExerciseAnalytics>();
+  const sortedSessions = [...sessions].sort(
+    (a, b) =>
+      new Date(b.finishedAt ?? b.startedAt).getTime() -
+      new Date(a.finishedAt ?? a.startedAt).getTime(),
+  );
+
+  for (const session of sortedSessions) {
+    for (const entry of session.entries) {
+      const completedSets = entry.sets.filter((set) => set.completed);
+      if (!completedSets.length) continue;
+
+      const key = `${session.workoutId}::${entry.exerciseId}`;
+      if (!index.has(key)) {
+        index.set(key, { lastSets: completedSets });
+      }
+    }
+  }
+
+  return index;
+}
