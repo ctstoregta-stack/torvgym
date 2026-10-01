@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button, Card, EmptyState, MutedTag, Tag } from "@/components/ui-kit";
 import { muscleGroupsOf, useGym } from "@/store/gym-store";
@@ -28,11 +29,13 @@ function Home() {
   const today = new Date().getDay();
 
   const workouts = activeRoutine?.workouts ?? [];
-  const todayWorkouts = workouts.filter((w) => w.days.includes(today));
-  const totalSessions = state.sessions.filter((s) => s.finishedAt).length;
+  const todayWorkouts = useMemo(() => workouts.filter((w) => w.days.includes(today)), [workouts, today]);
+  const totalSessions = useMemo(() => state.sessions.reduce((count, session) => count + (session.finishedAt ? 1 : 0), 0), [state.sessions]);
   const activeSession = state.activeSession;
-  const since = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const weeklySessions = state.sessions.filter((s) => s.finishedAt && new Date(s.finishedAt).getTime() >= since);
+  const weeklySessions = useMemo(() => {
+    const since = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    return state.sessions.filter((s) => s.finishedAt && new Date(s.finishedAt).getTime() >= since);
+  }, [state.sessions]);
   const activeWorkout = activeSession ? workouts.find((w) => w.id === activeSession.workoutId) : undefined;
   const activeDoneExercises = activeSession?.entries.filter((entry) =>
     entry.sets.length > 0 && entry.sets.every((set) => set.completed),
@@ -51,13 +54,19 @@ function Home() {
       </AppShell>
     );
   }
-  const weeklyVolume = weeklySessions.reduce(
-    (acc, s) => acc + s.entries.reduce((a, e) => a + e.sets.reduce((v, x) => v + (x.weight ?? 0) * (x.reps ?? 0), 0), 0),
-    0,
+  const weeklyVolume = useMemo(
+    () => weeklySessions.reduce(
+      (acc, s) => acc + s.entries.reduce((a, e) => a + e.sets.reduce((v, x) => v + (x.weight ?? 0) * (x.reps ?? 0), 0), 0),
+      0,
+    ),
+    [weeklySessions],
   );
-  const weeklyPRs = weeklySessions.reduce(
-    (acc, s) => acc + s.entries.reduce((a, e) => a + e.sets.filter((x) => x.isPR).length, 0),
-    0,
+  const weeklyPRs = useMemo(
+    () => weeklySessions.reduce(
+      (acc, s) => acc + s.entries.reduce((a, e) => a + e.sets.filter((x) => x.isPR).length, 0),
+      0,
+    ),
+    [weeklySessions],
   );
 
   return (
