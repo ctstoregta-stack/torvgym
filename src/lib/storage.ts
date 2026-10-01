@@ -104,18 +104,25 @@ function migrate(raw: unknown, version: number): AppState | null {
 
 export function loadState(): AppState | null {
   if (typeof window === "undefined") return null;
+
   try {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return null;
+
     const parsed: unknown = JSON.parse(raw);
     const storedVersion = Number(window.localStorage.getItem(VERSION_KEY) ?? 1);
     const state = migrate(parsed, Number.isFinite(storedVersion) ? storedVersion : 1);
     if (!state) return null;
 
     if (storedVersion !== CURRENT_VERSION) {
-      window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION));
-      window.localStorage.setItem(KEY, JSON.stringify(state));
+      try {
+        window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION));
+        window.localStorage.setItem(KEY, JSON.stringify(state));
+      } catch {
+        // A migração é oportunista; os dados já normalizados continuam válidos em memória.
+      }
     }
+
     return state;
   } catch {
     return null;
