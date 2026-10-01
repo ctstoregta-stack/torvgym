@@ -54,21 +54,6 @@ function Home() {
       </AppShell>
     );
   }
-  const weeklyVolume = useMemo(
-    () => weeklySessions.reduce(
-      (acc, s) => acc + s.entries.reduce((a, e) => a + e.sets.reduce((v, x) => v + (x.weight ?? 0) * (x.reps ?? 0), 0), 0),
-      0,
-    ),
-    [weeklySessions],
-  );
-  const weeklyPRs = useMemo(
-    () => weeklySessions.reduce(
-      (acc, s) => acc + s.entries.reduce((a, e) => a + e.sets.filter((x) => x.isPR).length, 0),
-      0,
-    ),
-    [weeklySessions],
-  );
-
   return (
     <AppShell>
       <div className="mb-6 flex items-end justify-between gap-4">
