@@ -79,8 +79,9 @@ export function ExerciseMedia({
           fetchPriority={loading === "eager" ? "high" : "low"}
           referrerPolicy="no-referrer"
           onError={() => {
-            if (useProxy) {
-              setUseProxy(false);
+            if (!useProxy) {
+              setUseProxy(true);
+              setLoaded(false);
             } else {
               setFailed(true);
             }
