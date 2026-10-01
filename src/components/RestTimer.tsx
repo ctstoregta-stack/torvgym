@@ -51,7 +51,7 @@ export function RestTimer({
     };
 
     update();
-    const timer = window.setInterval(update, 250);
+    const timer = window.setInterval(update, 1000);
     return () => window.clearInterval(timer);
   }, [rest, onChange]);
 
