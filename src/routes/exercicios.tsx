@@ -29,6 +29,7 @@ function ExercisesPage() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [visibleLimit, setVisibleLimit] = useState(60);
   const [form, setForm] = useState({
     name: "",
     category: "",
@@ -93,7 +94,7 @@ function ExercisesPage() {
       </div>
 
       <div className="mt-4 space-y-2">
-        {filtered.map((ex) => {
+        {visibleExercises.map((ex) => {
           const pr = prFor(ex.id);
           return (
             <Link key={ex.id} to="/exercicio/$exerciseId" params={{ exerciseId: ex.id }}>
@@ -112,7 +113,7 @@ function ExercisesPage() {
             </Link>
           );
         })}
-        {filtered.length === 0 && (
+        {filtered.length > visibleLimit && (\n          <Button\n            variant="secondary"\n            className="w-full"\n            onClick={() => setVisibleLimit((limit) => limit + 60)}\n          >\n            Mostrar mais {Math.min(60, filtered.length - visibleLimit)}\n          </Button>\n        )}\n        {filtered.length === 0 && (
           <p className="py-10 text-center text-sm text-muted-foreground">
             Nenhum exercício encontrado.
           </p>
