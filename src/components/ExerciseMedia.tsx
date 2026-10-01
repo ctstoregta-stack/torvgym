@@ -26,6 +26,23 @@ export function ExerciseMedia({
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [useProxy, setUseProxy] = useState(false);
+  const [online, setOnline] = useState(() => typeof navigator === "undefined" ? true : navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setOnline(true);
+      setFailed(false);
+      setLoaded(false);
+      setUseProxy(false);
+    };
+    const handleOffline = () => setOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     setFailed(false);
@@ -63,7 +80,7 @@ export function ExerciseMedia({
     return useProxy ? proxiedGifUrl(exercise.gif_url) : exercise.gif_url;
   }, [exercise.gif_url, useProxy]);
 
-  const showFallback = failed || !exercise.gif_url;
+  const showFallback = failed || !exercise.gif_url || !online;
 
   return (
     <div
