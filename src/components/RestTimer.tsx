@@ -43,6 +43,8 @@ export function RestTimer({
       const elapsed = Math.floor((Date.now() - rest.startedAt!) / 1000);
       const remaining = Math.max(0, rest.total - elapsed);
       setDisplayRemaining(remaining);
+      // Enquanto corre, o timestamp é a fonte de verdade. Não persistimos
+      // cada tick para evitar gravações contínuas no localStorage.
       if (remaining === 0) {
         onChange({ ...rest, remaining: 0, running: false, startedAt: null });
       }
