@@ -228,7 +228,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Pernas",
     equipment: "Máquina",
     gif_url:
-      "https://online.ironcult.ru/upragneniy/HIP-ADDUCTION-MACHINE.gif",
+      "https://static.wixstatic.com/media/ec5f2b_2972e42897834dc89cc954cf3955a561~mv2.gif",
     execution:
       "Sente-se com as pernas afastadas apoiadas nas almofadas internas. Faça força para fechar as pernas aproximando os joelhos no centro.",
     primary_muscles: ["Adutores da Coxa"],
@@ -493,7 +493,7 @@ export const EXERCISE_DB: Exercise[] = [
     name: "Abdominal Supra com Halter",
     category: "Abdômen",
     equipment: "Halter",
-    gif_url: "https://exercises.loadmuscle.com/gifs/720/4734.webp",
+    gif_url: "https://media.giphy.com/media/Z2HvKWXUGnNrNCNfKh/giphy.gif",
     execution: "Deitado, segure o halter junto ao peito. Flexione o tronco elevando as escápulas do banco/chão e retorne de forma controlada.",
     primary_muscles: ["Reto Abdominal"],
     secondary_muscles: ["Oblíquos", "Flexores do Quadril"],
