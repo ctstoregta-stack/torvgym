@@ -122,7 +122,7 @@ function ExercisesPage() {
             </Link>
           );
         })}
-        {filtered.length > visibleLimit && (\n          <Button\n            variant="secondary"\n            className="w-full"\n            onClick={() => setVisibleLimit((limit) => limit + 60)}\n          >\n            Mostrar mais {Math.min(60, filtered.length - visibleLimit)}\n          </Button>\n        )}\n        {filtered.length === 0 && (
+        {filtered.length > visibleLimit && (\n          <Button\n            variant="outline"\n            className="w-full"\n            onClick={() => setVisibleLimit((limit) => limit + 60)}\n          >\n            Mostrar mais {Math.min(60, filtered.length - visibleLimit)}\n          </Button>\n        )}\n        {filtered.length === 0 && (
           <p className="py-10 text-center text-sm text-muted-foreground">
             Nenhum exercício encontrado.
           </p>
