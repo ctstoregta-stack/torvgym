@@ -25,12 +25,12 @@ export function ExerciseMedia({
   const [visible, setVisible] = useState(loading === "eager");
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const [useProxy, setUseProxy] = useState(true);
+  const [useProxy, setUseProxy] = useState(false);
 
   useEffect(() => {
     setFailed(false);
     setLoaded(false);
-    setUseProxy(true);
+    setUseProxy(false);
     if (loading === "eager") {
       setVisible(true);
       return;
@@ -51,7 +51,7 @@ export function ExerciseMedia({
           observer.disconnect();
         }
       },
-      { rootMargin: "320px 0px" },
+      { rootMargin: "180px 0px" },
     );
 
     observer.observe(node);
