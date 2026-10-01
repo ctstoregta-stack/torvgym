@@ -41,19 +41,28 @@ function ExercisesPage() {
   });
 
   const categories = useMemo(
-    () => Array.from(new Set(exercises.map((e) => e.category))).sort(),
+    () =>
+      Array.from(new Set(exercises.map((e) => e.category))).sort((a, b) =>
+        a.localeCompare(b, "pt-BR", { sensitivity: "base" }),
+      ),
     [exercises],
   );
 
   const filtered = useMemo(
     () =>
-      exercises.filter(
-        (e) =>
-          (!category || e.category === category) &&
-          `${e.name} ${e.equipment}`.toLowerCase().includes(query.toLowerCase()),
-      ),
+      exercises
+        .filter(
+          (e) =>
+            (!category || e.category === category) &&
+            `${e.name} ${e.equipment}`.toLocaleLowerCase("pt-BR").includes(query.toLocaleLowerCase("pt-BR")),
+        )
+        .sort((a, b) =>
+          a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }),
+        ),
     [exercises, query, category],
   );
+
+  const visibleExercises = filtered.slice(0, visibleLimit);
 
   if (!ready) {
     return (
