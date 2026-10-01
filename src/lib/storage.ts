@@ -66,7 +66,7 @@ function normalizeSession(value: unknown): Session | null {
     return { exerciseId: entry.exerciseId, sets };
   }).filter((entry): entry is { exerciseId: string; sets: Session["entries"][number]["sets"] } => entry !== null);
 
-  return {
+  const session: Session = {
     id: value.id,
     routineId: typeof value.routineId === "string" ? value.routineId : "",
     workoutId: value.workoutId,
@@ -74,12 +74,21 @@ function normalizeSession(value: unknown): Session | null {
     startedAt: typeof value.startedAt === "string" ? value.startedAt : new Date().toISOString(),
     finishedAt: typeof value.finishedAt === "string" ? value.finishedAt : null,
     entries,
-    currentExerciseIndex: typeof value.currentExerciseIndex === "number" ? Math.max(0, Math.floor(value.currentExerciseIndex)) : undefined,
-    restStartedAt: typeof value.restStartedAt === "string" ? value.restStartedAt : null,
-    restTotal: typeof value.restTotal === "number" && Number.isFinite(value.restTotal) ? Math.max(0, value.restTotal) : undefined,
-    restRemaining: typeof value.restRemaining === "number" && Number.isFinite(value.restRemaining) ? Math.max(0, value.restRemaining) : undefined,
-    restRunning: typeof value.restRunning === "boolean" ? value.restRunning : undefined,
   };
+
+  if (typeof value.currentExerciseIndex === "number") {
+    session.currentExerciseIndex = Math.max(0, Math.floor(value.currentExerciseIndex));
+  }
+  if (typeof value.restStartedAt === "string") session.restStartedAt = value.restStartedAt;
+  if (typeof value.restTotal === "number" && Number.isFinite(value.restTotal)) {
+    session.restTotal = Math.max(0, value.restTotal);
+  }
+  if (typeof value.restRemaining === "number" && Number.isFinite(value.restRemaining)) {
+    session.restRemaining = Math.max(0, value.restRemaining);
+  }
+  if (typeof value.restRunning === "boolean") session.restRunning = value.restRunning;
+
+  return session;
 }
 
 function normalizeState(value: unknown): AppState | null {
