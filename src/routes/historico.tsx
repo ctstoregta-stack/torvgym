@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button, Card, EmptyState } from "@/components/ui-kit";
 import { useGym } from "@/store/gym-store";
@@ -29,13 +29,18 @@ function HistoryPage() {
   const { ready, state, getExercise } = useGym();
   const [range, setRange] = useState<7 | 30 | 90 | 0>(0);
 
-  const allSessions = state.sessions
-    .filter((s) => s.finishedAt)
-    .sort((a, b) => new Date(b.finishedAt!).getTime() - new Date(a.finishedAt!).getTime());
-  const since = range ? Date.now() - range * 24 * 60 * 60 * 1000 : 0;
-  const sessions = range
-    ? allSessions.filter((s) => new Date(s.finishedAt!).getTime() >= since)
-    : allSessions;
+  const allSessions = useMemo(
+    () => [...state.sessions]
+      .filter((s) => s.finishedAt)
+      .sort((a, b) => new Date(b.finishedAt!).getTime() - new Date(a.finishedAt!).getTime()),
+    [state.sessions],
+  );
+  const sessions = useMemo(() => {
+    const since = range ? Date.now() - range * 24 * 60 * 60 * 1000 : 0;
+    return range
+      ? allSessions.filter((s) => new Date(s.finishedAt!).getTime() >= since)
+      : allSessions;
+  }, [allSessions, range]);
 
   if (!ready) {
     return <AppShell title="Histórico"><div className="h-40 animate-pulse rounded-xl bg-card" /></AppShell>;
