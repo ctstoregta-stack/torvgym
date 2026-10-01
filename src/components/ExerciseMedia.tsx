@@ -26,7 +26,7 @@ export function ExerciseMedia({
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [useProxy, setUseProxy] = useState(false);
-  const [online, setOnline] = useState(() => typeof navigator === "undefined" ? true : navigator.onLine);
+  // Começa otimista para manter SSR/hidratação estáveis; o efeito sincroniza o estado real.\n  const [online, setOnline] = useState(true);
 
   useEffect(() => {
     const handleOnline = () => {
