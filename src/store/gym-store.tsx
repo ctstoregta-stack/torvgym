@@ -130,9 +130,19 @@ export function GymProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!ready) return;
+
     const flush = () => saveState(state);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
+
     window.addEventListener("pagehide", flush);
-    return () => window.removeEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [state, ready]);
 
   const exercises = useMemo(
