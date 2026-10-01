@@ -113,13 +113,19 @@ function ExecutePage() {
 
   const handleRestChange = useCallback((next: RestState) => {
     setRest((current) => {
-      if (next && current && next.remaining === 0 && current.remaining > 0) toast.success("Descanso concluído");
-      if (next) {
-        const isTick = !!current && next.remaining === current.remaining - 1 && next.total === current.total && next.running === current.running;
-        if (!isTick) updateSessionContext({ restStartedAt: next.running ? new Date(Date.now() - (next.total - next.remaining) * 1000).toISOString() : null, restTotal: next.total, restRemaining: next.remaining, restRunning: next.running });
-      } else {
-        updateSessionContext({ restStartedAt: null, restTotal: 0, restRemaining: 0, restRunning: false });
+      if (next && current && next.remaining === 0 && current.remaining > 0) {
+        toast.success("Descanso concluído");
       }
+      if (!next) {
+        updateSessionContext({ restStartedAt: null, restTotal: 0, restRemaining: 0, restRunning: false });
+        return null;
+      }
+      updateSessionContext({
+        restStartedAt: next.running && next.startedAt ? new Date(next.startedAt).toISOString() : null,
+        restTotal: next.total,
+        restRemaining: next.remaining,
+        restRunning: next.running,
+      });
       return next;
     });
   }, [updateSessionContext]);
@@ -131,7 +137,7 @@ function ExecutePage() {
 
   const startRest = useCallback((seconds: number = DEFAULT_REST) => {
     const startedAt = new Date().toISOString();
-    const next = { total: seconds, remaining: seconds, running: true } as RestState;
+    const next = { total: seconds, remaining: seconds, running: true, startedAt: Date.now() } as RestState;
     setRest(next);
     updateSessionContext({ restStartedAt: startedAt, restTotal: seconds, restRemaining: seconds, restRunning: true });
   }, [updateSessionContext]);
@@ -153,7 +159,7 @@ function ExecutePage() {
     }
     if (session.restTotal && session.restRemaining != null) {
       const remaining = session.restRunning && session.restStartedAt ? Math.max(0, session.restTotal - Math.floor((Date.now() - new Date(session.restStartedAt).getTime()) / 1000)) : session.restRemaining;
-      setRest({ total: session.restTotal, remaining, running: !!session.restRunning && remaining > 0 });
+      setRest({ total: session.restTotal, remaining, running: !!session.restRunning && remaining > 0, startedAt: session.restRunning && session.restStartedAt ? new Date(session.restStartedAt).getTime() : null });
     }
   }, [session?.id, workoutId]);
 
