@@ -9,7 +9,7 @@ import {
 } from "react";
 import { EXERCISE_DB } from "@/data/exercises";
 import { emptyState, loadState, saveState, uid } from "@/lib/storage";
-import { buildExerciseAnalyticsIndex } from "@/store/gym-analytics";
+import { buildExerciseAnalyticsIndex, buildWorkoutExerciseAnalyticsIndex } from "@/store/gym-analytics";
 import type {
   AppState,
   Exercise,
@@ -105,6 +105,7 @@ type Ctx = {
   // analytics
   prFor: (exerciseId: string) => number | null;
   lastSetsFor: (exerciseId: string) => SetLog[] | null;
+  lastSetsForWorkout: (workoutId: string, exerciseId: string) => SetLog[] | null;
   historyFor: (
     exerciseId: string,
   ) => { date: string; sets: SetLog[]; maxWeight: number }[];
@@ -195,6 +196,11 @@ export function GymProvider({ children }: { children: ReactNode }) {
     [finishedSessions],
   );
 
+  const workoutAnalyticsIndex = useMemo(
+    () => buildWorkoutExerciseAnalyticsIndex(finishedSessions),
+    [finishedSessions],
+  );
+
   const activeAnalyticsIndex = useMemo(
     () =>
       state.activeSession
@@ -212,6 +218,12 @@ export function GymProvider({ children }: { children: ReactNode }) {
       return Math.max(historical, active);
     },
     [analyticsIndex, activeAnalyticsIndex],
+  );
+
+  const lastSetsForWorkout = useCallback(
+    (workoutId: string, exerciseId: string) =>
+      workoutAnalyticsIndex.get(`${workoutId}::${exerciseId}`)?.lastSets ?? null,
+    [workoutAnalyticsIndex],
   );
 
   const historyFor = useCallback(
@@ -458,6 +470,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
 
     prFor,
     lastSetsFor,
+    lastSetsForWorkout,
     historyFor,
   };
 
