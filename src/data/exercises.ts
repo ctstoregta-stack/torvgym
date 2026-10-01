@@ -228,7 +228,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Pernas",
     equipment: "Máquina",
     gif_url:
-      "https://static.wixstatic.com/media/ec5f2b_2972e42897834dc89cc954cf3955a561~mv2.gif",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/02/Hip-Adduction-Machine.gif",
     execution:
       "Sente-se com as pernas afastadas apoiadas nas almofadas internas. Faça força para fechar as pernas aproximando os joelhos no centro.",
     primary_muscles: ["Adutores da Coxa"],
@@ -252,7 +252,7 @@ export const EXERCISE_DB: Exercise[] = [
     category: "Braços",
     equipment: "Barras",
     gif_url:
-      "https://media.giphy.com/media/ssVByClVV45ikx1N1M/giphy.gif",
+      "https://fitnessprogramer.com/wp-content/uploads/2021/06/Dumbbell-Wrist-Extension.gif",
     execution:
       "Apoie os antebraços em um banco deixando as mãos livres com as palmas para baixo. Movimente apenas os punhos para cima estendendo-os.",
     primary_muscles: ["Extensores do Punho"],
@@ -493,7 +493,7 @@ export const EXERCISE_DB: Exercise[] = [
     name: "Abdominal Supra com Halter",
     category: "Abdômen",
     equipment: "Halter",
-    gif_url: "https://media.giphy.com/media/Z2HvKWXUGnNrNCNfKh/giphy.gif",
+    gif_url: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Weighted-Sit-Ups.gif",
     execution: "Deitado, segure o halter junto ao peito. Flexione o tronco elevando as escápulas do banco/chão e retorne de forma controlada.",
     primary_muscles: ["Reto Abdominal"],
     secondary_muscles: ["Oblíquos", "Flexores do Quadril"],
