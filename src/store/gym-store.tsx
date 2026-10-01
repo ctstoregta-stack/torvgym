@@ -352,15 +352,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
       setState((s) => {
         if (!s.activeSession) return s;
 
-        let historicalBest = 0;
-        for (const session of s.sessions) {
-          for (const entry of session.entries) {
-            if (entry.exerciseId !== exerciseId) continue;
-            for (const set of entry.sets) {
-              if (set.completed && set.weight != null) historicalBest = Math.max(historicalBest, set.weight);
-            }
-          }
-        }
+        const historicalBest = analyticsIndex.get(exerciseId)?.pr ?? 0;
 
         const nextEntries = s.activeSession.entries.map((entry) =>
           entry.exerciseId === exerciseId
