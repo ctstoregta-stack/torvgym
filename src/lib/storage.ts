@@ -17,88 +17,88 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function normalizeExercise(value: unknown): Exercise | null {
-  if (!isRecord(value) || typeof value.id !== "string" || typeof value.name !== "string") return null;
+  if (!isRecord(value) || typeof  !== "string" || typeof  !== "string") return null;
   return {
-    id: value.id,
-    name: value.name,
-    category: typeof value.category === "string" ? value.category : "Outros",
-    equipment: typeof value.equipment === "string" ? value.equipment : "Não informado",
-    gif_url: typeof value.gif_url === "string" ? value.gif_url : "",
-    execution: typeof value.execution === "string" ? value.execution : "",
-    primary_muscles: Array.isArray(value.primary_muscles) ? value.primary_muscles.filter((item): item is string => typeof item === "string") : [],
-    secondary_muscles: Array.isArray(value.secondary_muscles) ? value.secondary_muscles.filter((item): item is string => typeof item === "string") : [],
-    custom: Boolean(value.custom),
+    id: ,
+    name: ,
+    category: typeof  === "string" ?  : "Outros",
+    equipment: typeof  === "string" ?  : "Não informado",
+    gif_url: typeof  === "string" ?  : "",
+    execution: typeof  === "string" ?  : "",
+    primary_muscles: Array.isArray() ? .filter((item): item is string => typeof item === "string") : [],
+    secondary_muscles: Array.isArray() ? .filter((item): item is string => typeof item === "string") : [],
+    custom: Boolean(),
   };
 }
 
 function normalizeWorkout(value: unknown): Workout | null {
-  if (!isRecord(value) || typeof value.id !== "string" || typeof value.name !== "string") return null;
-  const days = Array.isArray(value.days) ? value.days.filter((day): day is number => Number.isInteger(day) && day >= 0 && day <= 6) : [];
-  const exerciseIds = Array.isArray(value.exerciseIds) ? value.exerciseIds.filter((id): id is string => typeof id === "string") : [];
-  const targetSets = isRecord(value.targetSets)
-    ? Object.fromEntries(Object.entries(value.targetSets).filter(([, sets]) => typeof sets === "number" && Number.isFinite(sets) && sets > 0).map(([id, sets]) => [id, Math.max(1, Math.round(sets as number))]))
+  if (!isRecord(value) || typeof  !== "string" || typeof  !== "string") return null;
+  const days = Array.isArray() ? .filter((day): day is number => Number.isInteger(day) && day >= 0 && day <= 6) : [];
+  const exerciseIds = Array.isArray() ? .filter((id): id is string => typeof id === "string") : [];
+  const targetSets = isRecord()
+    ? Object.fromEntries(Object.entries().filter(([, sets]) => typeof sets === "number" && Number.isFinite(sets) && sets > 0).map(([id, sets]) => [id, Math.max(1, Math.round(sets as number))]))
     : {};
 
-  return { id: value.id, name: value.name, days: [...new Set(days)], exerciseIds, targetSets };
+  return { id: , name: , days: [...new Set(days)], exerciseIds, targetSets };
 }
 
 function normalizeRoutine(value: unknown): Routine | null {
-  if (!isRecord(value) || typeof value.id !== "string" || typeof value.name !== "string") return null;
-  const workouts = Array.isArray(value.workouts) ? value.workouts.map(normalizeWorkout).filter((workout): workout is Workout => workout !== null) : [];
+  if (!isRecord(value) || typeof  !== "string" || typeof  !== "string") return null;
+  const workouts = Array.isArray() ? .map(normalizeWorkout).filter((workout): workout is Workout => workout !== null) : [];
   return {
-    id: value.id,
-    name: value.name,
-    createdAt: typeof value.createdAt === "string" ? value.createdAt : new Date().toISOString(),
+    id: ,
+    name: ,
+    createdAt: typeof  === "string" ?  : new Date().toISOString(),
     workouts,
   };
 }
 
 function normalizeSession(value: unknown): Session | null {
-  if (!isRecord(value) || typeof value.id !== "string" || typeof value.workoutId !== "string" || !Array.isArray(value.entries)) return null;
-  const entries = value.entries.filter(isRecord).map((entry) => {
-    if (typeof entry.exerciseId !== "string" || !Array.isArray(entry.sets)) return null;
-    const sets = entry.sets.filter(isRecord).map((set) => ({
-      weight: typeof set.weight === "number" && Number.isFinite(set.weight) ? set.weight : null,
-      reps: typeof set.reps === "number" && Number.isFinite(set.reps) ? set.reps : null,
-      completed: Boolean(set.completed),
-      isPR: Boolean(set.isPR),
+  if (!isRecord(value) || typeof  !== "string" || typeof  !== "string" || !Array.isArray()) return null;
+  const entries = .filter(isRecord).map((entry) => {
+    if (typeof  !== "string" || !Array.isArray()) return null;
+    const sets = .filter(isRecord).map((set) => ({
+      weight: typeof  === "number" && Number.isFinite() ?  : null,
+      reps: typeof  === "number" && Number.isFinite() ?  : null,
+      completed: Boolean(),
+      isPR: Boolean(),
     }));
-    return { exerciseId: entry.exerciseId, sets };
-  }).filter((entry): entry is { exerciseId: string; sets: Session["entries"][number]["sets"] } => entry !== null);
+    return { exerciseId: , sets };
+  }).filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
   const session: Session = {
-    id: value.id,
-    routineId: typeof value.routineId === "string" ? value.routineId : "",
-    workoutId: value.workoutId,
-    workoutName: typeof value.workoutName === "string" ? value.workoutName : "Treino",
-    startedAt: typeof value.startedAt === "string" ? value.startedAt : new Date().toISOString(),
-    finishedAt: typeof value.finishedAt === "string" ? value.finishedAt : null,
+    id: ,
+    routineId: typeof  === "string" ?  : "",
+    workoutId: ,
+    workoutName: typeof  === "string" ?  : "Treino",
+    startedAt: typeof  === "string" ?  : new Date().toISOString(),
+    finishedAt: typeof  === "string" ?  : null,
     entries,
   };
 
-  if (typeof value.currentExerciseIndex === "number") {
-    session.currentExerciseIndex = Math.max(0, Math.floor(value.currentExerciseIndex));
+  if (typeof  === "number") {
+    session.currentExerciseIndex = Math.max(0, Math.floor());
   }
-  if (typeof value.restStartedAt === "string") session.restStartedAt = value.restStartedAt;
-  if (typeof value.restTotal === "number" && Number.isFinite(value.restTotal)) {
-    session.restTotal = Math.max(0, value.restTotal);
+  if (typeof  === "string") session.restStartedAt = ;
+  if (typeof  === "number" && Number.isFinite()) {
+    session.restTotal = Math.max(0, );
   }
-  if (typeof value.restRemaining === "number" && Number.isFinite(value.restRemaining)) {
-    session.restRemaining = Math.max(0, value.restRemaining);
+  if (typeof  === "number" && Number.isFinite()) {
+    session.restRemaining = Math.max(0, );
   }
-  if (typeof value.restRunning === "boolean") session.restRunning = value.restRunning;
+  if (typeof  === "boolean") session.restRunning = ;
 
   return session;
 }
 
 function normalizeState(value: unknown): AppState | null {
   if (!isRecord(value)) return null;
-  const routines = Array.isArray(value.routines) ? value.routines.map(normalizeRoutine).filter((routine): routine is Routine => routine !== null) : [];
-  const customExercises = Array.isArray(value.customExercises) ? value.customExercises.map(normalizeExercise).filter((exercise): exercise is Exercise => exercise !== null) : [];
-  const sessions = Array.isArray(value.sessions) ? value.sessions.map(normalizeSession).filter((session): session is Session => session !== null) : [];
-  const activeSession = value.activeSession ? normalizeSession(value.activeSession) : null;
-  const activeRoutineId = typeof value.activeRoutineId === "string" && routines.some((routine) => routine.id === value.activeRoutineId)
-    ? value.activeRoutineId
+  const routines = Array.isArray() ? .map(normalizeRoutine).filter((routine): routine is Routine => routine !== null) : [];
+  const customExercises = Array.isArray() ? .map(normalizeExercise).filter((exercise): exercise is Exercise => exercise !== null) : [];
+  const sessions = Array.isArray() ? .map(normalizeSession).filter((session): session is Session => session !== null) : [];
+  const activeSession =  ? normalizeSession() : null;
+  const activeRoutineId = typeof  === "string" && routines.some((routine) => routine.id === )
+    ? 
     : routines[0]?.id ?? null;
 
   return { routines, activeRoutineId, customExercises, sessions, activeSession };
