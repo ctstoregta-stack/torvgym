@@ -473,7 +473,7 @@ const BASE_EXERCISE_DB: Exercise[] = [
     name: "Abdução de Quadril Deitado com Caneleira",
     category: "Glúteos",
     equipment: "Caneleira",
-    gif_url: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Side-Hip-Abduction-1.gif",
+    gif_url: "https://d205bpvrqc9yn1.cloudfront.net/0710.gif",
     execution: "Deite-se de lado, mantenha a perna de cima estendida e eleve-a lateralmente contra a resistência da caneleira. Retorne lentamente.",
     primary_muscles: ["Glúteo Médio"],
     secondary_muscles: ["Glúteo Mínimo", "Tensor da Fáscia Lata"],
