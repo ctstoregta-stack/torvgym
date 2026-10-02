@@ -84,6 +84,7 @@ export function Input({
 }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
+      aria-label={props["aria-label"] ?? props.placeholder}
       className={`control w-full rounded-xl border border-input bg-elevated px-3 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/70 transition-colors focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/40 ${className}`}
       {...props}
     />

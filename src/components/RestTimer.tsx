@@ -85,7 +85,7 @@ export function RestTimer({
   if (completed) {
     return (
       <div className="fixed bottom-[calc(140px+env(safe-area-inset-bottom))] left-1/2 z-40 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2">
-        <div className="surface animate-pr-pop overflow-hidden border border-success/40 bg-card p-4 text-center shadow-[var(--shadow-glow)]">
+        <div role="status" aria-live="polite" className="surface animate-pr-pop overflow-hidden border border-success/40 bg-card p-4 text-center shadow-[var(--shadow-glow)]">
           <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-success/15 text-success">
             <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="m5 12 4 4L19 6" strokeLinecap="round" strokeLinejoin="round" />
@@ -108,11 +108,11 @@ export function RestTimer({
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0">
             <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Descanso</p>
-            <p className="text-2xl font-bold tabular-nums text-primary">{formatClock(remaining)}</p>
+            <p role="timer" aria-label={`Descanso restante: ${formatClock(remaining)}`} className="text-2xl font-bold tabular-nums text-primary">{formatClock(remaining)}</p>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
-            <RestBtn label="-15s" onClick={() => updateRemaining(remaining - 15)} />
-            <RestBtn label="+30s" onClick={() => updateRemaining(remaining + 30, rest.total + 30, true)} />
+            <RestBtn label="-15s" ariaLabel="Diminuir 15 segundos" onClick={() => updateRemaining(remaining - 15)} />
+            <RestBtn label="+30s" ariaLabel="Aumentar 30 segundos" onClick={() => updateRemaining(remaining + 30, rest.total + 30, true)} />
             <RestBtn
               label={rest.running ? "Pausar" : "Retomar"}
               onClick={() => {
@@ -120,10 +120,17 @@ export function RestTimer({
                 else updateRemaining(remaining, rest.total, remaining > 0);
               }}
             />
-            <RestBtn label="Pular" onClick={onSkip} primary />
+            <RestBtn label="Pular" ariaLabel="Pular descanso" onClick={onSkip} primary />
           </div>
         </div>
-        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-elevated">
+        <div
+          role="progressbar"
+          aria-label="Progresso do descanso"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(pct)}
+          className="mt-2 h-1 w-full overflow-hidden rounded-full bg-elevated"
+        >
           <div className="h-full rounded-full bg-primary transition-[width] duration-200 ease-linear" style={{ width: `${pct}%` }} />
         </div>
       </div>
@@ -133,10 +140,12 @@ export function RestTimer({
 
 function RestBtn({
   label,
+  ariaLabel,
   onClick,
   primary = false,
 }: {
   label: string;
+  ariaLabel?: string;
   onClick: () => void;
   primary?: boolean;
 }) {
@@ -144,6 +153,7 @@ function RestBtn({
     <button
       type="button"
       onClick={onClick}
+      aria-label={ariaLabel ?? label}
       className={`h-10 min-w-[48px] rounded-lg px-2 text-xs font-semibold tap active:scale-95 ${primary ? "bg-primary/20 text-primary" : "bg-elevated text-muted-foreground"}`}
     >
       {label}

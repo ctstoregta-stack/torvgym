@@ -82,6 +82,7 @@ function ExercisesPage() {
 
       <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
         <button
+          aria-pressed={category === null}
           onClick={() => setCategory(null)}
           className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
             category === null ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"
@@ -92,6 +93,7 @@ function ExercisesPage() {
         {categories.map((c) => (
           <button
             key={c}
+            aria-pressed={category === c}
             onClick={() => setCategory(c)}
             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
               category === c ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"

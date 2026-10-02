@@ -57,7 +57,7 @@ export function AppShell({
         </Link>
       )}
 
-      <nav className="fixed bottom-0 left-1/2 z-20 w-full max-w-6xl -translate-x-1/2 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      <nav aria-label="Navegação principal" className="fixed bottom-0 left-1/2 z-20 w-full max-w-6xl -translate-x-1/2 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <ul className="grid grid-cols-4">
           {NAV.map(({ to, label, icon: Icon }) => {
             const isActive = to === "/" ? pathname === "/" : pathname.startsWith(to);
@@ -65,6 +65,7 @@ export function AppShell({
               <li key={to}>
                 <Link
                   to={to}
+                  aria-current={isActive ? "page" : undefined}
                   className={`flex min-h-16 flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium tap ${
                     isActive ? "text-primary" : "text-muted-foreground"
                   }`}

@@ -324,9 +324,9 @@ function WorkoutPage() {
                 onChange={(e) => setQuery(e.target.value)}
               />
               <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
-                <button type="button" onClick={() => setCategory(null)} className={`min-h-9 shrink-0 rounded-full px-3 text-xs font-semibold ${category === null ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground"}`}>Todos</button>
+                <button type="button" aria-pressed={category === null} onClick={() => setCategory(null)} className={`min-h-9 shrink-0 rounded-full px-3 text-xs font-semibold ${category === null ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground"}`}>Todos</button>
                 {categories.map((item) => (
-                  <button type="button" key={item} onClick={() => setCategory(item)} className={`min-h-9 shrink-0 rounded-full px-3 text-xs font-semibold ${category === item ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground"}`}>
+                  <button type="button" key={item} aria-pressed={category === item} onClick={() => setCategory(item)} className={`min-h-9 shrink-0 rounded-full px-3 text-xs font-semibold ${category === item ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground"}`}>
                     {item}
                   </button>
                 ))}
