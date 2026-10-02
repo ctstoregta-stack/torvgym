@@ -113,7 +113,28 @@ function HistoryPage() {
                   }))}>
                     <XAxis dataKey="name" tick={{ fontSize: 10 }} />
                     <YAxis hide />
-                    <Tooltip cursor={false} />
+                    <Tooltip
+                      cursor={false}
+                      contentStyle={{
+                        background: "hsl(var(--card))",
+                        border: "none",
+                        borderRadius: "12px",
+                        boxShadow: "0 8px 24px hsl(var(--background) / 0.35)",
+                        padding: "10px 12px",
+                      }}
+                      labelStyle={{
+                        color: "hsl(var(--muted-foreground))",
+                        fontSize: "11px",
+                        marginBottom: "4px",
+                      }}
+                      itemStyle={{
+                        color: "hsl(var(--foreground))",
+                        fontSize: "15px",
+                        fontWeight: 700,
+                        lineHeight: 1.2,
+                      }}
+                      formatter={(value) => [`${Number(value).toLocaleString("pt-BR")} kg`, "Volume"]}
+                    />
                     <Bar dataKey="volume" fill="var(--primary)" radius={[6, 6, 0, 0]} isAnimationActive={false} />
                   </BarChart>
                 </ResponsiveContainer>
