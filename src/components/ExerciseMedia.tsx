@@ -69,7 +69,7 @@ export function ExerciseMedia({
           observer.disconnect();
         }
       },
-      { rootMargin: "120px 0px" },
+      { rootMargin: "0px" },
     );
 
     observer.observe(node);
