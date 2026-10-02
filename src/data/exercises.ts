@@ -967,7 +967,7 @@ const ADDITIONAL_EXERCISES: Exercise[] = [
     name: "Coice de Glúteo na Polia",
     category: "Glúteos",
     equipment: "Polia",
-    gif_url: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Donkey-Kickback-1.gif",
+    gif_url: "https://d205bpvrqc9yn1.cloudfront.net/0228.gif",
     execution: "Leve a perna para trás contra a resistência mantendo o quadril estável.",
     primary_muscles: ["Glúteo Máximo"],
     secondary_muscles: ["Isquiocrurais", "Glúteo Médio"],
