@@ -110,7 +110,10 @@ export function ExerciseMedia({
       )}
 
       {(showFallback || (visible && !loaded)) && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-elevated">
+        <div
+          role={showFallback ? "status" : undefined}
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-elevated"
+        >
           <div className="flex h-10 w-24 items-center justify-center gap-1 overflow-hidden">
             <span className="h-6 w-1.5 rounded-full bg-primary/70 animate-loop-sweep" />
             <span className="h-8 w-1.5 rounded-full bg-primary animate-loop-sweep" style={{ animationDelay: "0.15s" }} />
@@ -120,6 +123,21 @@ export function ExerciseMedia({
             <p className="px-3 text-center text-[10px] uppercase tracking-widest text-muted-foreground">
               Animação indisponível
             </p>
+          )}
+          {failed && online && exercise.gif_url && (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setFailed(false);
+                setLoaded(false);
+                setUseProxy(false);
+              }}
+              className="min-h-9 rounded-full bg-primary/15 px-3 text-[11px] font-semibold text-primary tap active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+            >
+              Tentar novamente
+            </button>
           )}
         </div>
       )}
