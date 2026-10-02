@@ -113,8 +113,8 @@ function HistoryPage() {
                   }))}>
                     <XAxis dataKey="name" tick={{ fontSize: 10 }} />
                     <YAxis hide />
-                    <Tooltip />
-                    <Bar dataKey="volume" fill="var(--primary)" radius={[6, 6, 0, 0]} />
+                    <Tooltip cursor={false} />
+                    <Bar dataKey="volume" fill="var(--primary)" radius={[6, 6, 0, 0]} isAnimationActive={false} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
