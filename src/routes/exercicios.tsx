@@ -29,7 +29,7 @@ function ExercisesPage() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  const [visibleLimit, setVisibleLimit] = useState(60);
+  const [visibleLimit, setVisibleLimit] = useState(24);
   const [form, setForm] = useState({
     name: "",
     category: "",
@@ -126,9 +126,9 @@ function ExercisesPage() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => setVisibleLimit((limit) => limit + 60)}
+            onClick={() => setVisibleLimit((limit) => limit + 24)}
           >
-            Mostrar mais {Math.min(60, filtered.length - visibleLimit)}
+            Mostrar mais {Math.min(24, filtered.length - visibleLimit)}
           </Button>
         )}
         {filtered.length === 0 && (
