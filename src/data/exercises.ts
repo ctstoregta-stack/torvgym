@@ -1007,7 +1007,7 @@ const ADDITIONAL_EXERCISES: Exercise[] = [
     name: "Abdominal na Polia",
     category: "Abdômen",
     equipment: "Polia",
-    gif_url: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Crunch.gif",
+    gif_url: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Kneeling-Cable-Crunch.gif",
     execution: "Ajoelhe-se e flexione a coluna contraindo o abdômen enquanto mantém o quadril relativamente estável.",
     primary_muscles: ["Reto Abdominal"],
     secondary_muscles: ["Oblíquos"],
