@@ -116,24 +116,26 @@ function HistoryPage() {
                     <Tooltip
                       cursor={false}
                       contentStyle={{
-                        background: "hsl(var(--card))",
+                        background: "#000",
                         border: "none",
                         borderRadius: "12px",
-                        boxShadow: "0 8px 24px hsl(var(--background) / 0.35)",
-                        padding: "10px 12px",
+                        boxShadow: "0 10px 28px rgba(0, 0, 0, 0.45)",
+                        padding: "10px 14px",
                       }}
                       labelStyle={{
-                        color: "hsl(var(--muted-foreground))",
+                        color: "#a1a1aa",
                         fontSize: "11px",
-                        marginBottom: "4px",
+                        fontWeight: 500,
+                        marginBottom: "5px",
                       }}
                       itemStyle={{
-                        color: "hsl(var(--foreground))",
-                        fontSize: "15px",
-                        fontWeight: 700,
+                        color: "#fff",
+                        fontSize: "18px",
+                        fontWeight: 800,
                         lineHeight: 1.2,
+                        padding: 0,
                       }}
-                      formatter={(value) => [`${Number(value).toLocaleString("pt-BR")} kg`, "Volume"]}
+                      formatter={(value) => [`${Number(value).toLocaleString("pt-BR")} kg`, ""]}
                     />
                     <Bar dataKey="volume" fill="var(--primary)" radius={[6, 6, 0, 0]} isAnimationActive={false} />
                   </BarChart>
