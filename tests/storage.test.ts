@@ -45,7 +45,7 @@ test("loadState recupera do snapshot quando o estado principal está corrompido"
   saveState(state);
   storage.setItem(KEY, "{isso não é json");
   assert.deepEqual(loadState(), state);
-  assert.equal(storage.getItem(VERSION_KEY), "3");
+  assert.equal(storage.getItem(VERSION_KEY), "4");
 });
 
 test("loadState usa o backup interno quando o estado principal e o snapshot estão corrompidos", () => {
@@ -156,6 +156,24 @@ test("sessão em andamento mantém os campos do cronômetro de descanso", () => 
   assert.equal(session?.restRunning, true);
 });
 
+test("migração preserva RPE e observação da série", () => {
+  storage.setItem(
+    KEY,
+    JSON.stringify({
+      routines: [],
+      sessions: [],
+      activeSession: {
+        id: "s1",
+        workoutId: "w1",
+        entries: [{ exerciseId: "supino", sets: [{ weight: 50, reps: 10, completed: true, rpe: 9, note: "Última série pesada" }] }],
+      },
+    }),
+  );
+  const set = loadState()?.activeSession?.entries[0]?.sets[0];
+  assert.equal(set?.rpe, 9);
+  assert.equal(set?.note, "Última série pesada");
+  assert.equal(storage.getItem(VERSION_KEY), "4");
+});
 test("uid gera ids com o prefixo pedido e sem repetição", () => {
   const ids = new Set(Array.from({ length: 200 }, () => uid("rt")));
   assert.equal(ids.size, 200);
