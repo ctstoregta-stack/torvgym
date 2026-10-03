@@ -217,27 +217,33 @@ jobs:
           "$APKSIGNER" verify --min-sdk-version 24 --verbose "$APK" > "$RUNNER_TEMP/torvgym-apk-verify.txt" 2>&1
           apksigner_status=$?
           set -e
+          cat "$RUNNER_TEMP/torvgym-apk-verify.txt"
           grep -q "Verified using v2 scheme (APK Signature Scheme v2): true" "$RUNNER_TEMP/torvgym-apk-verify.txt"
           if [ "$apksigner_status" -ne 0 ]; then
-            echo "apksigner retornou $apksigner_status, mas a assinatura V2 obrigatória foi validada."
+            echo "::error::apksigner retornou $apksigner_status ao verificar o APK assinado."
+            exit "$apksigner_status"
           fi
+
           set +e
           "$APKSIGNER" verify --min-sdk-version 24 --print-certs "$APK" > "$RUNNER_TEMP/torvgym-apk-certs.txt" 2>&1
           print_certs_status=$?
           set -e
+          cat "$RUNNER_TEMP/torvgym-apk-certs.txt"
           grep -E "Signer #1 certificate SHA-256 digest:" "$RUNNER_TEMP/torvgym-apk-certs.txt" | sed 's/.*: //' | tr -d '\r\n' > "$RUNNER_TEMP/torvgym-apk-sha256.txt"
           test -s "$RUNNER_TEMP/torvgym-apk-sha256.txt"
           if [ "$print_certs_status" -ne 0 ]; then
-            echo "apksigner --print-certs retornou $print_certs_status, mas o certificado do APK foi extraído para validação."
+            echo "::error::apksigner --print-certs retornou $print_certs_status."
+            exit "$print_certs_status"
           fi
 
           set +e
           jarsigner -verify "$AAB" > "$RUNNER_TEMP/torvgym-aab-verify.txt" 2>&1
           jarsigner_status=$?
           set -e
-          grep -q "jar verified." "$RUNNER_TEMP/torvgym-aab-verify.txt"
+          cat "$RUNNER_TEMP/torvgym-aab-verify.txt"
           if [ "$jarsigner_status" -ne 0 ]; then
-            echo "jarsigner retornou $jarsigner_status, mas confirmou que o AAB está assinado e foi verificado."
+            echo "::error::jarsigner falhou ao verificar o AAB (status $jarsigner_status)."
+            exit "$jarsigner_status"
           fi
 
           tr -d '\r\n' < "$RUNNER_TEMP/torvgym-keystore-sha256.txt" | tr '[:lower:]' '[:upper:]' > "$RUNNER_TEMP/keystore.sha"
