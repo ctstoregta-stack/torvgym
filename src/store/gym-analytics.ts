@@ -74,6 +74,8 @@ export function exerciseProgressionFromHistory(
   if (!history.length) return null;
 
   const latest = history[0];
+  if (!latest) return null;
+
   const previous = history[1] ?? null;
   if (!previous) {
     return {
