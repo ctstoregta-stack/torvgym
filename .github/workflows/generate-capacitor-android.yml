@@ -101,15 +101,37 @@ jobs:
       - name: Validate production signing secrets
         if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          HAS_ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+          HAS_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD != '' }}
+          HAS_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS != '' }}
+          HAS_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD != '' }}
         run: |
-          test -n "$ANDROID_KEYSTORE_BASE64"
-          test -n "$ANDROID_KEYSTORE_PASSWORD"
-          test -n "$ANDROID_KEY_ALIAS"
-          test -n "$ANDROID_KEY_PASSWORD"
+          set -euo pipefail
+          missing=0
+
+          if [ "$HAS_ANDROID_KEYSTORE_BASE64" != "true" ]; then
+            echo "::error::Secret ANDROID_KEYSTORE_BASE64 está ausente ou vazio."
+            missing=1
+          fi
+          if [ "$HAS_ANDROID_KEYSTORE_PASSWORD" != "true" ]; then
+            echo "::error::Secret ANDROID_KEYSTORE_PASSWORD está ausente ou vazio."
+            missing=1
+          fi
+          if [ "$HAS_ANDROID_KEY_ALIAS" != "true" ]; then
+            echo "::error::Secret ANDROID_KEY_ALIAS está ausente ou vazio."
+            missing=1
+          fi
+          if [ "$HAS_ANDROID_KEY_PASSWORD" != "true" ]; then
+            echo "::error::Secret ANDROID_KEY_PASSWORD está ausente ou vazio."
+            missing=1
+          fi
+
+          if [ "$missing" -ne 0 ]; then
+            echo "::error::Configure os quatro secrets de assinatura no repositório antes de executar o workflow manual."
+            exit 1
+          fi
+
+          echo "Os quatro secrets de assinatura estão disponíveis."
 
       - name: Prepare production keystore
         if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -125,6 +147,7 @@ jobs:
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           set -euo pipefail
           keytool -list \
