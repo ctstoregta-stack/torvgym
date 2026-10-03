@@ -235,3 +235,9 @@
     transition: none;
   }
 }
+
+#lovable-badge {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
