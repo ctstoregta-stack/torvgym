@@ -98,6 +98,7 @@ type Ctx = {
     patch: Partial<SetLog>,
   ) => void;
   addSet: (exerciseId: string) => void;
+  duplicateSet: (exerciseId: string, index: number) => void;
   removeSet: (exerciseId: string) => void;
   finishSession: () => Session | null;
   updateSessionContext: (patch: Partial<Pick<Session, "currentExerciseIndex" | "restStartedAt" | "restTotal" | "restRemaining" | "restRunning">>) => void;
@@ -429,6 +430,22 @@ export function GymProvider({ children }: { children: ReactNode }) {
                           { weight: null, reps: null, completed: false },
                         ],
                       }
+                    : e,
+                ),
+              },
+            }
+          : s,
+      ),
+    duplicateSet: (exerciseId, index) =>
+      setState((s) =>
+        s.activeSession
+          ? {
+              ...s,
+              activeSession: {
+                ...s.activeSession,
+                entries: s.activeSession.entries.map((e) =>
+                  e.exerciseId === exerciseId && e.sets[index]
+                    ? { ...e, sets: [...e.sets.slice(0, index + 1), { ...e.sets[index], completed: false, isPR: false }, ...e.sets.slice(index + 1)] }
                     : e,
                 ),
               },
