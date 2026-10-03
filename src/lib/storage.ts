@@ -3,6 +3,8 @@ import type { AppState, Exercise, Routine, Session, Workout } from "./types";
 const KEY = "gymtrack.state.v1";
 const VERSION_KEY = "gymtrack.state.version";
 const CURRENT_VERSION = 2;
+const BACKUP_FORMAT = "torvgym-backup";
+const BACKUP_VERSION = 1;
 
 export const emptyState: AppState = {
   routines: [],
@@ -154,13 +156,51 @@ export function loadState(): AppState | null {
   }
 }
 
-export function saveState(state: AppState) {
-  if (typeof window === "undefined") return;
+export function saveState(state: AppState): boolean {
+  if (typeof window === "undefined") return false;
   try {
     window.localStorage.setItem(KEY, JSON.stringify(state));
     window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION));
+    return true;
   } catch {
     // Storage cheio ou indisponível: a app continua funcionando em memória.
+    return false;
+  }
+}
+
+export function createBackup(state: AppState): string {
+  return JSON.stringify(
+    {
+      format: BACKUP_FORMAT,
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      state,
+    },
+    null,
+    2,
+  );
+}
+
+export function parseBackup(raw: string): AppState | null {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!isRecord(parsed) || parsed.format !== BACKUP_FORMAT || parsed.version !== BACKUP_VERSION) {
+      return null;
+    }
+    return normalizeState(parsed.state);
+  } catch {
+    return null;
+  }
+}
+
+export function storageSizeBytes(): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const raw = window.localStorage.getItem(KEY);
+    const version = window.localStorage.getItem(VERSION_KEY);
+    return ((raw?.length ?? 0) + (version?.length ?? 0)) * 2;
+  } catch {
+    return 0;
   }
 }
 
