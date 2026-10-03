@@ -91,6 +91,7 @@ function ExecutePage() {
     getExercise,
     updateSet,
     addSet,
+    duplicateSet,
     removeSet,
     finishSession,
     discardSession,
@@ -452,7 +453,7 @@ function ExecutePage() {
                           onChange={(e) => updateSet(current.exerciseId, i, { note: e.target.value })}
                           className="h-9 min-w-0 rounded-lg border border-input bg-card px-2 text-xs outline-none focus:border-primary"
                         />
-                        <button type="button" aria-label={`Repetir série ${i + 1}`} onClick={() => addSet(current.exerciseId)} className="h-9 rounded-lg bg-card px-2 text-xs font-semibold text-muted-foreground tap active:scale-95">+ repetir</button>
+                        <button type="button" aria-label={`Repetir série ${i + 1}`} onClick={() => duplicateSet(current.exerciseId, i)} className="h-9 rounded-lg bg-card px-2 text-xs font-semibold text-muted-foreground tap active:scale-95">+ repetir</button>
                       </div>
                     </div>
                   )}
