@@ -17,7 +17,6 @@ import androidx.annotation.NonNull;
 
 import com.getcapacitor.BridgeActivity;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -32,8 +31,10 @@ import java.util.regex.Pattern;
 
 final class TorvGymUpdater {
     private static final String TAG = "TorvGymUpdater";
-    private static final String RELEASE_API = "https://api.github.com/repos/ctstoregta-stack/torvgym/releases/latest";
-    private static final String RELEASE_ASSET_NAME = "torvgym-release.apk";
+    private static final String UPDATE_MANIFEST_URL =
+        "https://ctstoregta-stack.github.io/torvgym/manifest.json";
+    private static final String UPDATE_SITE_PREFIX =
+        "https://ctstoregta-stack.github.io/torvgym/";
     private static final String PREFS = "torvgym_updater";
     private static final String PREF_LAST_DISMISSED = "last_dismissed_tag";
     private static final String PREF_PENDING_DOWNLOAD_ID = "pending_download_id";
@@ -78,11 +79,13 @@ final class TorvGymUpdater {
     }
 
     private Release fetchLatestRelease() throws Exception {
-        HttpURLConnection connection = (HttpURLConnection) new URL(RELEASE_API).openConnection();
+        HttpURLConnection connection = (HttpURLConnection) new URL(
+            UPDATE_MANIFEST_URL + "?v=" + BuildConfig.VERSION_CODE
+        ).openConnection();
         connection.setConnectTimeout(8000);
         connection.setReadTimeout(10000);
         connection.setRequestMethod("GET");
-        connection.setRequestProperty("Accept", "application/vnd.github+json");
+        connection.setRequestProperty("Accept", "application/json");
         connection.setRequestProperty("User-Agent", "TorvGym-Updater");
 
         try {
@@ -96,24 +99,19 @@ final class TorvGymUpdater {
             }
 
             JSONObject json = new JSONObject(body.toString());
-            String tag = json.optString("tag_name", "");
+            String tag = json.optString("tag", "");
             Matcher matcher = VERSION_TAG.matcher(tag);
             if (!matcher.matches()) return null;
 
-            String assetUrl = null;
-            JSONArray assets = json.optJSONArray("assets");
-            if (assets != null) {
-                for (int i = 0; i < assets.length(); i++) {
-                    JSONObject asset = assets.optJSONObject(i);
-                    if (asset != null && RELEASE_ASSET_NAME.equals(asset.optString("name"))) {
-                        assetUrl = asset.optString("browser_download_url", null);
-                        break;
-                    }
-                }
+            int versionCode = json.optInt("versionCode", -1);
+            if (versionCode < 0) {
+                versionCode = Integer.parseInt(matcher.group(1));
             }
 
-            if (assetUrl == null || !assetUrl.startsWith("https://github.com/")) return null;
-            return new Release(Integer.parseInt(matcher.group(1)), tag, assetUrl);
+            String assetUrl = json.optString("apkUrl", "");
+            if (!assetUrl.startsWith(UPDATE_SITE_PREFIX)) return null;
+
+            return new Release(versionCode, tag, assetUrl);
         } finally {
             connection.disconnect();
         }
@@ -123,7 +121,8 @@ final class TorvGymUpdater {
         new AlertDialog.Builder(activity)
             .setTitle("Nova atualização do TorvGym")
             .setMessage("A versão " + release.tag + " está disponível. Deseja atualizar agora?")
-            .setNegativeButton("Agora não", (dialog, which) -> preferences.edit().putString(PREF_LAST_DISMISSED, release.tag).apply())
+            .setNegativeButton("Agora não", (dialog, which) ->
+                preferences.edit().putString(PREF_LAST_DISMISSED, release.tag).apply())
             .setPositiveButton("Atualizar", (dialog, which) -> beginUpdate(release))
             .show();
     }
@@ -166,7 +165,8 @@ final class TorvGymUpdater {
         if (pendingDownloadId != -1L || pendingAssetUrl == null) return;
 
         registerDownloadReceiver();
-        DownloadManager downloadManager = (DownloadManager) activity.getSystemService(Context.DOWNLOAD_SERVICE);
+        DownloadManager downloadManager =
+            (DownloadManager) activity.getSystemService(Context.DOWNLOAD_SERVICE);
         if (downloadManager == null) return;
 
         String fileName = "TorvGym-update-" + pendingTag + ".apk";
@@ -174,7 +174,9 @@ final class TorvGymUpdater {
         request.setTitle("Atualizando TorvGym");
         request.setDescription("Baixando " + pendingTag);
         request.setMimeType("application/vnd.android.package-archive");
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        request.setNotificationVisibility(
+            DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
+        );
         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
 
         pendingDownloadId = downloadManager.enqueue(request);
@@ -185,7 +187,8 @@ final class TorvGymUpdater {
 
     private void resumePendingDownload() {
         if (pendingDownloadId == -1L) return;
-        DownloadManager downloadManager = (DownloadManager) activity.getSystemService(Context.DOWNLOAD_SERVICE);
+        DownloadManager downloadManager =
+            (DownloadManager) activity.getSystemService(Context.DOWNLOAD_SERVICE);
         if (downloadManager == null) return;
 
         try (android.database.Cursor cursor = downloadManager.query(
@@ -226,7 +229,8 @@ final class TorvGymUpdater {
     }
 
     private void openDownloadedApk(long downloadId) {
-        DownloadManager downloadManager = (DownloadManager) activity.getSystemService(Context.DOWNLOAD_SERVICE);
+        DownloadManager downloadManager =
+            (DownloadManager) activity.getSystemService(Context.DOWNLOAD_SERVICE);
         if (downloadManager == null) return;
 
         Uri uri = downloadManager.getUriForDownloadedFile(downloadId);
