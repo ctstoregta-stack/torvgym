@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { emptyState, loadState, saveState, uid } from "../src/lib/storage.ts";
+import { createBackup, emptyState, loadState, parseBackup, saveState, storageSizeBytes, uid } from "../src/lib/storage.ts";
 
 const KEY = "gymtrack.state.v1";
 const VERSION_KEY = "gymtrack.state.version";
@@ -130,4 +130,39 @@ test("uid gera ids com o prefixo pedido e sem repetição", () => {
   const ids = new Set(Array.from({ length: 200 }, () => uid("rt")));
   assert.equal(ids.size, 200);
   for (const id of ids) assert.ok(id.startsWith("rt_"));
+});
+
+
+test("createBackup e parseBackup fazem round-trip validado", () => {
+  const state = {
+    ...emptyState,
+    routines: [
+      {
+        id: "r-backup",
+        name: "Backup",
+        createdAt: "2026-02-01T00:00:00.000Z",
+        workouts: [],
+      },
+    ],
+    activeRoutineId: "r-backup",
+  };
+  const backup = createBackup(state);
+  assert.deepEqual(parseBackup(backup), state);
+});
+
+test("parseBackup rejeita formato desconhecido e JSON inválido", () => {
+  assert.equal(parseBackup("{nao-json"), null);
+  assert.equal(
+    parseBackup(JSON.stringify({ format: "outro", version: 1, state: emptyState })),
+    null,
+  );
+});
+
+test("storageSizeBytes reflete o estado salvo", () => {
+  saveState({
+    ...emptyState,
+    routines: [{ id: "r", name: "Rotina", createdAt: "2026-01-01T00:00:00.000Z", workouts: [] }],
+    activeRoutineId: "r",
+  });
+  assert.ok(storageSizeBytes() > 0);
 });
