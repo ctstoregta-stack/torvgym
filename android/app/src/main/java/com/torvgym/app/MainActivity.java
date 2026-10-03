@@ -15,7 +15,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         if (updater != null) {
             updater.onResume();
@@ -23,7 +23,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         if (updater != null) {
             updater.shutdown();
             updater = null;
