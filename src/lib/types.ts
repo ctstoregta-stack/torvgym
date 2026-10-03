@@ -32,6 +32,8 @@ export type SetLog = {
   reps: number | null;
   completed: boolean;
   isPR?: boolean;
+  rpe?: number | null;
+  note?: string;
 };
 
 export type ExerciseLog = {
