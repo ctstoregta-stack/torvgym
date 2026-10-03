@@ -16,9 +16,6 @@ jobs:
     environment: production
     permissions:
       contents: write
-      actions: read
-      pages: write
-      id-token: write
     runs-on: ubuntu-latest
     env:
       TORVGYM_VERSION_CODE: ${{ github.run_number }}
@@ -317,6 +314,54 @@ EOF
           path: ${{ runner.temp }}/torvgym-pages
 
 
+      - name: Commit Android platform
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add android package-lock.json
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração nativa nova para commit."
+            exit 0
+          fi
+          git commit -m "chore: generate Capacitor Android platform [skip ci]"
+          git push
+
+  publish-release:
+    if: ${{ github.event_name == 'push' }}
+    needs: android
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download signed Android release APK
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: torvgym-release-signed-apk
+          path: release-assets
+
+      - name: Download signed Android App Bundle
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: torvgym-release-signed-aab
+          path: release-assets
+
+      - name: Publish automatic GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="v1.0.${GITHUB_RUN_NUMBER}"
+          APK="release-assets/app-release.apk"
+          AAB="release-assets/app-release.aab"
+          test -s "$APK"
+          test -s "$AAB"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$APK" "$AAB" --clobber
+          else
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "TorvGym $TAG" --generate-notes "$APK" "$AAB"
+          fi
+          echo "Release automática publicada: $TAG"
+
   deploy-pages:
     if: ${{ github.event_name == 'push' }}
     needs: android
@@ -337,28 +382,3 @@ EOF
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
         with:
           token: ${{ github.token }}
-      - name: Publish automatic GitHub release
-        if: ${{ github.event_name == 'push' }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          TAG="v1.0.${GITHUB_RUN_NUMBER}"
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "$RUNNER_TEMP/torvgym-release.apk" android/app/build/outputs/bundle/release/app-release.aab --clobber
-          else
-            gh release create "$TAG" --target "$GITHUB_SHA" --title "TorvGym $TAG" --generate-notes "$RUNNER_TEMP/torvgym-release.apk" android/app/build/outputs/bundle/release/app-release.aab
-          fi
-          echo "Release automática publicada: $TAG"
-
-      - name: Commit Android platform
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add android package-lock.json
-          if git diff --cached --quiet; then
-            echo "Nenhuma alteração nativa nova para commit."
-            exit 0
-          fi
-          git commit -m "chore: generate Capacitor Android platform [skip ci]"
-          git push
