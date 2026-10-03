@@ -68,11 +68,9 @@ export type ExerciseProgression = {
   recommendation: "increase-load" | "add-reps" | "maintain" | "recover";
 };
 
-export function exerciseProgressionFor(
-  sessions: Session[],
-  exerciseId: string,
+export function exerciseProgressionFromHistory(
+  history: ExerciseAnalytics["history"],
 ): ExerciseProgression | null {
-  const history = exerciseHistoryFor(sessions, exerciseId);
   if (!history.length) return null;
 
   const latest = history[0];
@@ -112,6 +110,13 @@ export function exerciseProgressionFor(
     estimated1RMChangePercent,
     recommendation,
   };
+}
+
+export function exerciseProgressionFor(
+  sessions: Session[],
+  exerciseId: string,
+): ExerciseProgression | null {
+  return exerciseProgressionFromHistory(exerciseHistoryFor(sessions, exerciseId));
 }
 
 export function lastExerciseSets(sessions: Session[], exerciseId: string) {
