@@ -431,6 +431,29 @@ function ExecutePage() {
                           Usar anterior: {prevLabel}
                         </button>
                       )}
+                      <div className="col-span-4 grid grid-cols-[72px_1fr_auto] gap-1.5">
+                        <select
+                          aria-label={`RPE da série ${i + 1}`}
+                          value={set.rpe ?? ""}
+                          onChange={(e) => updateSet(current.exerciseId, i, { rpe: e.target.value ? Number(e.target.value) : null })}
+                          className="h-9 rounded-lg border border-input bg-card px-1 text-xs font-semibold outline-none focus:border-primary"
+                        >
+                          <option value="">RPE</option>
+                          {Array.from({ length: 10 }, (_, n) => n + 1).map((value) => (
+                            <option key={value} value={value}>{value}</option>
+                          ))}
+                        </select>
+                        <input
+                          type="text"
+                          maxLength={500}
+                          aria-label={`Observação da série ${i + 1}`}
+                          value={set.note ?? ""}
+                          placeholder="Observação..."
+                          onChange={(e) => updateSet(current.exerciseId, i, { note: e.target.value })}
+                          className="h-9 min-w-0 rounded-lg border border-input bg-card px-2 text-xs outline-none focus:border-primary"
+                        />
+                        <button type="button" aria-label={`Repetir série ${i + 1}`} onClick={() => addSet(current.exerciseId)} className="h-9 rounded-lg bg-card px-2 text-xs font-semibold text-muted-foreground tap active:scale-95">+ repetir</button>
+                      </div>
                     </div>
                   )}
                 </div>
