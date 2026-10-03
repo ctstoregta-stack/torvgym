@@ -104,7 +104,7 @@ type Ctx = {
   discardSession: () => void;
   // data safety
   createBackup: () => string;
-  importBackup: (raw: string) => boolean;
+  importBackup: (raw: string) => "invalid" | "saved" | "memory-only";
   storageSizeBytes: () => number;
   // analytics
   prFor: (exerciseId: string) => number | null;
@@ -474,9 +474,9 @@ export function GymProvider({ children }: { children: ReactNode }) {
     createBackup: () => createBackup(state),
     importBackup: (raw) => {
       const imported = parseBackup(raw);
-      if (!imported) return false;
+      if (!imported) return "invalid";
       setState(imported);
-      return saveState(imported);
+      return saveState(imported) ? "saved" : "memory-only";
     },
     storageSizeBytes,
 
