@@ -184,10 +184,10 @@ export function createBackup(state: AppState): string {
 export function parseBackup(raw: string): AppState | null {
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (!isRecord(parsed) || parsed.format !== BACKUP_FORMAT || parsed.version !== BACKUP_VERSION) {
+    if (!isRecord(parsed) || parsed["format"] !== BACKUP_FORMAT || parsed["version"] !== BACKUP_VERSION) {
       return null;
     }
-    return normalizeState(parsed.state);
+    return normalizeState(parsed["state"]);
   } catch {
     return null;
   }
