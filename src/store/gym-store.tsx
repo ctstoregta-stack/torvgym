@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { EXERCISE_DB } from "@/data/exercises";
-import { emptyState, loadState, saveState, uid } from "@/lib/storage";
+import { createBackup, emptyState, loadState, parseBackup, saveState, storageSizeBytes, uid } from "@/lib/storage";
 import { buildExerciseAnalyticsIndex, buildWorkoutExerciseAnalyticsIndex } from "@/store/gym-analytics";
 import type {
   AppState,
@@ -102,6 +102,10 @@ type Ctx = {
   finishSession: () => Session | null;
   updateSessionContext: (patch: Partial<Pick<Session, "currentExerciseIndex" | "restStartedAt" | "restTotal" | "restRemaining" | "restRunning">>) => void;
   discardSession: () => void;
+  // data safety
+  createBackup: () => string;
+  importBackup: (raw: string) => boolean;
+  storageSizeBytes: () => number;
   // analytics
   prFor: (exerciseId: string) => number | null;
   lastSetsFor: (exerciseId: string) => SetLog[] | null;
@@ -467,6 +471,14 @@ export function GymProvider({ children }: { children: ReactNode }) {
     },
     updateSessionContext,
     discardSession: () => setState((s) => ({ ...s, activeSession: null })),
+    createBackup: () => createBackup(state),
+    importBackup: (raw) => {
+      const imported = parseBackup(raw);
+      if (!imported) return false;
+      setState(imported);
+      return saveState(imported);
+    },
+    storageSizeBytes,
 
     prFor,
     lastSetsFor,
