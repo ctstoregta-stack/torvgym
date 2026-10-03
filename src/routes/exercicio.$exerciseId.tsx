@@ -59,6 +59,7 @@ function ExerciseDetail() {
 
   const pr = prFor(ex.id);
   const history = historyFor(ex.id);
+  const progression = exerciseProgressionFromHistory(history);
 
   let best1rm = 0;
   let totalVolume = 0;
@@ -189,6 +190,38 @@ function ExerciseDetail() {
               </Card>
             </div>
 
+            {progression && progression.previous && (
+              <Card>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold">Progressão sugerida</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Comparação com a sessão anterior
+                    </p>
+                  </div>
+                  <Tag>
+                    {progression.estimated1RMChangePercent != null
+                      ? `${progression.estimated1RMChangePercent > 0 ? "+" : ""}${progression.estimated1RMChangePercent}% 1RM`
+                      : "—"}
+                  </Tag>
+                </div>
+                <p className="mt-3 text-sm leading-relaxed">
+                  {progression.recommendation === "increase-load"
+                    ? "A evolução do 1RM estimado foi consistente. Considere aumentar a carga na próxima sessão, mantendo a execução."
+                    : progression.recommendation === "add-reps"
+                      ? "O desempenho melhorou. Tente adicionar 1 repetição antes de aumentar a carga."
+                      : progression.recommendation === "recover"
+                        ? "O 1RM estimado caiu de forma relevante. Priorize recuperação e repita uma carga confortável antes de progredir."
+                        : "Mantenha a carga atual e busque repetir ou melhorar as repetições com boa execução."}
+                </p>
+                {progression.volumeChangePercent != null && (
+                  <p className="mt-2 text-xs text-muted-foreground tabular-nums">
+                    Volume: {progression.volumeChangePercent > 0 ? "+" : ""}
+                    {progression.volumeChangePercent}% vs. sessão anterior
+                  </p>
+                )}
+              </Card>
+            )}
             {history.length === 0 ? (
               <EmptyState
                 title="Sem histórico ainda"
