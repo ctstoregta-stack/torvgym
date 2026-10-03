@@ -113,7 +113,13 @@ type Ctx = {
   lastSetsForWorkout: (workoutId: string, exerciseId: string) => SetLog[] | null;
   historyFor: (
     exerciseId: string,
-  ) => { date: string; sets: SetLog[]; maxWeight: number }[];
+  ) => {
+    date: string;
+    sets: SetLog[];
+    maxWeight: number;
+    volume: number;
+    estimated1RM: number;
+  }[];
 };
 
 const GymContext = createContext<Ctx | null>(null);
