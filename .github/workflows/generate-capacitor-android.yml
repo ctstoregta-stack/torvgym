@@ -277,54 +277,6 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Prepare automatic update APK
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          set -euo pipefail
-          cp android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/torvgym-release.apk"
-          test -s "$RUNNER_TEMP/torvgym-release.apk"
-
-      - name: Prepare public update channel
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          set -euo pipefail
-          TAG="v1.0.${GITHUB_RUN_NUMBER}"
-          UPDATE_DIR="$RUNNER_TEMP/torvgym-pages"
-          mkdir -p "$UPDATE_DIR/releases/$TAG"
-          cp "$RUNNER_TEMP/torvgym-release.apk" "$UPDATE_DIR/releases/$TAG/torvgym-release.apk"
-          SHA256="$(sha256sum "$RUNNER_TEMP/torvgym-release.apk" | awk '{print $1}')"
-          SIZE_BYTES="$(stat -c '%s' "$RUNNER_TEMP/torvgym-release.apk")"
-          cat > "$UPDATE_DIR/manifest.json" <<EOF
-{
-  "schemaVersion": 1,
-  "tag": "$TAG",
-  "versionCode": ${GITHUB_RUN_NUMBER},
-  "versionName": "1.0.${GITHUB_RUN_NUMBER}",
-  "apkUrl": "https://ctstoregta-stack.github.io/torvgym/releases/$TAG/torvgym-release.apk",
-  "sha256": "$SHA256",
-  "sizeBytes": $SIZE_BYTES
-}
-EOF
-          cat "$UPDATE_DIR/manifest.json"
-
-      - name: Upload public update channel
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with:
-          path: ${{ runner.temp }}/torvgym-pages
-
-
-      - name: Commit Android platform
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add android package-lock.json
-          if git diff --cached --quiet; then
-            echo "Nenhuma alteração nativa nova para commit."
-            exit 0
-          fi
-          git commit -m "chore: generate Capacitor Android platform [skip ci]"
-          git push
 
   publish-release:
     if: ${{ github.event_name == 'push' }}
@@ -361,24 +313,3 @@ EOF
             gh release create "$TAG" --target "$GITHUB_SHA" --title "TorvGym $TAG" --generate-notes "$APK" "$AAB"
           fi
           echo "Release automática publicada: $TAG"
-
-  deploy-pages:
-    if: ${{ github.event_name == 'push' }}
-    needs: android
-    permissions:
-      actions: read
-      pages: write
-      id-token: write
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
-
-      - name: Deploy public update channel
-        id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
-        with:
-          token: ${{ github.token }}
