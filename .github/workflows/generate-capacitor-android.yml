@@ -64,6 +64,15 @@ jobs:
       - name: Sync Capacitor Android
         run: npm run cap:sync
 
+      - name: Validate Android security resources
+        run: |
+          test -f android/app/src/main/res/xml/backup_rules.xml
+          test -f android/app/src/main/res/xml/data_extraction_rules.xml
+          ! test -f android/app/src/main/res/xml/file_paths.xml
+          grep -q 'android:allowBackup="false"' android/app/src/main/AndroidManifest.xml
+          grep -q 'android:dataExtractionRules="@xml/data_extraction_rules"' android/app/src/main/AndroidManifest.xml
+          grep -q 'android:fullBackupContent="@xml/backup_rules"' android/app/src/main/AndroidManifest.xml
+
       - name: Build Android debug APK
         working-directory: android
         run: ./gradlew assembleDebug
