@@ -55,7 +55,7 @@ jobs:
         run: npm audit --audit-level=high
 
       - name: Validate project
-        run: npm run typecheck && npm test
+        run: npm run typecheck && npm test && npm run lint
 
       - name: Build web assets for Capacitor
         run: npm run build:capacitor
