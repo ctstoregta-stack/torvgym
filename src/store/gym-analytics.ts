@@ -50,6 +50,70 @@ export function exerciseHistoryFor(sessions: Session[], exerciseId: string) {
     }[];
 }
 
+export type ExerciseProgression = {
+  latest: {
+    date: string;
+    volume: number;
+    maxWeight: number;
+    estimated1RM: number;
+  };
+  previous: {
+    date: string;
+    volume: number;
+    maxWeight: number;
+    estimated1RM: number;
+  } | null;
+  volumeChangePercent: number | null;
+  estimated1RMChangePercent: number | null;
+  recommendation: "increase-load" | "add-reps" | "maintain" | "recover";
+};
+
+export function exerciseProgressionFor(
+  sessions: Session[],
+  exerciseId: string,
+): ExerciseProgression | null {
+  const history = exerciseHistoryFor(sessions, exerciseId);
+  if (!history.length) return null;
+
+  const latest = history[0];
+  const previous = history[1] ?? null;
+  if (!previous) {
+    return {
+      latest,
+      previous: null,
+      volumeChangePercent: null,
+      estimated1RMChangePercent: null,
+      recommendation: "maintain",
+    };
+  }
+
+  const percentChange = (current: number, prior: number) =>
+    prior > 0 ? Math.round(((current - prior) / prior) * 1000) / 10 : null;
+
+  const volumeChangePercent = percentChange(latest.volume, previous.volume);
+  const estimated1RMChangePercent = percentChange(
+    latest.estimated1RM,
+    previous.estimated1RM,
+  );
+
+  let recommendation: ExerciseProgression["recommendation"] = "maintain";
+  if (latest.estimated1RM >= previous.estimated1RM * 1.025) {
+    recommendation = "increase-load";
+  } else if (latest.estimated1RM >= previous.estimated1RM) {
+    recommendation = "add-reps";
+  } else if (latest.estimated1RM < previous.estimated1RM * 0.95) {
+    recommendation = "recover";
+  }
+
+  return {
+    latest,
+    previous,
+    volumeChangePercent,
+    estimated1RMChangePercent,
+    recommendation,
+  };
+}
+
 export function lastExerciseSets(sessions: Session[], exerciseId: string) {
   const sorted = [...sessions].sort(
     (a, b) => new Date(b.finishedAt!).getTime() - new Date(a.finishedAt!).getTime(),
