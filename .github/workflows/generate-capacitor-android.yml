@@ -13,6 +13,9 @@ permissions:
 
 jobs:
   android:
+    # Permite usar secrets cadastrados no Environment "production".
+    # Secrets do repositório continuam disponíveis normalmente.
+    environment: production
     permissions:
       contents: write
     runs-on: ubuntu-latest
