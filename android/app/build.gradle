@@ -23,6 +23,9 @@ def buildVersionName = buildVersionNameValue ?: "1.0.0"
 android {
     namespace = "com.torvgym.app"
     compileSdk = rootProject.ext.compileSdkVersion
+    buildFeatures {
+        buildConfig true
+    }
     defaultConfig {
         applicationId "com.torvgym.app"
         minSdkVersion rootProject.ext.minSdkVersion
