@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { ExerciseMedia } from "@/components/ExerciseMedia";
 import { Button, Card, EmptyState, MutedTag, Tag } from "@/components/ui-kit";
 import { useGym } from "@/store/gym-store";
-import { estimateSet1RM } from "@/store/gym-analytics";
+import { estimateSet1RM, exerciseProgressionFromHistory } from "@/store/gym-analytics";
 
 export const Route = createFileRoute("/exercicio/$exerciseId")({
   head: () => ({
