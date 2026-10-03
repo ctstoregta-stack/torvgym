@@ -35,7 +35,8 @@ final class TorvGymUpdater {
     private static final String RELEASE_API = "https://api.github.com/repos/ctstoregta-stack/torvgym/releases/latest";
     private static final String RELEASE_ASSET_NAME = "torvgym-release.apk";
     private static final String PREFS = "torvgym_updater";
-    private static final String PREF_LAST_OFFERED = "last_offered_tag";
+    private static final String PREF_LAST_DISMISSED = "last_dismissed_tag";
+    private static final String PREF_PENDING_DOWNLOAD_ID = "pending_download_id";
     private static final Pattern VERSION_TAG = Pattern.compile("^v1\\.0\\.(\\d+)$");
 
     private final BridgeActivity activity;
@@ -47,7 +48,8 @@ final class TorvGymUpdater {
             if (!DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(intent.getAction())) return;
             long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L);
             if (downloadId != pendingDownloadId) return;
-            pendingDownloadId = -1L;
+            if (downloadId != pendingDownloadId) return;
+            clearPendingDownload();
             openDownloadedApk(downloadId);
         }
     };
@@ -60,6 +62,7 @@ final class TorvGymUpdater {
     TorvGymUpdater(@NonNull BridgeActivity activity) {
         this.activity = activity;
         this.preferences = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        this.pendingDownloadId = preferences.getLong(PREF_PENDING_DOWNLOAD_ID, -1L);
     }
 
     void checkForUpdate() {
@@ -67,7 +70,7 @@ final class TorvGymUpdater {
             try {
                 Release release = fetchLatestRelease();
                 if (release == null || release.versionCode <= BuildConfig.VERSION_CODE) return;
-                if (release.tag.equals(preferences.getString(PREF_LAST_OFFERED, ""))) return;
+                if (release.tag.equals(preferences.getString(PREF_LAST_DISMISSED, ""))) return;
                 activity.runOnUiThread(() -> showUpdateDialog(release));
             } catch (Exception e) {
                 Log.d(TAG, "Falha ao verificar atualização", e);
@@ -118,11 +121,10 @@ final class TorvGymUpdater {
     }
 
     private void showUpdateDialog(Release release) {
-        preferences.edit().putString(PREF_LAST_OFFERED, release.tag).apply();
         new AlertDialog.Builder(activity)
             .setTitle("Nova atualização do TorvGym")
             .setMessage("A versão " + release.tag + " está disponível. Deseja atualizar agora?")
-            .setNegativeButton("Agora não", null)
+            .setNegativeButton("Agora não", (dialog, which) -> preferences.edit().putString(PREF_LAST_DISMISSED, release.tag).apply())
             .setPositiveButton("Atualizar", (dialog, which) -> beginUpdate(release))
             .show();
     }
@@ -149,6 +151,11 @@ final class TorvGymUpdater {
     }
 
     void onResume() {
+        if (pendingDownloadId != -1L) {
+            registerDownloadReceiver();
+            resumePendingDownload();
+            return;
+        }
         if (pendingAssetUrl == null) return;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O
             || activity.getPackageManager().canRequestPackageInstalls()) {
@@ -172,8 +179,39 @@ final class TorvGymUpdater {
         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
 
         pendingDownloadId = downloadManager.enqueue(request);
+        preferences.edit().putLong(PREF_PENDING_DOWNLOAD_ID, pendingDownloadId).apply();
         pendingAssetUrl = null;
         pendingTag = null;
+    }
+
+    private void resumePendingDownload() {
+        if (pendingDownloadId == -1L) return;
+        DownloadManager downloadManager = (DownloadManager) activity.getSystemService(Context.DOWNLOAD_SERVICE);
+        if (downloadManager == null) return;
+
+        try (android.database.Cursor cursor = downloadManager.query(
+            new DownloadManager.Query().setFilterById(pendingDownloadId))) {
+            if (cursor == null || !cursor.moveToFirst()) {
+                clearPendingDownload();
+                return;
+            }
+            int status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
+            if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                long completedId = pendingDownloadId;
+                clearPendingDownload();
+                openDownloadedApk(completedId);
+            } else if (status == DownloadManager.STATUS_FAILED) {
+                Log.w(TAG, "Download da atualização falhou; será permitido tentar novamente.");
+                clearPendingDownload();
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Não foi possível recuperar o download da atualização", e);
+        }
+    }
+
+    private void clearPendingDownload() {
+        pendingDownloadId = -1L;
+        preferences.edit().remove(PREF_PENDING_DOWNLOAD_ID).apply();
     }
 
     @SuppressWarnings("deprecation")
