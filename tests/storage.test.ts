@@ -130,7 +130,7 @@ test("activeRoutineId inexistente cai para a primeira rotina", () => {
 test("dados da versão antiga são migrados e a versão atual é gravada", () => {
   storage.setItem(KEY, JSON.stringify({ routines: [], customExercises: [], sessions: [] }));
   assert.ok(loadState());
-  assert.equal(storage.getItem(VERSION_KEY), "3");
+  assert.equal(storage.getItem(VERSION_KEY), "4");
 });
 
 test("sessão em andamento mantém os campos do cronômetro de descanso", () => {
