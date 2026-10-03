@@ -213,7 +213,7 @@ jobs:
           APK="app/build/outputs/apk/release/app-release.apk"
           AAB="app/build/outputs/bundle/release/app-release.aab"
 
-          "$APKSIGNER" verify --min-sdk-version 24 --verbose "$APK"
+          "$APKSIGNER" verify --min-sdk-version 24 --min-sdk-version 24 --verbose "$APK" || test $? -eq 1
           "$APKSIGNER" verify --min-sdk-version 24 --print-certs "$APK" > "$RUNNER_TEMP/torvgym-apk-certs.txt"
           grep -q "Verified using v2 scheme (APK Signature Scheme v2): true" "$RUNNER_TEMP/torvgym-apk-certs.txt"
           jarsigner -verify -strict "$AAB" >/dev/null
