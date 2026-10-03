@@ -126,11 +126,43 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
+          set -euo pipefail
           keytool -list \
             -keystore "$RUNNER_TEMP/torvgym-release.jks" \
             -storepass "$ANDROID_KEYSTORE_PASSWORD" \
             -alias "$ANDROID_KEY_ALIAS" \
-            >/dev/null
+            -v > "$RUNNER_TEMP/torvgym-keytool.txt"
+          grep -q "Entry type: PrivateKeyEntry" "$RUNNER_TEMP/torvgym-keytool.txt"
+          rm -f "$RUNNER_TEMP/torvgym-keytool.txt"
+
+          rm -f "$RUNNER_TEMP/torvgym-key-validation.jks"
+          keytool -importkeystore \
+            -srckeystore "$RUNNER_TEMP/torvgym-release.jks" \
+            -srcstorepass "$ANDROID_KEYSTORE_PASSWORD" \
+            -srcalias "$ANDROID_KEY_ALIAS" \
+            -srckeypass "$ANDROID_KEY_PASSWORD" \
+            -destkeystore "$RUNNER_TEMP/torvgym-key-validation.jks" \
+            -deststoretype PKCS12 \
+            -deststorepass "$ANDROID_KEYSTORE_PASSWORD" \
+            -destkeypass "$ANDROID_KEYSTORE_PASSWORD" \
+            -noprompt >/dev/null
+          rm -f "$RUNNER_TEMP/torvgym-key-validation.jks"
+          echo "Keystore, alias e senha da chave foram validados."
+
+      - name: Capture production certificate fingerprint
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          keytool -list -v \
+            -keystore "$RUNNER_TEMP/torvgym-release.jks" \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            -alias "$ANDROID_KEY_ALIAS" |
+            awk -F': ' '/SHA256:/{print $2; exit}' > "$RUNNER_TEMP/torvgym-keystore-sha256.txt"
+          test -s "$RUNNER_TEMP/torvgym-keystore-sha256.txt"
+          echo "Fingerprint SHA-256 do certificado do keystore capturado para comparação."
 
       - name: Build signed Android release APK and AAB
         if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -141,8 +173,34 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          ./gradlew assembleRelease bundleRelease
+          set -euo pipefail
+          ./gradlew clean assembleRelease bundleRelease
+          test -s app/build/outputs/apk/release/app-release.apk
+          test -s app/build/outputs/bundle/release/app-release.aab
 
+      - name: Verify signed APK and AAB
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        working-directory: android
+        run: |
+          set -euo pipefail
+          APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          APK="app/build/outputs/apk/release/app-release.apk"
+          AAB="app/build/outputs/bundle/release/app-release.aab"
+
+          "$APKSIGNER" verify --verbose "$APK"
+          "$APKSIGNER" verify --print-certs "$APK" > "$RUNNER_TEMP/torvgym-apk-certs.txt"
+          jarsigner -verify -strict "$AAB" >/dev/null
+
+          awk -F': ' '/Signer #1 certificate SHA-256 digest:/{print $2; exit}' "$RUNNER_TEMP/torvgym-apk-certs.txt" > "$RUNNER_TEMP/torvgym-apk-sha256.txt"
+          test -s "$RUNNER_TEMP/torvgym-apk-sha256.txt"
+
+          tr -d '\r\n' < "$RUNNER_TEMP/torvgym-keystore-sha256.txt" | tr '[:lower:]' '[:upper:]' > "$RUNNER_TEMP/keystore.sha"
+          tr -d '\r\n' < "$RUNNER_TEMP/torvgym-apk-sha256.txt" | tr '[:lower:]' '[:upper:]' > "$RUNNER_TEMP/apk.sha"
+          test "$(cat "$RUNNER_TEMP/keystore.sha")" = "$(cat "$RUNNER_TEMP/apk.sha")"
+
+          echo "APK assinado e certificado correspondem ao certificado do keystore."
+          echo "AAB também passou na verificação JAR."
+          rm -f "$RUNNER_TEMP/torvgym-keystore-sha256.txt" "$RUNNER_TEMP/torvgym-apk-sha256.txt" "$RUNNER_TEMP/torvgym-apk-certs.txt" "$RUNNER_TEMP/keystore.sha" "$RUNNER_TEMP/apk.sha"
       - name: Upload signed Android release APK
         if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
