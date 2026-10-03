@@ -1,5 +1,15 @@
 import type { Session, SetLog } from "@/lib/types";
 
+export function estimateSet1RM(set: SetLog) {
+  if (set.weight == null || set.reps == null || set.weight <= 0 || set.reps <= 0) return 0;
+  return Math.round(set.weight * (1 + set.reps / 30) * 10) / 10;
+}
+
+export function setVolume(set: SetLog) {
+  if (set.weight == null || set.reps == null || set.weight <= 0 || set.reps <= 0) return 0;
+  return set.weight * set.reps;
+}
+
 export function sessionPRFor(sessions: Session[], exerciseId: string) {
   let max: number | null = null;
   for (const session of sessions) {
@@ -51,7 +61,7 @@ export function lastExerciseSets(sessions: Session[], exerciseId: string) {
 
 export type ExerciseAnalytics = {
   pr: number | null;
-  history: { date: string; sets: SetLog[]; maxWeight: number }[];
+  history: { date: string; sets: SetLog[]; maxWeight: number; volume: number; estimated1RM: number }[];
   lastSets: SetLog[] | null;
 };
 
@@ -84,6 +94,8 @@ export function buildExerciseAnalyticsIndex(sessions: Session[]) {
         date: session.finishedAt ?? session.startedAt,
         sets: completedSets,
         maxWeight: Math.max(...completedSets.map((set) => set.weight ?? 0)),
+        volume: completedSets.reduce((total, set) => total + setVolume(set), 0),
+        estimated1RM: Math.max(...completedSets.map(estimateSet1RM), 0),
       });
 
       if (!current.lastSets) current.lastSets = completedSets;
