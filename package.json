@@ -12,7 +12,12 @@
     "preview": "vite preview",
     "test": "node --test --experimental-strip-types \"tests/**/*.test.ts\"",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "build:capacitor": "vite build && node scripts/prepare-capacitor-web.mjs",
+    "cap:sync": "cap sync android",
+    "cap:add:android": "cap add android",
+    "cap:open:android": "cap open android",
+    "cap:run:android": "cap run android"
   },
   "overrides": {
     "rolldown": "1.2.1"
@@ -69,7 +74,9 @@
     "tw-animate-css": "^1.3.4",
     "vaul": "^1.1.2",
     "vite-tsconfig-paths": "^6.0.2",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/android": "^8.5.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
@@ -88,6 +95,7 @@
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "8.1.5"
+    "vite": "8.1.5",
+    "@capacitor/cli": "^8.5.2"
   }
 }
