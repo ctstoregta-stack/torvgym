@@ -17,6 +17,7 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       TORVGYM_VERSION_CODE: ${{ github.run_number }}
       TORVGYM_VERSION_NAME: 1.0.${{ github.run_number }}
@@ -296,6 +297,7 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v5.0.0

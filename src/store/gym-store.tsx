@@ -133,6 +133,13 @@ export function GymProvider({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(save);
   }, [state, ready]);
 
+  // A sessão ativa é estado crítico: persiste imediatamente após cada
+  // alteração para reduzir ao mínimo a janela de perda em crash/fechamento.
+  useEffect(() => {
+    if (!ready || !state.activeSession) return;
+    saveState(state);
+  }, [state.activeSession, ready]);
+
   useEffect(() => {
     if (!ready) return;
 

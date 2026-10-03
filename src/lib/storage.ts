@@ -2,7 +2,9 @@ import type { AppState, Exercise, Routine, Session, Workout } from "./types";
 
 const KEY = "gymtrack.state.v1";
 const VERSION_KEY = "gymtrack.state.version";
-const CURRENT_VERSION = 2;
+const RECOVERY_KEY = "gymtrack.state.recovery.v1";
+const AUTO_BACKUP_KEY = "gymtrack.state.auto-backup.v1";
+const CURRENT_VERSION = 3;
 const BACKUP_FORMAT = "torvgym-backup";
 const BACKUP_VERSION = 1;
 
@@ -96,7 +98,7 @@ function normalizeSession(input: unknown): Session | null {
   if (typeof currentExerciseIndex === "number") {
     session.currentExerciseIndex = Math.max(0, Math.floor(currentExerciseIndex));
   }
-  if (typeof restStartedAt === "string") session.restStartedAt = restStartedAt;
+  if (typeof restStartedAt === "string" || restStartedAt === null) session.restStartedAt = restStartedAt;
   if (typeof restTotal === "number" && Number.isFinite(restTotal)) {
     session.restTotal = Math.max(0, restTotal);
   }
@@ -123,34 +125,67 @@ function normalizeState(input: unknown): AppState | null {
 }
 
 function migrate(raw: unknown, version: number): AppState | null {
-  // V1 and V2 currently share the same shape. Keeping the migration boundary
-  // makes future storage changes explicit without invalidating existing users.
-  if (version <= 2) return normalizeState(raw);
+  // V1/V2 possuem o mesmo formato lógico. V3 mantém a estrutura e adiciona
+  // recuperação automática no armazenamento, sem invalidar dados existentes.
+  if (version >= 1 && version <= CURRENT_VERSION) return normalizeState(raw);
   return null;
+}
+
+function readStoredState(key: string): AppState | null {
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return null;
+    return normalizeState(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+function repairPrimary(state: AppState) {
+  try {
+    window.localStorage.setItem(KEY, JSON.stringify(state));
+    window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION));
+  } catch {
+    // A recuperação continua válida em memória mesmo se o storage estiver cheio.
+  }
 }
 
 export function loadState(): AppState | null {
   if (typeof window === "undefined") return null;
 
   try {
-    const raw = window.localStorage.getItem(KEY);
-    if (!raw) return null;
-
-    const parsed: unknown = JSON.parse(raw);
     const storedVersion = Number(window.localStorage.getItem(VERSION_KEY) ?? 1);
-    const state = migrate(parsed, Number.isFinite(storedVersion) ? storedVersion : 1);
-    if (!state) return null;
-
-    if (storedVersion !== CURRENT_VERSION) {
-      try {
-        window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION));
-        window.localStorage.setItem(KEY, JSON.stringify(state));
-      } catch {
-        // A migração é oportunista; os dados já normalizados continuam válidos em memória.
-      }
+    const version = Number.isFinite(storedVersion) ? storedVersion : 1;
+    const state = migrate(readRawPrimary(), version);
+    if (state) {
+      if (version !== CURRENT_VERSION) repairPrimary(state);
+      return state;
     }
 
-    return state;
+    // O estado principal pode estar ausente/corrompido. Tenta primeiro o
+    // snapshot de recuperação e depois o backup interno independente.
+    const recovery = readStoredState(RECOVERY_KEY);
+    if (recovery) {
+      repairPrimary(recovery);
+      return recovery;
+    }
+
+    const automaticBackup = readStoredState(AUTO_BACKUP_KEY);
+    if (automaticBackup) {
+      repairPrimary(automaticBackup);
+      return automaticBackup;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function readRawPrimary(): unknown {
+  try {
+    const raw = window.localStorage.getItem(KEY);
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
@@ -158,14 +193,31 @@ export function loadState(): AppState | null {
 
 export function saveState(state: AppState): boolean {
   if (typeof window === "undefined") return false;
+
+  const serialized = JSON.stringify(state);
+  let primarySaved = false;
+
   try {
-    window.localStorage.setItem(KEY, JSON.stringify(state));
+    window.localStorage.setItem(KEY, serialized);
     window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION));
-    return true;
+    primarySaved = true;
   } catch {
-    // Storage cheio ou indisponível: a app continua funcionando em memória.
-    return false;
+    // Continua tentando os snapshots independentes abaixo.
   }
+
+  try {
+    window.localStorage.setItem(RECOVERY_KEY, serialized);
+  } catch {
+    // O snapshot de recuperação é best-effort.
+  }
+
+  try {
+    window.localStorage.setItem(AUTO_BACKUP_KEY, serialized);
+  } catch {
+    // O backup interno é best-effort.
+  }
+
+  return primarySaved;
 }
 
 export function createBackup(state: AppState): string {
@@ -196,9 +248,8 @@ export function parseBackup(raw: string): AppState | null {
 export function storageSizeBytes(): number {
   if (typeof window === "undefined") return 0;
   try {
-    const raw = window.localStorage.getItem(KEY);
-    const version = window.localStorage.getItem(VERSION_KEY);
-    return ((raw?.length ?? 0) + (version?.length ?? 0)) * 2;
+    const keys = [KEY, VERSION_KEY, RECOVERY_KEY, AUTO_BACKUP_KEY];
+    return keys.reduce((total, key) => total + ((window.localStorage.getItem(key)?.length ?? 0) * 2), 0);
   } catch {
     return 0;
   }

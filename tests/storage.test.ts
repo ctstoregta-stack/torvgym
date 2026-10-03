@@ -4,6 +4,8 @@ import { createBackup, emptyState, loadState, parseBackup, saveState, storageSiz
 
 const KEY = "gymtrack.state.v1";
 const VERSION_KEY = "gymtrack.state.version";
+const RECOVERY_KEY = "gymtrack.state.recovery.v1";
+const AUTO_BACKUP_KEY = "gymtrack.state.auto-backup.v1";
 
 class MemoryStorage {
   private data = new Map<string, string>();
@@ -34,8 +36,34 @@ test("loadState retorna null quando não há dados salvos", () => {
   assert.equal(loadState(), null);
 });
 
-test("loadState retorna null para JSON corrompido, sem lançar erro", () => {
+test("loadState recupera do snapshot quando o estado principal está corrompido", () => {
+  const state = {
+    ...emptyState,
+    routines: [{ id: "r-recovery", name: "Recuperação", createdAt: "2026-01-01T00:00:00.000Z", workouts: [] }],
+    activeRoutineId: "r-recovery",
+  };
+  saveState(state);
   storage.setItem(KEY, "{isso não é json");
+  assert.deepEqual(loadState(), state);
+  assert.equal(storage.getItem(VERSION_KEY), "3");
+});
+
+test("loadState usa o backup interno quando o estado principal e o snapshot estão corrompidos", () => {
+  const state = {
+    ...emptyState,
+    routines: [{ id: "r-auto", name: "Backup automático", createdAt: "2026-01-01T00:00:00.000Z", workouts: [] }],
+    activeRoutineId: "r-auto",
+  };
+  saveState(state);
+  storage.setItem(KEY, "{corrompido");
+  storage.setItem(RECOVERY_KEY, "{corrompido");
+  assert.deepEqual(loadState(), state);
+});
+
+test("loadState retorna null quando todas as cópias estão inválidas", () => {
+  storage.setItem(KEY, "{corrompido");
+  storage.setItem(RECOVERY_KEY, "{corrompido");
+  storage.setItem(AUTO_BACKUP_KEY, "{corrompido");
   assert.equal(loadState(), null);
 });
 
@@ -54,8 +82,10 @@ test("saveState e loadState preservam os dados (ida e volta)", () => {
     ],
     activeRoutineId: "r1",
   };
-  saveState(state);
+  assert.equal(saveState(state), true);
   assert.deepEqual(loadState(), state);
+  assert.ok(storage.getItem(RECOVERY_KEY));
+  assert.ok(storage.getItem(AUTO_BACKUP_KEY));
 });
 
 test("loadState descarta itens inválidos e preenche padrões", () => {
@@ -100,7 +130,7 @@ test("activeRoutineId inexistente cai para a primeira rotina", () => {
 test("dados da versão antiga são migrados e a versão atual é gravada", () => {
   storage.setItem(KEY, JSON.stringify({ routines: [], customExercises: [], sessions: [] }));
   assert.ok(loadState());
-  assert.equal(storage.getItem(VERSION_KEY), "2");
+  assert.equal(storage.getItem(VERSION_KEY), "3");
 });
 
 test("sessão em andamento mantém os campos do cronômetro de descanso", () => {
@@ -131,7 +161,6 @@ test("uid gera ids com o prefixo pedido e sem repetição", () => {
   assert.equal(ids.size, 200);
   for (const id of ids) assert.ok(id.startsWith("rt_"));
 });
-
 
 test("createBackup e parseBackup fazem round-trip validado", () => {
   const state = {
