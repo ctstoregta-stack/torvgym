@@ -158,7 +158,7 @@ function Home() {
         </>
       )}
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
+      <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
         <Link to="/exercicios">
           <Card className="h-full">
             <p className="text-sm font-semibold">Biblioteca</p>
@@ -172,6 +172,14 @@ function Home() {
             <p className="text-sm font-semibold">Histórico</p>
             <p className="mt-1 text-xs text-muted-foreground">
               Sessões e progressão
+            </p>
+          </Card>
+        </Link>
+        <Link to="/configuracoes">
+          <Card className="h-full">
+            <p className="text-sm font-semibold">Dados e backup</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Exportar e restaurar
             </p>
           </Card>
         </Link>
