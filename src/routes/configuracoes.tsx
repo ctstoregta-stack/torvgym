@@ -107,7 +107,7 @@ function Settings() {
           <div className="mt-4 flex flex-wrap gap-2">
             <Button onClick={handleExport}>Exportar backup</Button>
             <Button
-              variant="secondary"
+              variant="outline"
               disabled={busy}
               onClick={() => inputRef.current?.click()}
             >
