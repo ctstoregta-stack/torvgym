@@ -70,6 +70,18 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Build Android release APK
+        working-directory: android
+        run: ./gradlew assembleRelease
+
+      - name: Upload Android release APK (unsigned)
+        uses: actions/upload-artifact@v4
+        with:
+          name: torvgym-release-unsigned-apk
+          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Commit Android platform
         run: |
           git config user.name "github-actions[bot]"
