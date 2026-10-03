@@ -24,8 +24,20 @@ jobs:
         with:
           node-version: 22
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Validate project
         run: npm run typecheck && npm test
@@ -38,6 +50,10 @@ jobs:
 
       - name: Sync Capacitor Android
         run: npm run cap:sync
+
+      - name: Build Android debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
 
       - name: Commit Android platform
         run: |
