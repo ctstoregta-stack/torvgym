@@ -312,13 +312,13 @@ EOF
 
       - name: Upload public update channel
         if: ${{ github.event_name == 'push' }}
-        uses: actions/upload-pages-artifact@v3.0.1
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
           path: ${{ runner.temp }}/torvgym-pages
 
       - name: Deploy public update channel
         if: ${{ github.event_name == 'push' }}
-        uses: actions/deploy-pages@v5.0.1
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
         with:
           token: ${{ github.token }}
 
