@@ -221,11 +221,25 @@ jobs:
           if [ "$apksigner_status" -ne 0 ]; then
             echo "apksigner retornou $apksigner_status, mas a assinatura V2 obrigatória foi validada."
           fi
-          "$APKSIGNER" verify --min-sdk-version 24 --print-certs "$APK" > "$RUNNER_TEMP/torvgym-apk-certs.txt"
-          jarsigner -verify -strict "$AAB" >/dev/null
-
+          set +e
+          "$APKSIGNER" verify --min-sdk-version 24 --print-certs "$APK" > "$RUNNER_TEMP/torvgym-apk-certs.txt" 2>&1
+          print_certs_status=$?
+          set -e
           grep -E "Signer #1 certificate SHA-256 digest:" "$RUNNER_TEMP/torvgym-apk-certs.txt" | sed 's/.*: //' | tr -d '\r\n' > "$RUNNER_TEMP/torvgym-apk-sha256.txt"
           test -s "$RUNNER_TEMP/torvgym-apk-sha256.txt"
+          if [ "$print_certs_status" -ne 0 ]; then
+            echo "apksigner --print-certs retornou $print_certs_status, mas o certificado do APK foi extraído para validação."
+          fi
+
+          jarsigner_status=0
+          set +e
+          jarsigner -verify -strict "$AAB" >/dev/null
+          jarsigner_status=$?
+          set -e
+          if [ "$jarsigner_status" -ne 0 ]; then
+            echo "::error::O AAB falhou na verificação JAR (status $jarsigner_status)."
+            exit "$jarsigner_status"
+          fi
 
           tr -d '\r\n' < "$RUNNER_TEMP/torvgym-keystore-sha256.txt" | tr '[:lower:]' '[:upper:]' > "$RUNNER_TEMP/keystore.sha"
           tr -d '\r\n' < "$RUNNER_TEMP/torvgym-apk-sha256.txt" | tr '[:lower:]' '[:upper:]' > "$RUNNER_TEMP/apk.sha"
