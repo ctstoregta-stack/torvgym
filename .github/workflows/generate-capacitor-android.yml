@@ -16,6 +16,8 @@ jobs:
     environment: production
     permissions:
       contents: write
+      pages: write
+      id-token: write
     runs-on: ubuntu-latest
     env:
       TORVGYM_VERSION_CODE: ${{ github.run_number }}
@@ -283,6 +285,41 @@ jobs:
           set -euo pipefail
           cp android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/torvgym-release.apk"
           test -s "$RUNNER_TEMP/torvgym-release.apk"
+
+      - name: Prepare public update channel
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          set -euo pipefail
+          TAG="v1.0.${GITHUB_RUN_NUMBER}"
+          UPDATE_DIR="$RUNNER_TEMP/torvgym-pages"
+          mkdir -p "$UPDATE_DIR/releases/$TAG"
+          cp "$RUNNER_TEMP/torvgym-release.apk" "$UPDATE_DIR/releases/$TAG/torvgym-release.apk"
+          SHA256="$(sha256sum "$RUNNER_TEMP/torvgym-release.apk" | awk '{print $1}')"
+          SIZE_BYTES="$(stat -c '%s' "$RUNNER_TEMP/torvgym-release.apk")"
+          cat > "$UPDATE_DIR/manifest.json" <<EOF
+{
+  "schemaVersion": 1,
+  "tag": "$TAG",
+  "versionCode": ${GITHUB_RUN_NUMBER},
+  "versionName": "1.0.${GITHUB_RUN_NUMBER}",
+  "apkUrl": "https://ctstoregta-stack.github.io/torvgym/releases/$TAG/torvgym-release.apk",
+  "sha256": "$SHA256",
+  "sizeBytes": $SIZE_BYTES
+}
+EOF
+          cat "$UPDATE_DIR/manifest.json"
+
+      - name: Upload public update channel
+        if: ${{ github.event_name == 'push' }}
+        uses: actions/upload-pages-artifact@v3.0.1
+        with:
+          path: ${{ runner.temp }}/torvgym-pages
+
+      - name: Deploy public update channel
+        if: ${{ github.event_name == 'push' }}
+        uses: actions/deploy-pages@v5.0.1
+        with:
+          token: ${{ github.token }}
 
       - name: Publish automatic GitHub release
         if: ${{ github.event_name == 'push' }}
