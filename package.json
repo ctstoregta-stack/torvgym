@@ -13,7 +13,7 @@
     "test": "node --test --experimental-strip-types \"tests/**/*.test.ts\"",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "build:capacitor": "vite build && node scripts/prepare-capacitor-web.mjs",
+    "build:capacitor": "node scripts/prepare-capacitor-web.mjs",
     "cap:sync": "cap sync android",
     "cap:add:android": "cap add android",
     "cap:open:android": "cap open android",
