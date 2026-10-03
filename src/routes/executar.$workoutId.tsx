@@ -421,42 +421,44 @@ function ExecutePage() {
                     </svg>
                   </button>
                   </div>
-                  {!set.completed && (
-                    <div className="mt-1 grid grid-cols-4 gap-1.5 pl-[96px]">
-                      <QuickAdjust label="-2,5" ariaLabel="Diminuir 2,5 kg" onClick={() => updateSet(current.exerciseId, i, { weight: Math.max(0, (set.weight ?? prev?.weight ?? 0) - 2.5) })} />
-                      <QuickAdjust label="+2,5" ariaLabel="Aumentar 2,5 kg" onClick={() => updateSet(current.exerciseId, i, { weight: (set.weight ?? prev?.weight ?? 0) + 2.5 })} />
-                      <QuickAdjust label="-1 rep" ariaLabel="Diminuir uma repetição" onClick={() => updateSet(current.exerciseId, i, { reps: Math.max(0, (set.reps ?? prev?.reps ?? 0) - 1) })} />
-                      <QuickAdjust label="+1 rep" ariaLabel="Aumentar uma repetição" onClick={() => updateSet(current.exerciseId, i, { reps: (set.reps ?? prev?.reps ?? 0) + 1 })} />
-                      {prev && (
-                        <button type="button" className="col-span-4 min-h-9 rounded-lg bg-primary/10 px-2 text-xs font-semibold text-primary tap active:scale-95" onClick={() => updateSet(current.exerciseId, i, { weight: prev.weight, reps: prev.reps })}>
-                          Usar anterior: {prevLabel}
-                        </button>
-                      )}
-                      <div className="col-span-4 grid grid-cols-[72px_1fr_auto] gap-1.5">
-                        <select
-                          aria-label={`RPE da série ${i + 1}`}
-                          value={set.rpe ?? ""}
-                          onChange={(e) => updateSet(current.exerciseId, i, { rpe: e.target.value ? Number(e.target.value) : null })}
-                          className="h-9 rounded-lg border border-input bg-card px-1 text-xs font-semibold outline-none focus:border-primary"
-                        >
-                          <option value="">RPE</option>
-                          {Array.from({ length: 10 }, (_, n) => n + 1).map((value) => (
-                            <option key={value} value={value}>{value}</option>
-                          ))}
-                        </select>
-                        <input
-                          type="text"
-                          maxLength={500}
-                          aria-label={`Observação da série ${i + 1}`}
-                          value={set.note ?? ""}
-                          placeholder="Observação..."
-                          onChange={(e) => updateSet(current.exerciseId, i, { note: e.target.value })}
-                          className="h-9 min-w-0 rounded-lg border border-input bg-card px-2 text-xs outline-none focus:border-primary"
-                        />
-                        <button type="button" aria-label={`Repetir série ${i + 1}`} onClick={() => duplicateSet(current.exerciseId, i)} className="h-9 rounded-lg bg-card px-2 text-xs font-semibold text-muted-foreground tap active:scale-95">+ repetir</button>
+                  <div className="mt-1 space-y-1.5 pl-[96px]">
+                    {!set.completed && (
+                      <div className="grid grid-cols-4 gap-1.5">
+                        <QuickAdjust label="-2,5" ariaLabel="Diminuir 2,5 kg" onClick={() => updateSet(current.exerciseId, i, { weight: Math.max(0, (set.weight ?? prev?.weight ?? 0) - 2.5) })} />
+                        <QuickAdjust label="+2,5" ariaLabel="Aumentar 2,5 kg" onClick={() => updateSet(current.exerciseId, i, { weight: (set.weight ?? prev?.weight ?? 0) + 2.5 })} />
+                        <QuickAdjust label="-1 rep" ariaLabel="Diminuir uma repetição" onClick={() => updateSet(current.exerciseId, i, { reps: Math.max(0, (set.reps ?? prev?.reps ?? 0) - 1) })} />
+                        <QuickAdjust label="+1 rep" ariaLabel="Aumentar uma repetição" onClick={() => updateSet(current.exerciseId, i, { reps: (set.reps ?? prev?.reps ?? 0) + 1 })} />
                       </div>
+                    )}
+                    <div className="grid grid-cols-[72px_minmax(0,1fr)_auto] gap-1.5">
+                      <select
+                        aria-label={`RPE da série ${i + 1}`}
+                        value={set.rpe ?? ""}
+                        onChange={(e) => updateSet(current.exerciseId, i, { rpe: e.target.value ? Number(e.target.value) : null })}
+                        className="h-9 rounded-lg border border-input bg-card px-1 text-xs font-semibold outline-none focus:border-primary"
+                      >
+                        <option value="">RPE</option>
+                        {Array.from({ length: 10 }, (_, n) => n + 1).map((value) => (
+                          <option key={value} value={value}>{value}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        maxLength={500}
+                        aria-label={`Observação da série ${i + 1}`}
+                        value={set.note ?? ""}
+                        placeholder="Observação..."
+                        onChange={(e) => updateSet(current.exerciseId, i, { note: e.target.value })}
+                        className="h-9 min-w-0 rounded-lg border border-input bg-card px-2 text-xs outline-none focus:border-primary"
+                      />
+                      <button type="button" aria-label={`Repetir série ${i + 1}`} onClick={() => duplicateSet(current.exerciseId, i)} className="h-9 rounded-lg bg-card px-2 text-xs font-semibold text-muted-foreground tap active:scale-95">+ repetir</button>
                     </div>
-                  )}
+                    {!set.completed && prev && (
+                      <button type="button" className="w-full min-h-9 rounded-lg bg-primary/10 px-2 text-xs font-semibold text-primary tap active:scale-95" onClick={() => updateSet(current.exerciseId, i, { weight: prev.weight, reps: prev.reps })}>
+                        Usar anterior: {prevLabel}
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}
