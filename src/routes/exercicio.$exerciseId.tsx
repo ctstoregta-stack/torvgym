@@ -3,7 +3,8 @@ import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ExerciseMedia } from "@/components/ExerciseMedia";
 import { Button, Card, EmptyState, MutedTag, Tag } from "@/components/ui-kit";
-import { estimate1RM, useGym } from "@/store/gym-store";
+import { useGym } from "@/store/gym-store";
+import { estimateSet1RM } from "@/store/gym-analytics";
 
 export const Route = createFileRoute("/exercicio/$exerciseId")({
   head: () => ({
@@ -60,12 +61,14 @@ function ExerciseDetail() {
   const history = historyFor(ex.id);
 
   let best1rm = 0;
+  let totalVolume = 0;
   let bestWeight = 0;
   let bestRepsAtMaxWeight = 0;
   for (const h of history) {
+    totalVolume += h.volume;
     for (const s of h.sets) {
       if (s.weight && s.reps) {
-        best1rm = Math.max(best1rm, estimate1RM(s.weight, s.reps));
+        best1rm = Math.max(best1rm, estimateSet1RM(s));
         if (s.weight > bestWeight) {
           bestWeight = s.weight;
           bestRepsAtMaxWeight = s.reps;
@@ -151,7 +154,7 @@ function ExerciseDetail() {
 
         {tab === "Histórico & Gráfico" && (
           <>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Card className="text-center">
                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
                   Carga máxima (PR)
@@ -166,6 +169,14 @@ function ExerciseDetail() {
                 </p>
                 <p className="mt-1 text-2xl font-bold tabular-nums">
                   {bestWeight ? `${bestWeight} kg × ${bestRepsAtMaxWeight}` : "—"}
+                </p>
+              </Card>
+              <Card className="text-center">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                  Volume total
+                </p>
+                <p className="mt-1 text-2xl font-bold tabular-nums">
+                  {totalVolume ? `${Math.round(totalVolume).toLocaleString("pt-BR")} kg` : "—"}
                 </p>
               </Card>
               <Card className="text-center">
