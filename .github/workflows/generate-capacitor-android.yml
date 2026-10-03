@@ -220,6 +220,11 @@ jobs:
           set -e
           cat "$RUNNER_TEMP/torvgym-apk-verify.txt"
           grep -q "Verified using v2 scheme (APK Signature Scheme v2): true" "$RUNNER_TEMP/torvgym-apk-verify.txt"
+          grep -q "Number of signers: 1" "$RUNNER_TEMP/torvgym-apk-verify.txt"
+          if grep -qiE "does not verify|failed to verify|verification failed|no signers" "$RUNNER_TEMP/torvgym-apk-verify.txt"; then
+            echo "::error::apksigner reportou uma falha explícita de verificação do APK."
+            exit 1
+          fi
           if [ "$apksigner_status" -ne 0 ]; then
             echo "::warning::apksigner retornou $apksigner_status, mas a verificação V2 obrigatória foi confirmada."
           fi
@@ -236,14 +241,20 @@ jobs:
             echo "::warning::apksigner --print-certs retornou $print_certs_status, mas o certificado foi extraído e será comparado ao keystore."
           fi
 
-          # AAB não é validado como um JAR comum: jarsigner pode retornar
-          # código 1 por diferenças de leitura entre JarFile e JarInputStream
-          # mesmo quando o bundle foi corretamente assinado pelo Android Gradle Plugin.
-          # Validamos a integridade ZIP e extraímos o certificado de assinatura
-          # diretamente do AAB com keytool, comparando-o ao keystore de produção.
-          unzip -t "$AAB" > "$RUNNER_TEMP/torvgym-aab-zip-test.txt"
+          # O AAB é um ZIP assinado no formato JAR. O unzip valida a
+          # integridade física do arquivo e o jarsigner valida a assinatura
+          # criptográfica e os digests das entradas.
           test -s "$AAB"
           unzip -tq "$AAB"
+          set +e
+          jarsigner -verify "$AAB" > "$RUNNER_TEMP/torvgym-aab-verify.txt" 2>&1
+          jarsigner_status=$?
+          set -e
+          cat "$RUNNER_TEMP/torvgym-aab-verify.txt"
+          if [ "$jarsigner_status" -ne 0 ]; then
+            echo "::error::jarsigner confirmou falha real na assinatura ou integridade do AAB (status $jarsigner_status)."
+            exit "$jarsigner_status"
+          fi
           keytool -printcert -jarfile "$AAB" > "$RUNNER_TEMP/torvgym-aab-certs.txt"
           cat "$RUNNER_TEMP/torvgym-aab-certs.txt"
           awk -F': ' '/SHA256:/{print $2; exit}' "$RUNNER_TEMP/torvgym-aab-certs.txt" | tr -d ':[:space:]\r\n' | tr '[:lower:]' '[:upper:]' > "$RUNNER_TEMP/torvgym-aab-sha256.txt"
@@ -258,7 +269,7 @@ jobs:
 
           echo "APK assinado e certificado correspondem ao certificado do keystore."
           echo "AAB íntegro e certificado de assinatura corresponde ao certificado do keystore."
-          rm -f "$RUNNER_TEMP/torvgym-keystore-sha256.txt" "$RUNNER_TEMP/torvgym-apk-sha256.txt" "$RUNNER_TEMP/torvgym-apk-certs.txt" "$RUNNER_TEMP/torvgym-aab-verify.txt" "$RUNNER_TEMP/torvgym-aab-certs.txt" "$RUNNER_TEMP/torvgym-aab-sha256.txt" "$RUNNER_TEMP/keystore.sha" "$RUNNER_TEMP/apk.sha" "$RUNNER_TEMP/aab.sha"
+          rm -f "$RUNNER_TEMP/torvgym-keystore-sha256.txt" "$RUNNER_TEMP/torvgym-apk-sha256.txt" "$RUNNER_TEMP/torvgym-apk-certs.txt" "$RUNNER_TEMP/torvgym-apk-verify.txt" "$RUNNER_TEMP/torvgym-aab-verify.txt" "$RUNNER_TEMP/torvgym-aab-certs.txt" "$RUNNER_TEMP/torvgym-aab-sha256.txt" "$RUNNER_TEMP/keystore.sha" "$RUNNER_TEMP/apk.sha" "$RUNNER_TEMP/aab.sha"
       - name: Upload signed Android release APK
         if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
