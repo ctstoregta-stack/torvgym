@@ -13,6 +13,13 @@ def hasReleaseSigning = [
     releaseKeyPassword,
 ].every { it != null && !it.isEmpty() }
 
+// GitHub Actions supplies a monotonically increasing version for every build.
+// Local builds keep the stable fallback version below.
+def buildVersionCodeValue = System.getenv('TORVGYM_VERSION_CODE')
+def buildVersionNameValue = System.getenv('TORVGYM_VERSION_NAME')
+def buildVersionCode = buildVersionCodeValue?.isInteger() ? buildVersionCodeValue.toInteger() : 1
+def buildVersionName = buildVersionNameValue ?: "1.0.0"
+
 android {
     namespace = "com.torvgym.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -20,8 +27,8 @@ android {
         applicationId "com.torvgym.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0.0"
+        versionCode buildVersionCode
+        versionName buildVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
