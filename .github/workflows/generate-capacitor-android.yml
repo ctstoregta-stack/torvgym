@@ -278,6 +278,18 @@ jobs:
           retention-days: 14
 
 
+      - name: Commit Android platform
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add android package-lock.json
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração nativa nova para commit."
+            exit 0
+          fi
+          git commit -m "chore: generate Capacitor Android platform [skip ci]"
+          git push
+
   publish-release:
     if: ${{ github.event_name == 'push' }}
     needs: android
