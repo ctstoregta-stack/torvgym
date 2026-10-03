@@ -36,6 +36,8 @@ export function exerciseHistoryFor(sessions: Session[], exerciseId: string) {
         date: session.finishedAt ?? session.startedAt,
         sets,
         maxWeight: Math.max(...sets.map((s) => s.weight ?? 0)),
+        volume: sets.reduce((total, set) => total + setVolume(set), 0),
+        estimated1RM: Math.max(...sets.map(estimateSet1RM), 0),
       };
     })
     .filter(Boolean)
@@ -43,6 +45,8 @@ export function exerciseHistoryFor(sessions: Session[], exerciseId: string) {
       date: string;
       sets: SetLog[];
       maxWeight: number;
+      volume: number;
+      estimated1RM: number;
     }[];
 }
 
