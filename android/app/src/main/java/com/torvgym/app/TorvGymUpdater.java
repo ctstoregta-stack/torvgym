@@ -48,7 +48,6 @@ final class TorvGymUpdater {
             if (!DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(intent.getAction())) return;
             long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L);
             if (downloadId != pendingDownloadId) return;
-            if (downloadId != pendingDownloadId) return;
             clearPendingDownload();
             openDownloadedApk(downloadId);
         }
