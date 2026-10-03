@@ -4,7 +4,7 @@ const KEY = "gymtrack.state.v1";
 const VERSION_KEY = "gymtrack.state.version";
 const RECOVERY_KEY = "gymtrack.state.recovery.v1";
 const AUTO_BACKUP_KEY = "gymtrack.state.auto-backup.v1";
-const CURRENT_VERSION = 3;
+const CURRENT_VERSION = 4;
 const BACKUP_FORMAT = "torvgym-backup";
 const BACKUP_VERSION = 1;
 
@@ -74,12 +74,14 @@ function normalizeSession(input: unknown): Session | null {
     const { exerciseId, sets: rawSets } = entry;
     if (typeof exerciseId !== "string" || !Array.isArray(rawSets)) return [];
     const sets = rawSets.filter(isRecord).map((set) => {
-      const { weight, reps, completed, isPR } = set;
+      const { weight, reps, completed, isPR, rpe, note } = set;
       return {
         weight: typeof weight === "number" && Number.isFinite(weight) ? weight : null,
         reps: typeof reps === "number" && Number.isFinite(reps) ? reps : null,
         completed: Boolean(completed),
         isPR: Boolean(isPR),
+        rpe: typeof rpe === "number" && Number.isFinite(rpe) ? Math.min(10, Math.max(1, Math.round(rpe))) : null,
+        note: typeof note === "string" ? note.slice(0, 500) : "",
       };
     });
     return [{ exerciseId, sets }];
@@ -125,8 +127,8 @@ function normalizeState(input: unknown): AppState | null {
 }
 
 function migrate(raw: unknown, version: number): AppState | null {
-  // V1/V2 possuem o mesmo formato lógico. V3 mantém a estrutura e adiciona
-  // recuperação automática no armazenamento, sem invalidar dados existentes.
+  // V1-V3 mantêm o formato lógico anterior. V4 adiciona feedback por série
+  // (RPE e observação) sem invalidar os dados existentes.
   if (version >= 1 && version <= CURRENT_VERSION) return normalizeState(raw);
   return null;
 }
