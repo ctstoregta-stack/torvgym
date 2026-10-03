@@ -77,6 +77,7 @@ export interface FileRoutesByTo {
   '/executar/$workoutId': typeof ExecutarWorkoutIdRoute
   '/exercicio/$exerciseId': typeof ExercicioExerciseIdRoute
   '/treino/$workoutId': typeof TreinoWorkoutIdRoute
+  '/configuracoes': typeof ConfiguracoesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +99,7 @@ export interface FileRouteTypes {
     | '/executar/$workoutId'
     | '/exercicio/$exerciseId'
     | '/treino/$workoutId'
+    | '/configuracoes'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
