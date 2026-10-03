@@ -218,7 +218,7 @@ jobs:
           grep -q "Verified using v2 scheme (APK Signature Scheme v2): true" "$RUNNER_TEMP/torvgym-apk-certs.txt"
           jarsigner -verify -strict "$AAB" >/dev/null
 
-          awk -F': ' '/Signer #1 certificate SHA-256 digest:/{print $2; exit}' "$RUNNER_TEMP/torvgym-apk-certs.txt" > "$RUNNER_TEMP/torvgym-apk-sha256.txt"
+          grep -E "Signer #1 certificate SHA-256 digest:" "$RUNNER_TEMP/torvgym-apk-certs.txt" | sed 's/.*: //' | tr -d '\r\n' > "$RUNNER_TEMP/torvgym-apk-sha256.txt"
           test -s "$RUNNER_TEMP/torvgym-apk-sha256.txt"
 
           tr -d '\r\n' < "$RUNNER_TEMP/torvgym-keystore-sha256.txt" | tr '[:lower:]' '[:upper:]' > "$RUNNER_TEMP/keystore.sha"
