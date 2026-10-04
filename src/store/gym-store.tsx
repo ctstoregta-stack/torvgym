@@ -12,6 +12,7 @@ import { EXERCISE_DB } from "@/data/exercises";
 import { createBackup, emptyState, loadState, parseBackup, saveState, storageSizeBytes, uid } from "@/lib/storage";
 import { buildExerciseAnalyticsIndex, sessionPRFor } from "@/store/gym-analytics";
 import { validateExercise } from "@/lib/exercise-validation";
+import { createEncryptedSyncPackage, decryptEncryptedSyncPackage } from "@/lib/cloud-sync";
 import type {
   AppState,
   Exercise,
@@ -111,6 +112,8 @@ type Ctx = {
   // data safety
   createBackup: () => string;
   importBackup: (raw: string) => "invalid" | "saved" | "memory-only";
+  createEncryptedSyncPackage: (password: string) => Promise<string>;
+  importEncryptedSyncPackage: (raw: string, password: string) => Promise<"saved" | "memory-only">;
   storageSizeBytes: () => number;
   // analytics
   prFor: (exerciseId: string) => number | null;
@@ -632,4 +635,11 @@ export function muscleGroupsOf(
 export function estimate1RM(weight: number, reps: number) {
   if (!weight || !reps) return 0;
   return Math.round(weight * (1 + reps / 30) * 10) / 10;
-}
+}    createEncryptedSyncPackage: (password) => createEncryptedSyncPackage(state, password),
+    importEncryptedSyncPackage: async (raw, password) => {
+      const payload = await decryptEncryptedSyncPackage(raw, password);
+      const imported = payload.state;
+      setState(imported);
+      return saveState(imported) ? "saved" : "memory-only";
+    },
+
