@@ -105,7 +105,7 @@ export async function decryptEncryptedSyncPackage(raw: string, password: string)
 
 export function syncPackageMetadata(raw: string) {
   const parsed = JSON.parse(raw) as Partial<SyncEnvelope>;
-  if (parsed.format !== FORMAT || parsed.version !== VERSION) return null;
+  if (parsed.format !== FORMAT || (parsed.version !== VERSION && parsed.version !== LEGACY_VERSION)) return null;
   if (parsed.version === LEGACY_VERSION) return {
     deviceId: parsed.deviceId ?? "", createdAt: parsed.createdAt ?? "", updatedAt: parsed.updatedAt ?? "",
   };
