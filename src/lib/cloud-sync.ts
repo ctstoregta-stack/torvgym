@@ -18,7 +18,7 @@ function base64ToBytes(value: string) {
 async function deriveKey(password: string, salt: Uint8Array) {
   const material = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
   return crypto.subtle.deriveKey(
-    { name:"PBKDF2", salt, iterations:ITERATIONS, hash:"SHA-256" },
+    { name:"PBKDF2", salt: salt as unknown as BufferSource, iterations:ITERATIONS, hash:"SHA-256" },
     material,
     { name:"AES-GCM", length:256 },
     false,
@@ -75,12 +75,14 @@ export async function decryptEncryptedSyncPackage(raw: string, password: string)
     throw new Error("Pacote de sincronização incompatível.");
   }
   const key = await deriveKey(password, base64ToBytes(envelope.salt));
-  const plaintext = await crypto.subtle.decrypt({ name:"AES-GCM", iv:base64ToBytes(envelope.iv) }, key, base64ToBytes(envelope.ciphertext));
+  const plaintext = await crypto.subtle.decrypt({ name:"AES-GCM", iv:base64ToBytes(envelope.iv) as unknown as BufferSource }, key, base64ToBytes(envelope.ciphertext));
   const payload: unknown = JSON.parse(dec.decode(plaintext));
   if (!payload || typeof payload !== "object" || !("state" in payload) || typeof (payload as { updatedAt?: unknown }).updatedAt !== "string") {
     throw new Error("Conteúdo de sincronização inválido.");
   }
-  return { state: (payload as { state: AppState }).state, updatedAt: (payload as { updatedAt: string }).updatedAt };
+  const data = payload as { state?: AppState; updatedAt?: string };
+  if (!data.state || typeof data.updatedAt !== "string") throw new Error("Conteúdo de sincronização inválido.");
+  return { state: data.state, updatedAt: data.updatedAt };
 }
 
 export function syncPackageMetadata(raw: string) {
