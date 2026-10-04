@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button, Card, EmptyState } from "@/components/ui-kit";
 import { useGym } from "@/store/gym-store";
-import { buildPeriodAnalytics, buildWorkoutAnalyticsIndex, sessionDurationSeconds, sessionSetCount, sessionVolume } from "@/store/gym-analytics";
+import { sessionDurationSeconds, sessionSetCount, sessionVolume } from "@/store/gym-analytics";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export const Route = createFileRoute("/historico")({
@@ -34,10 +34,6 @@ function HistoryPage() {
       ? allSessions.filter((s) => new Date(s.finishedAt!).getTime() >= since)
       : allSessions;
   }, [allSessions, range]);
-
-  const workoutAnalytics = useMemo(() => buildWorkoutAnalyticsIndex(sessions), [sessions]);
-  const weeklyAnalytics = useMemo(() => buildPeriodAnalytics(sessions, "week").slice(-8), [sessions]);
-  const monthlyAnalytics = useMemo(() => buildPeriodAnalytics(sessions, "month").slice(-6), [sessions]);
 
   if (!ready) {
     return <AppShell title="Histórico"><div className="h-40 animate-pulse rounded-xl bg-card" /></AppShell>;
@@ -99,38 +95,9 @@ function HistoryPage() {
             </Card>
           </div>
 
-          {workoutAnalytics.size > 0 && (
-            <Card className="my-4 p-3">
-              <p className="text-sm font-semibold">Evolução por treino</p>
-              <p className="mt-1 text-xs text-muted-foreground">Compare o volume da sessão mais recente com a anterior.</p>
-              <div className="mt-3 space-y-2">
-                {[...workoutAnalytics.values()].slice(0, 6).map((workout) => (
-                  <div key={workout.workoutId} className="rounded-lg bg-elevated px-3 py-2.5">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="min-w-0 truncate text-xs font-semibold">{workout.workoutName}</span>
-                      <span className="shrink-0 text-xs font-bold tabular-nums">
-                        {Math.round(workout.latestVolume).toLocaleString("pt-BR")} kg
-                      </span>
-                    </div>
-                    <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
-                      <span>{workout.sessions.length} sessão{workout.sessions.length === 1 ? "" : "ões"}</span>
-                      <span>{workout.totalSets} séries</span>
-                      <span>{workout.averageDurationSeconds ? `${Math.round(workout.averageDurationSeconds / 60)} min médios` : "—"}</span>
-                      {workout.volumeChangePercent != null && (
-                        <span className={workout.volumeChangePercent >= 0 ? "text-primary" : "text-muted-foreground"}>
-                          {workout.volumeChangePercent > 0 ? "+" : ""}{workout.volumeChangePercent}% volume
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
           {sessions.length > 1 && (
             <Card className="my-4 p-3">
-              <p className="mb-3 text-sm font-semibold">Volume por treino</p>
+              <p className="mb-1 text-sm font-semibold">Evolução dos últimos treinos</p>\n              <p className="mb-3 text-xs text-muted-foreground">Volume de cada sessão concluída.</p>
               <div className="h-44 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={sessions.slice(0, 8).reverse().map((session) => ({
@@ -168,49 +135,6 @@ function HistoryPage() {
                 </ResponsiveContainer>
               </div>
             </Card>
-          )}
-
-          {(weeklyAnalytics.length > 1 || monthlyAnalytics.length > 1) && (
-            <div className="grid gap-3 md:grid-cols-2">
-              {weeklyAnalytics.length > 1 && (
-                <Card className="p-3">
-                  <p className="text-sm font-semibold">Evolução semanal</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Volume acumulado por semana.</p>
-                  <div className="mt-3 h-36">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={weeklyAnalytics}>
-                        <XAxis dataKey="label" tick={{ fontSize: 9 }} />
-                        <YAxis hide />
-                        <Tooltip
-                          cursor={false}
-                          formatter={(value) => [`${Number(value).toLocaleString("pt-BR")} kg`, "Volume"]}
-                        />
-                        <Bar dataKey="volume" fill="var(--primary)" radius={[5, 5, 0, 0]} isAnimationActive={false} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </Card>
-              )}
-              {monthlyAnalytics.length > 1 && (
-                <Card className="p-3">
-                  <p className="text-sm font-semibold">Evolução mensal</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Volume acumulado por mês.</p>
-                  <div className="mt-3 h-36">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={monthlyAnalytics}>
-                        <XAxis dataKey="label" tick={{ fontSize: 9 }} />
-                        <YAxis hide />
-                        <Tooltip
-                          cursor={false}
-                          formatter={(value) => [`${Number(value).toLocaleString("pt-BR")} kg`, "Volume"]}
-                        />
-                        <Bar dataKey="volume" fill="var(--primary)" radius={[5, 5, 0, 0]} isAnimationActive={false} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </Card>
-              )}
-            </div>
           )}
 
           <div className="space-y-3">
