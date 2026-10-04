@@ -159,21 +159,25 @@ export function GymProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ready) return;
 
-    const activeSession = state.activeSession;
-    if (!activeSession) {
+    if (!state.activeSession) {
       void stopNativeWorkoutNotification();
-      return;
     }
-
-    void startNativeWorkoutNotification(activeSession.workoutName);
-  }, [ready, state.activeSession?.id, state.activeSession?.workoutName]);
+  }, [ready, state.activeSession]);
 
   useEffect(() => {
     if (!ready) return;
 
     const flush = () => saveState(state);
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") flush();
+      if (document.visibilityState === "hidden") {
+        flush();
+        if (state.activeSession) {
+          void startNativeWorkoutNotification(state.activeSession.workoutName);
+        }
+        return;
+      }
+
+      void stopNativeWorkoutNotification();
     };
 
     window.addEventListener("pagehide", flush);
