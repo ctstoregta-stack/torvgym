@@ -11,3 +11,17 @@ test("identifica pacote de sincronização compatível", () => {
 test("rejeita versão de sincronização incompatível", () => {
   assert.equal(syncPackageMetadata(JSON.stringify({format:"other",version:1})), null);
 });
+
+
+test("metadados E2EE exigem algoritmo, KDF e iterações corretos", () => {
+  const valid = JSON.stringify({
+    format:"torvgym-sync", version:2, deviceId:"device-1",
+    createdAt:"2026-10-01T00:00:00.000Z", updatedAt:"2026-10-02T00:00:00.000Z",
+    algorithm:"AES-256-GCM", kdf:"PBKDF2-SHA256", iterations:300000,
+  });
+  assert.deepEqual(syncPackageMetadata(valid), {
+    deviceId:"device-1",createdAt:"2026-10-01T00:00:00.000Z",updatedAt:"2026-10-02T00:00:00.000Z",
+  });
+  const tampered = JSON.stringify({...JSON.parse(valid), iterations:150000});
+  assert.equal(syncPackageMetadata(tampered), null);
+});
