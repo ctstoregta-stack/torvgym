@@ -11,6 +11,7 @@ import {
 import { EXERCISE_DB } from "@/data/exercises";
 import { createBackup, emptyState, loadState, parseBackup, saveState, storageSizeBytes, uid } from "@/lib/storage";
 import { buildExerciseAnalyticsIndex, sessionPRFor } from "@/store/gym-analytics";
+import { validateExercise } from "@/lib/exercise-validation";
 import type {
   AppState,
   Exercise,
@@ -370,10 +371,23 @@ export function GymProvider({ children }: { children: ReactNode }) {
       })),
 
     addCustomExercise: (ex) =>
-      setState((s) => ({
-        ...s,
-        customExercises: [...s.customExercises, { ...ex, custom: true }],
-      })),
+      setState((s) => {
+        const candidate = { ...ex, custom: true } as Exercise;
+        if (validateExercise(candidate).length > 0) return s;
+
+        const duplicateId = [...EXERCISE_DB, ...s.customExercises].some(
+          (exercise) => exercise.id.trim().toLocaleLowerCase("pt-BR") === candidate.id.trim().toLocaleLowerCase("pt-BR"),
+        );
+        const duplicateName = [...EXERCISE_DB, ...s.customExercises].some(
+          (exercise) => exercise.name.trim().toLocaleLowerCase("pt-BR") === candidate.name.trim().toLocaleLowerCase("pt-BR"),
+        );
+        if (duplicateId || duplicateName) return s;
+
+        return {
+          ...s,
+          customExercises: [...s.customExercises, candidate],
+        };
+      }),
 
     startSession: (workoutId) => {
       const found = findWorkout(workoutId);
