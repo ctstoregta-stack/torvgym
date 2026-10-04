@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildExerciseAnalyticsIndex, buildPeriodAnalytics, buildWorkoutAnalyticsIndex, estimateSet1RM, setVolume, exerciseProgressionFor } from "../src/store/gym-analytics.ts";
+import { buildDashboardAnalytics, buildExerciseAnalyticsIndex, buildPeriodAnalytics, buildWorkoutAnalyticsIndex, estimateSet1RM, setVolume, exerciseProgressionFor } from "../src/store/gym-analytics.ts";
 
 test("calcula volume e 1RM estimado de uma série", () => {
   const set = { weight: 60, reps: 10, completed: true };
@@ -143,4 +143,47 @@ test("analytics semanal e mensal agrupam sessões, volume e séries", () => {
   assert.equal(weekly[0]?.sessions, 1);
   assert.equal(monthly.length, 1);
   assert.equal(monthly[0]?.volume, 650);
+});
+
+
+test("dashboard consolida métricas gerais e destaca exercícios por volume", () => {
+  const sessions = [
+    {
+      id: "s2",
+      routineId: "r1",
+      workoutId: "w1",
+      workoutName: "Treino A",
+      startedAt: "2026-10-03T10:00:00.000Z",
+      finishedAt: "2026-10-03T11:00:00.000Z",
+      entries: [{
+        exerciseId: "supino",
+        sets: [
+          { weight: 80, reps: 5, completed: true, isPR: true },
+          { weight: 70, reps: 8, completed: true },
+        ],
+      }],
+    },
+    {
+      id: "s1",
+      routineId: "r1",
+      workoutId: "w1",
+      workoutName: "Treino A",
+      startedAt: "2026-10-01T10:00:00.000Z",
+      finishedAt: "2026-10-01T11:00:00.000Z",
+      entries: [{
+        exerciseId: "supino",
+        sets: [
+          { weight: 70, reps: 5, completed: true },
+        ],
+      }],
+    },
+  ];
+  const dashboard = buildDashboardAnalytics(sessions);
+  assert.equal(dashboard.totalSessions, 2);
+  assert.equal(dashboard.totalVolume, 1180);
+  assert.equal(dashboard.totalSets, 3);
+  assert.equal(dashboard.totalPRs, 1);
+  assert.equal(dashboard.sessionsLast7Days, 2);
+  assert.equal(dashboard.topExercises[0]?.exerciseId, "supino");
+  assert.equal(dashboard.topExercises[0]?.volume, 1180);
 });
