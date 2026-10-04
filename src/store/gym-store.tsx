@@ -618,6 +618,14 @@ export function useGym() {
   return ctx;
 }
 
+    createEncryptedSyncPackage: (password) => createEncryptedSyncPackage(state, password),
+    importEncryptedSyncPackage: async (raw, password) => {
+      const payload = await decryptEncryptedSyncPackage(raw, password);
+      const imported = payload.state;
+      setState(imported);
+      return saveState(imported) ? "saved" : "memory-only";
+    },
+
 /** Grupos musculares derivados automaticamente dos exercícios do treino. */
 export function muscleGroupsOf(
   exerciseIds: string[],
