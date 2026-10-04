@@ -354,8 +354,8 @@ function ExecutePage() {
                       <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Carga · kg</span>
                       <input type="number" inputMode="decimal" step="0.5"
                         aria-label={`Carga da série ${i + 1} (kg)`}
-                        value={set.weight ?? prev?.weight ?? ""}
-                        placeholder={prev?.weight != null ? String(prev.weight) : "0"}
+                        value={set.weight ?? ""}
+                        placeholder="0"
                         onChange={(e) => updateSet(current.exerciseId, i, { weight: e.target.value === "" ? null : Number(e.target.value) })}
                         className="h-12 w-full rounded-xl border border-input bg-card px-2 text-center text-lg font-semibold tabular-nums outline-none transition-colors focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/40"
                       />
@@ -365,8 +365,8 @@ function ExecutePage() {
                       <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Repetições</span>
                       <input type="number" inputMode="numeric"
                         aria-label={`Repetições da série ${i + 1}`}
-                        value={set.reps ?? prev?.reps ?? ""}
-                        placeholder={prev?.reps != null ? String(prev.reps) : "0"}
+                        value={set.reps ?? ""}
+                        placeholder="0"
                         onChange={(e) => updateSet(current.exerciseId, i, { reps: e.target.value === "" ? null : Number(e.target.value) })}
                         className="h-12 w-full rounded-xl border border-input bg-card px-2 text-center text-lg font-semibold tabular-nums outline-none transition-colors focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/40"
                       />
@@ -375,8 +375,8 @@ function ExecutePage() {
                     <button aria-label={`Concluir série ${i + 1}`}
                       onClick={() => {
                         if (set.completed) { updateSet(current.exerciseId, i, { completed: false, isPR: false }); return; }
-                        const weight = set.weight ?? prev?.weight ?? null;
-                        const reps = set.reps ?? prev?.reps ?? null;
+                        const weight = set.weight;
+                        const reps = set.reps;
                         const sessionBest = Math.max(0, ...current.sets.filter((s) => s.completed && s.weight != null).map((s) => s.weight!));
                         const best = Math.max(storedPR ?? 0, sessionBest);
                         const isPR = weight != null && weight > best;
@@ -395,10 +395,10 @@ function ExecutePage() {
 
                   {!set.completed && isActiveSet && (
                     <div className="mt-2 grid grid-cols-4 gap-1.5">
-                      <QuickAdjust label="-2,5" ariaLabel="Diminuir 2,5 kg" onClick={() => updateSet(current.exerciseId, i, { weight: Math.max(0, (set.weight ?? prev?.weight ?? 0) - 2.5) })} />
-                      <QuickAdjust label="+2,5" ariaLabel="Aumentar 2,5 kg" onClick={() => updateSet(current.exerciseId, i, { weight: (set.weight ?? prev?.weight ?? 0) + 2.5 })} />
-                      <QuickAdjust label="-1 rep" ariaLabel="Diminuir uma repetição" onClick={() => updateSet(current.exerciseId, i, { reps: Math.max(0, (set.reps ?? prev?.reps ?? 0) - 1) })} />
-                      <QuickAdjust label="+1 rep" ariaLabel="Aumentar uma repetição" onClick={() => updateSet(current.exerciseId, i, { reps: (set.reps ?? prev?.reps ?? 0) + 1 })} />
+                      <QuickAdjust label="-2,5" ariaLabel="Diminuir 2,5 kg" onClick={() => updateSet(current.exerciseId, i, { weight: Math.max(0, (set.weight ?? 0) - 2.5) })} />
+                      <QuickAdjust label="+2,5" ariaLabel="Aumentar 2,5 kg" onClick={() => updateSet(current.exerciseId, i, { weight: (set.weight ?? 0) + 2.5 })} />
+                      <QuickAdjust label="-1 rep" ariaLabel="Diminuir uma repetição" onClick={() => updateSet(current.exerciseId, i, { reps: Math.max(0, (set.reps ?? 0) - 1) })} />
+                      <QuickAdjust label="+1 rep" ariaLabel="Aumentar uma repetição" onClick={() => updateSet(current.exerciseId, i, { reps: (set.reps ?? 0) + 1 })} />
                     </div>
                   )}
 
