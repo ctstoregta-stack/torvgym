@@ -56,7 +56,7 @@ public final class TorvGymWorkoutService extends Service {
         );
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_popup_sync)
+            .setSmallIcon(R.drawable.torvgym_logo)
             .setContentTitle("TorvGym — Treino ativo")
             .setContentText(safeName + " continua ativo em segundo plano")
             .setStyle(new NotificationCompat.BigTextStyle()
