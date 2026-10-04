@@ -75,7 +75,7 @@ function Settings() {
 
   async function handleSyncExport() {
     if (syncPassword.length < 8) {
-      toast.error("Use uma senha de pelo menos 8 caracteres para proteger a sincronização.");
+      toast.error("Use uma senha de pelo menos 12 caracteres para proteger a sincronização.");
       return;
     }
     try {
@@ -106,7 +106,7 @@ function Settings() {
       if (state.activeSession && !window.confirm("Existe um treino em andamento. Restaurar a sincronização substituirá esse estado. Continuar?")) return;
       const result = await importEncryptedSyncPackage(raw, syncPassword);
       toast[result === "saved" ? "success" : "warning"](
-        result === "saved" ? "Dados sincronizados neste dispositivo." : "Dados sincronizados em memória, mas não puderam ser gravados no armazenamento local.",
+        result === "saved" ? "Dados E2EE sincronizados neste dispositivo." : "Dados sincronizados em memória, mas não puderam ser gravados no armazenamento local.",
       );
     } catch {
       toast.error("Não foi possível abrir o pacote. Verifique a senha e o arquivo.");
@@ -172,16 +172,16 @@ function Settings() {
         </Card>
 
         <Card>
-          <h2 className="text-base font-semibold">Sincronização protegida</h2>
+          <h2 className="text-base font-semibold">Sincronização E2EE</h2>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            Gere um pacote criptografado para guardar em seu serviço de nuvem e restaurá-lo em outro dispositivo. O TorvGym continua funcionando offline e não envia seus dados para um servidor sem uma configuração de nuvem explícita.
+            Gere um pacote com criptografia de ponta a ponta. Os dados são criptografados neste dispositivo antes de serem exportados; quem armazenar o arquivo não consegue ler o conteúdo sem a senha. O TorvGym continua funcionando offline e não envia seus dados para um servidor sem uma configuração de nuvem explícita.
           </p>
           <label className="mt-4 block text-xs font-semibold text-muted-foreground">
             Senha de sincronização
             <input
               type="password"
               autoComplete="new-password"
-              minLength={8}
+              minLength={12}
               value={syncPassword}
               onChange={(event) => setSyncPassword(event.target.value)}
               placeholder="Mínimo de 8 caracteres"
@@ -189,7 +189,7 @@ function Settings() {
             />
           </label>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Button onClick={() => void handleSyncExport()}>Exportar pacote protegido</Button>
+            <Button onClick={() => void handleSyncExport()}>Exportar pacote E2EE</Button>
             <Button variant="outline" disabled={busy} onClick={() => syncInput?.click()}>
               {busy ? "Sincronizando…" : "Importar pacote"}
             </Button>
