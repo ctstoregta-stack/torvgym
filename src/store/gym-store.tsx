@@ -92,6 +92,8 @@ type Ctx = {
   setTargetSets: (workoutId: string, exerciseId: string, sets: number) => void;
   // custom exercises
   addCustomExercise: (ex: Omit<Exercise, "custom">) => void;
+  updateCustomExercise: (id: string, patch: Partial<Omit<Exercise, "id" | "custom">>) => boolean;
+  deleteCustomExercise: (id: string) => "deleted" | "in-use" | "not-found";
   // sessions
   startSession: (workoutId: string) => string | null;
   updateSet: (
@@ -373,7 +375,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
     addCustomExercise: (ex) =>
       setState((s) => {
         const candidate = { ...ex, custom: true } as Exercise;
-        if (validateExercise(candidate).length > 0) return s;
+        if (validateExercise(candidate, { allowOptionalCustomFields: true }).length > 0) return s;
 
         const duplicateId = [...EXERCISE_DB, ...s.customExercises].some(
           (exercise) => exercise.id.trim().toLocaleLowerCase("pt-BR") === candidate.id.trim().toLocaleLowerCase("pt-BR"),
@@ -388,6 +390,48 @@ export function GymProvider({ children }: { children: ReactNode }) {
           customExercises: [...s.customExercises, candidate],
         };
       }),
+
+    updateCustomExercise: (id, patch) => {
+      let changed = false;
+      setState((s) => {
+        const current = s.customExercises.find((exercise) => exercise.id === id);
+        if (!current) return s;
+        const candidate = { ...current, ...patch, id, custom: true } as Exercise;
+        if (validateExercise(candidate, { allowOptionalCustomFields: true }).length > 0) return s;
+        const duplicateName = [...EXERCISE_DB, ...s.customExercises]
+          .filter((exercise) => exercise.id !== id)
+          .some(
+            (exercise) =>
+              exercise.name.trim().toLocaleLowerCase("pt-BR") ===
+              candidate.name.trim().toLocaleLowerCase("pt-BR"),
+          );
+        if (duplicateName) return s;
+        changed = true;
+        return { ...s, customExercises: s.customExercises.map((exercise) =>
+          exercise.id === id ? candidate : exercise,
+        ) };
+      });
+      return changed;
+    },
+    deleteCustomExercise: (id) => {
+      let result: "deleted" | "in-use" | "not-found" = "not-found";
+      setState((s) => {
+        if (!s.customExercises.some((exercise) => exercise.id === id)) return s;
+        const usedByWorkout = s.routines.some((routine) =>
+          routine.workouts.some((workout) => workout.exerciseIds.includes(id)),
+        );
+        const usedByHistory = s.sessions.some((session) =>
+          session.entries.some((entry) => entry.exerciseId === id),
+        );
+        if (usedByWorkout || usedByHistory) {
+          result = "in-use";
+          return s;
+        }
+        result = "deleted";
+        return { ...s, customExercises: s.customExercises.filter((exercise) => exercise.id !== id) };
+      });
+      return result;
+    },
 
     startSession: (workoutId) => {
       const found = findWorkout(workoutId);

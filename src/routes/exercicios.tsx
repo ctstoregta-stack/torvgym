@@ -25,10 +25,12 @@ export const Route = createFileRoute("/exercicios")({
 });
 
 function ExercisesPage() {
-  const { ready, exercises, addCustomExercise, prFor } = useGym();
+  const { ready, exercises, addCustomExercise, updateCustomExercise, deleteCustomExercise, prFor } = useGym();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
+  const [scope, setScope] = useState<"all" | "custom">("all");
   const [creating, setCreating] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [visibleLimit, setVisibleLimit] = useState(24);
   const [form, setForm] = useState({
     name: "",
@@ -53,13 +55,14 @@ function ExercisesPage() {
       exercises
         .filter(
           (e) =>
+            (scope === "all" || e.custom === true) &&
             (!category || e.category === category) &&
             `${e.name} ${e.equipment}`.toLocaleLowerCase("pt-BR").includes(query.toLocaleLowerCase("pt-BR")),
         )
         .sort((a, b) =>
           a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }),
         ),
-    [exercises, query, category],
+    [exercises, query, category, scope],
   );
 
   const visibleExercises = filtered.slice(0, visibleLimit);
@@ -82,19 +85,26 @@ function ExercisesPage() {
 
       <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
         <button
-          aria-pressed={category === null}
-          onClick={() => setCategory(null)}
+          aria-pressed={scope === "all" && category === null}
+          onClick={() => { setScope("all"); setCategory(null); }}
           className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
             category === null ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"
           }`}
         >
           Todos
         </button>
+        <button
+          aria-pressed={scope === "custom"}
+          onClick={() => { setScope("custom"); setCategory(null); }}
+          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${scope === "custom" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
+        >
+          Personalizados
+        </button>
         {categories.map((c) => (
           <button
             key={c}
-            aria-pressed={category === c}
-            onClick={() => setCategory(c)}
+            aria-pressed={scope === "all" && category === c}
+            onClick={() => { setScope("all"); setCategory(c); }}
             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
               category === c ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"
             }`}
@@ -112,14 +122,31 @@ function ExercisesPage() {
               <div className="surface flex items-center gap-3 p-3 tap active:scale-[0.99]">
                 <ExerciseMedia exercise={ex} className="h-16 w-16 shrink-0" rounded="rounded-lg" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{ex.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {ex.category} · {ex.equipment}
-                  </p>
-                  {pr != null && (
-                    <p className="mt-0.5 text-xs font-semibold text-gold">PR {pr} kg</p>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-semibold">{ex.name}</p>
+                    {ex.custom && <span className="shrink-0 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">Personalizado</span>}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{ex.category} · {ex.equipment}</p>
+                  {pr != null && <p className="mt-0.5 text-xs font-semibold text-gold">PR {pr} kg</p>}
                 </div>
+                {ex.custom && (
+                  <div className="flex shrink-0 flex-col gap-1">
+                    <button type="button" className="text-[11px] font-semibold text-primary" onClick={(event) => {
+                      event.preventDefault(); event.stopPropagation();
+                      setEditingId(ex.id); setForm({
+                        name: ex.name, category: ex.category, equipment: ex.equipment,
+                        gif_url: ex.gif_url, execution: ex.execution,
+                        primary: ex.primary_muscles.join(", "), secondary: ex.secondary_muscles.join(", "),
+                      }); setCreating(false);
+                    }}>Editar</button>
+                    <button type="button" className="text-[11px] font-semibold text-destructive" onClick={(event) => {
+                      event.preventDefault(); event.stopPropagation();
+                      if (deleteCustomExercise(ex.id) === "in-use") {
+                        window.alert("Este exercício já está em um treino ou histórico e não pode ser excluído.");
+                      }
+                    }}>Excluir</button>
+                  </div>
+                )}
               </div>
             </Link>
           );
@@ -142,12 +169,12 @@ function ExercisesPage() {
 
       <Card className="mt-6">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold">Criar exercício</p>
+          <p className="text-sm font-semibold">{editingId ? "Editar exercício personalizado" : "Criar exercício"}</p>
           <button
             className="text-xs font-semibold text-primary"
             onClick={() => setCreating((v) => !v)}
           >
-            {creating ? "Cancelar" : "Abrir"}
+            {creating || editingId ? "Cancelar" : "Abrir"}
           </button>
         </div>
         {creating && (
@@ -193,8 +220,19 @@ function ExercisesPage() {
               onClick={() => {
                 const split = (v: string) =>
                   v.split(",").map((s) => s.trim()).filter(Boolean);
-                addCustomExercise({
-                  id: `custom-${form.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36)}`,
+                if (editingId) {
+                  updateCustomExercise(editingId, {
+                    name: form.name.trim(),
+                    category: form.category.trim(),
+                    equipment: form.equipment.trim() || "Livre",
+                    gif_url: form.gif_url.trim(),
+                    execution: form.execution.trim(),
+                    primary_muscles: split(form.primary),
+                    secondary_muscles: split(form.secondary),
+                  });
+                } else {
+                  addCustomExercise({
+                    id: `custom-${form.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36)}`,
                   name: form.name.trim(),
                   category: form.category.trim(),
                   equipment: form.equipment.trim() || "Livre",
@@ -202,17 +240,13 @@ function ExercisesPage() {
                   execution: form.execution.trim(),
                   primary_muscles: split(form.primary),
                   secondary_muscles: split(form.secondary),
-                });
+                  });
+                }
                 setForm({
-                  name: "",
-                  category: "",
-                  equipment: "",
-                  gif_url: "",
-                  execution: "",
-                  primary: "",
-                  secondary: "",
+                  name: "", category: "", equipment: "", gif_url: "", execution: "", primary: "", secondary: "",
                 });
                 setCreating(false);
+                setEditingId(null);
               }}
             >
               Salvar exercício

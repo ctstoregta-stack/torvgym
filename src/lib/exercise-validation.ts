@@ -20,11 +20,21 @@ const REQUIRED_TEXT_FIELDS = [
   "execution",
 ] as const;
 
-export function validateExercise(exercise: Exercise): ExerciseDatabaseIssue[] {
+export function validateExercise(
+  exercise: Exercise,
+  options: { allowOptionalCustomFields?: boolean } = {},
+): ExerciseDatabaseIssue[] {
   const issues: ExerciseDatabaseIssue[] = [];
 
   for (const field of REQUIRED_TEXT_FIELDS) {
-    if (typeof exercise[field] !== "string" || exercise[field].trim() === "") {
+    const optionalCustomField =
+      options.allowOptionalCustomFields &&
+      exercise.custom === true &&
+      (field === "gif_url" || field === "execution");
+    if (
+      !optionalCustomField &&
+      (typeof exercise[field] !== "string" || exercise[field].trim() === "")
+    {
       issues.push({
         code: "missing-field",
         exerciseId: exercise.id,
