@@ -13,6 +13,7 @@ import { createBackup, emptyState, loadState, parseBackup, saveState, storageSiz
 import { buildExerciseAnalyticsIndex, sessionPRFor } from "@/store/gym-analytics";
 import { validateExercise } from "@/lib/exercise-validation";
 import { createEncryptedSyncPackage, decryptEncryptedSyncPackage } from "@/lib/cloud-sync";
+import { startNativeWorkoutNotification, stopNativeWorkoutNotification } from "@/lib/native-workout";
 import type {
   AppState,
   Exercise,
@@ -154,6 +155,18 @@ export function GymProvider({ children }: { children: ReactNode }) {
     if (!ready || !state.activeSession) return;
     saveState(state);
   }, [state.activeSession, ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+
+    const activeSession = state.activeSession;
+    if (!activeSession) {
+      void stopNativeWorkoutNotification();
+      return;
+    }
+
+    void startNativeWorkoutNotification(activeSession.workoutName);
+  }, [ready, state.activeSession?.id, state.activeSession?.workoutName]);
 
   useEffect(() => {
     if (!ready) return;
