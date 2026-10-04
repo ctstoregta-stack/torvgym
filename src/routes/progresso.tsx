@@ -1,0 +1,179 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo } from "react";
+import { AppShell } from "@/components/AppShell";
+import { Button, Card, EmptyState, Tag } from "@/components/ui-kit";
+import {
+  buildDashboardAnalytics,
+  buildExerciseAnalyticsIndex,
+  buildPeriodAnalytics,
+  exerciseProgressionFromHistory,
+} from "@/store/gym-analytics";
+import { useGym } from "@/store/gym-store";
+
+export const Route = createFileRoute("/progresso")({
+  head: () => ({
+    meta: [
+      { title: "Progresso · TorvGym" },
+      { name: "description", content: "Dashboard de evolução, volume, frequência, PRs e progressão." },
+    ],
+  }),
+  component: ProgressPage,
+});
+
+function formatDuration(seconds: number) {
+  if (!seconds) return "—";
+  const minutes = Math.round(seconds / 60);
+  return minutes >= 60
+    ? `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}min`
+    : `${minutes} min`;
+}
+
+function ProgressPage() {
+  const { ready, state, getExercise } = useGym();
+  const completed = useMemo(
+    () => state.sessions.filter((session) => session.finishedAt),
+    [state.sessions],
+  );
+  const dashboard = useMemo(() => buildDashboardAnalytics(completed), [completed]);
+  const weekly = useMemo(() => buildPeriodAnalytics(completed, "week").slice(-8), [completed]);
+  const monthly = useMemo(() => buildPeriodAnalytics(completed, "month").slice(-6), [completed]);
+  const exerciseIndex = useMemo(() => buildExerciseAnalyticsIndex(completed), [completed]);
+  const progressions = useMemo(
+    () =>
+      [...exerciseIndex.entries()]
+        .map(([exerciseId, data]) => ({
+          exerciseId,
+          progression: exerciseProgressionFromHistory(data.history),
+        }))
+        .filter((item) => item.progression)
+        .sort(
+          (a, b) =>
+            Math.abs(b.progression?.estimated1RMChangePercent ?? 0) -
+            Math.abs(a.progression?.estimated1RMChangePercent ?? 0),
+        )
+        .slice(0, 6),
+    [exerciseIndex],
+  );
+
+  if (!ready) return <AppShell title="Progresso"><div className="h-40 animate-pulse rounded-xl bg-card" /></AppShell>;
+
+  if (!completed.length) {
+    return (
+      <AppShell title="Progresso" back={{ to: "/" }}>
+        <EmptyState
+          title="Seu dashboard começa no primeiro treino"
+          description="Finalize um treino para acompanhar frequência, volume, PRs e evolução por exercício."
+          action={<Link to="/"><Button>Ir para o início</Button></Link>}
+        />
+      </AppShell>
+    );
+  }
+
+  return (
+    <AppShell title="Progresso" back={{ to: "/" }}>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <Metric label="Treinos" value={dashboard.totalSessions.toLocaleString("pt-BR")} />
+        <Metric label="Volume" value={`${Math.round(dashboard.totalVolume).toLocaleString("pt-BR")} kg`} />
+        <Metric label="Séries" value={dashboard.totalSets.toLocaleString("pt-BR")} />
+        <Metric label="PRs" value={dashboard.totalPRs.toLocaleString("pt-BR")} />
+      </div>
+
+      <Card className="mt-4">
+        <p className="text-sm font-semibold">Ritmo atual</p>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className="rounded-xl bg-elevated p-3">
+            <p className="text-[11px] text-muted-foreground">Últimos 7 dias</p>
+            <p className="mt-1 text-xl font-bold">{dashboard.sessionsLast7Days} treino{dashboard.sessionsLast7Days === 1 ? "" : "s"}</p>
+          </div>
+          <div className="rounded-xl bg-elevated p-3">
+            <p className="text-[11px] text-muted-foreground">Duração média</p>
+            <p className="mt-1 text-xl font-bold">{formatDuration(dashboard.averageDurationSeconds)}</p>
+          </div>
+        </div>
+        {dashboard.volumeChangePercent != null && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Volume no último treino: <strong className="text-foreground">{dashboard.volumeChangePercent > 0 ? "+" : ""}{dashboard.volumeChangePercent}%</strong> em relação ao anterior.
+          </p>
+        )}
+      </Card>
+
+      <Card className="mt-4">
+        <p className="text-sm font-semibold">Semanas recentes</p>
+        <div className="mt-3 space-y-2">
+          {weekly.map((item) => (
+            <div key={item.key} className="grid grid-cols-[48px_1fr_auto] items-center gap-2">
+              <span className="text-[11px] text-muted-foreground">{item.label}</span>
+              <div className="h-2 overflow-hidden rounded-full bg-elevated">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, Math.max(6, (item.volume / Math.max(...weekly.map((w) => w.volume), 1)) * 100))}%` }} />
+              </div>
+              <span className="text-[11px] font-semibold tabular-nums">{item.sessions}x · {Math.round(item.volume)} kg</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="mt-4">
+        <p className="text-sm font-semibold">Meses recentes</p>
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {monthly.map((item) => (
+            <div key={item.key} className="rounded-xl bg-elevated p-3">
+              <p className="text-[11px] text-muted-foreground">{item.label}</p>
+              <p className="mt-1 text-lg font-bold">{Math.round(item.volume).toLocaleString("pt-BR")} kg</p>
+              <p className="text-[11px] text-muted-foreground">{item.sessions} treinos · {item.sets} séries</p>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="mt-4">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="text-sm font-semibold">Exercícios de maior volume</p>
+            <p className="text-xs text-muted-foreground">Onde você mais acumulou trabalho.</p>
+          </div>
+          <Link to="/exercicios" className="text-xs font-semibold text-primary">Biblioteca</Link>
+        </div>
+        <div className="mt-3 space-y-2">
+          {dashboard.topExercises.map((item) => (
+            <Link key={item.exerciseId} to="/exercicio/$exerciseId" params={{ exerciseId: item.exerciseId }} className="flex items-center justify-between gap-3 rounded-xl bg-elevated p-3">
+              <span className="min-w-0 truncate text-sm font-semibold">{getExercise(item.exerciseId)?.name ?? item.exerciseId}</span>
+              <span className="shrink-0 text-xs font-bold tabular-nums">{Math.round(item.volume).toLocaleString("pt-BR")} kg</span>
+            </Link>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="mt-4">
+        <p className="text-sm font-semibold">Progressão recente</p>
+        <div className="mt-3 space-y-2">
+          {progressions.map(({ exerciseId, progression }) => {
+            if (!progression) return null;
+            const change = progression.estimated1RMChangePercent;
+            const label =
+              progression.recommendation === "increase-load" ? "Aumentar carga" :
+              progression.recommendation === "add-reps" ? "Adicionar reps" :
+              progression.recommendation === "recover" ? "Recuperar" : "Manter";
+            return (
+              <Link key={exerciseId} to="/exercicio/$exerciseId" params={{ exerciseId }} className="flex items-center justify-between gap-3 rounded-xl bg-elevated p-3">
+                <span className="min-w-0 truncate text-sm font-semibold">{getExercise(exerciseId)?.name ?? exerciseId}</span>
+                <span className="flex shrink-0 items-center gap-2">
+                  <Tag>{label}</Tag>
+                  <span className="text-xs font-bold tabular-nums">{change == null ? "—" : `${change > 0 ? "+" : ""}${change}% 1RM`}</span>
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </Card>
+    </AppShell>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <Card className="p-3">
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className="mt-1 text-xl font-bold tabular-nums">{value}</p>
+    </Card>
+  );
+}
