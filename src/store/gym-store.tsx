@@ -244,7 +244,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
       // encontrada no histórico. O histórico é cronológico (mais antigo → mais novo).
       for (let i = finishedSessions.length - 1; i >= 0; i -= 1) {
         const session = finishedSessions[i];
-        if (session.workoutId !== workoutId) continue;
+        if (!session || session.workoutId !== workoutId) continue;
         const entry = session.entries.find((item) => item.exerciseId === exerciseId);
         const sets = entry?.sets.filter((set) => set.completed) ?? [];
         if (sets.length) return sets;
