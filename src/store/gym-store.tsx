@@ -10,7 +10,7 @@ import {
 } from "react";
 import { EXERCISE_DB } from "@/data/exercises";
 import { createBackup, emptyState, loadState, parseBackup, saveState, storageSizeBytes, uid } from "@/lib/storage";
-import { buildExerciseAnalyticsIndex, exerciseHistoryFor, lastExerciseSets, sessionPRFor } from "@/store/gym-analytics";
+import { buildExerciseAnalyticsIndex, sessionPRFor } from "@/store/gym-analytics";
 import type {
   AppState,
   Exercise,
@@ -229,13 +229,13 @@ export function GymProvider({ children }: { children: ReactNode }) {
 
   const prFor = useCallback(
     (exerciseId: string) => {
-      const historical = sessionPRFor(finishedSessions, exerciseId);
+      const historical = getAnalyticsIndex().get(exerciseId)?.pr ?? null;
       const active = state.activeSession ? sessionPRFor([state.activeSession], exerciseId) : null;
       if (historical == null) return active;
       if (active == null) return historical;
       return Math.max(historical, active);
     },
-    [finishedSessions, state.activeSession],
+    [getAnalyticsIndex, state.activeSession],
   );
 
   const lastSetsForWorkout = useCallback(
@@ -252,16 +252,13 @@ export function GymProvider({ children }: { children: ReactNode }) {
   );
 
   const historyFor = useCallback(
-    (exerciseId: string) => {
-      getAnalyticsIndex();
-      return exerciseHistoryFor(finishedSessions, exerciseId);
-    },
-    [finishedSessions, getAnalyticsIndex],
+    (exerciseId: string) => getAnalyticsIndex().get(exerciseId)?.history ?? [],
+    [getAnalyticsIndex],
   );
 
   const lastSetsFor = useCallback(
-    (exerciseId: string) => lastExerciseSets(finishedSessions, exerciseId),
-    [finishedSessions],
+    (exerciseId: string) => getAnalyticsIndex().get(exerciseId)?.lastSets ?? null,
+    [getAnalyticsIndex],
   );
 
   const updateSessionContext = useCallback((patch: Partial<Pick<Session, "currentExerciseIndex" | "restStartedAt" | "restTotal" | "restRemaining" | "restRunning">>) => {
