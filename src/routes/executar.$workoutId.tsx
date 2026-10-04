@@ -102,6 +102,8 @@ function ExecutePage() {
     updateSessionContext,
   } = useGym();
 
+  const defaultRest = findWorkout(workoutId)?.workout.restSeconds ?? DEFAULT_REST;
+
   const [now, setNow] = useState(() => Date.now());
   const [index, setIndex] = useState(0);
   const [rest, setRest] = useState<RestState>(null);
@@ -151,8 +153,6 @@ function ExecutePage() {
   }, [updateSet]);
 
   const session = state.activeSession;
-  const workoutConfig = findWorkout(workoutId)?.workout;
-  const defaultRest = workoutConfig?.restSeconds ?? DEFAULT_REST;
 
   useEffect(() => {
     if (!session || session.workoutId !== workoutId) return;
