@@ -89,6 +89,7 @@ function ExecutePage() {
     ready,
     state,
     getExercise,
+    findWorkout,
     updateSet,
     addSet,
     duplicateSet,
@@ -130,14 +131,14 @@ function ExecutePage() {
       });
       return next;
     });
-  }, [updateSessionContext]);
+  }, [defaultRest, updateSessionContext]);
 
   const handleRestSkip = useCallback(() => {
     setRest(null);
     updateSessionContext({ restStartedAt: null, restTotal: 0, restRemaining: 0, restRunning: false });
   }, [updateSessionContext]);
 
-  const startRest = useCallback((seconds: number = DEFAULT_REST) => {
+  const startRest = useCallback((seconds: number = defaultRest) => {
     const startedAt = new Date().toISOString();
     const next = { total: seconds, remaining: seconds, running: true, startedAt: Date.now() } as RestState;
     setRest(next);
@@ -150,6 +151,8 @@ function ExecutePage() {
   }, [updateSet]);
 
   const session = state.activeSession;
+  const workoutConfig = findWorkout(workoutId)?.workout;
+  const defaultRest = workoutConfig?.restSeconds ?? DEFAULT_REST;
 
   useEffect(() => {
     if (!session || session.workoutId !== workoutId) return;
