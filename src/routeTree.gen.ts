@@ -19,6 +19,7 @@ import { Route as ExercicioExerciseIdRouteImport } from './routes/exercicio.$exe
 import { Route as TreinoWorkoutIdRouteImport } from './routes/treino.$workoutId'
 import { Route as ProgressoRouteImport } from './routes/progresso'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
+import { Route as ConquistasRouteImport } from './routes/conquistas'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -70,6 +71,11 @@ const RelatoriosRoute = RelatoriosRouteImport.update({
   path: '/relatorios',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConquistasRoute = ConquistasRouteImport.update({
+  id: '/conquistas',
+  path: '/conquistas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/treino/$workoutId': typeof TreinoWorkoutIdRoute
   '/progresso': typeof ProgressoRoute
   '/relatorios': typeof RelatoriosRoute
+  '/conquistas': typeof ConquistasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -121,6 +128,7 @@ export interface FileRouteTypes {
     | '/treino/$workoutId'
     | '/progresso'
     | '/relatorios'
+    | '/conquistas'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,6 +141,7 @@ export interface FileRouteTypes {
     | '/treino/$workoutId'
     | '/progresso'
     | '/relatorios'
+    | '/conquistas'
   id:
     | '__root__'
     | '/'
@@ -158,6 +167,7 @@ export interface RootRouteChildren {
   TreinoWorkoutIdRoute: typeof TreinoWorkoutIdRoute
   ProgressoRoute: typeof ProgressoRoute
   RelatoriosRoute: typeof RelatoriosRoute
+  ConquistasRoute: typeof ConquistasRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -230,6 +240,13 @@ declare module '@tanstack/react-router' {
       path: '/relatorios'
       fullPath: '/relatorios'
       preLoaderRoute: typeof RelatoriosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conquistas': {
+      id: '/conquistas'
+      path: '/conquistas'
+      fullPath: '/conquistas'
+      preLoaderRoute: typeof ConquistasRouteImport
       parentRoute: typeof rootRouteImport
     }
   }

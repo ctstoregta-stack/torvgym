@@ -163,12 +163,18 @@ function Home() {
             </p>
           </Card>
         </Link>
-        <a href="/progresso">
+        <Link to="/progresso">
           <Card className="h-full">
             <p className="text-sm font-semibold">Progresso</p>
             <p className="mt-1 text-xs text-muted-foreground">Dashboard de evolução</p>
           </Card>
-        </a>
+        </Link>
+        <Link to="/conquistas">
+          <Card className="h-full">
+            <p className="text-sm font-semibold">Conquistas</p>
+            <p className="mt-1 text-xs text-muted-foreground">XP, níveis e sequência</p>
+          </Card>
+        </Link>
         <Link to="/historico">
           <Card className="h-full">
             <p className="text-sm font-semibold">Histórico</p>
