@@ -1,8 +1,8 @@
 import type { AppState } from "./types";
 
 const FORMAT = "torvgym-sync";
-const VERSION = 1;
-const ITERATIONS = 150000;
+const VERSION = 2;
+const ITERATIONS = 300000;
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
@@ -35,6 +35,9 @@ export type SyncEnvelope = {
   salt: string;
   iv: string;
   ciphertext: string;
+  algorithm: "AES-256-GCM";
+  kdf: "PBKDF2-SHA256";
+  iterations: number;
 };
 
 export function getSyncDeviceId() {
@@ -47,13 +50,15 @@ export function getSyncDeviceId() {
 }
 
 export async function createEncryptedSyncPackage(state: AppState, password: string): Promise<string> {
-  if (password.length < 8) throw new Error("A senha de sincronização deve ter pelo menos 8 caracteres.");
+  if (password.length < 12) throw new Error("A senha de sincronização deve ter pelo menos 12 caracteres.");
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKey(password, salt);
   const now = new Date().toISOString();
+  const aadText = `${FORMAT}|${VERSION}|${now}|${now}|${getSyncDeviceId()}`;
+  const aad = enc.encode(aadText);
   const plaintext = enc.encode(JSON.stringify({ state, updatedAt: now }));
-  const ciphertext = await crypto.subtle.encrypt({ name:"AES-GCM", iv }, key, plaintext);
+  const ciphertext = await crypto.subtle.encrypt({ name:"AES-GCM", iv, additionalData: aad }, key, plaintext);
   const envelope: SyncEnvelope = {
     format: FORMAT,
     version: VERSION,
@@ -63,6 +68,9 @@ export async function createEncryptedSyncPackage(state: AppState, password: stri
     salt: bytesToBase64(salt),
     iv: bytesToBase64(iv),
     ciphertext: bytesToBase64(new Uint8Array(ciphertext)),
+    algorithm: "AES-256-GCM",
+    kdf: "PBKDF2-SHA256",
+    iterations: ITERATIONS,
   };
   return JSON.stringify(envelope, null, 2);
 }
@@ -71,11 +79,13 @@ export async function decryptEncryptedSyncPackage(raw: string, password: string)
   const parsed: unknown = JSON.parse(raw);
   if (!parsed || typeof parsed !== "object") throw new Error("Pacote de sincronização inválido.");
   const envelope = parsed as Partial<SyncEnvelope>;
-  if (envelope.format !== FORMAT || envelope.version !== VERSION || !envelope.salt || !envelope.iv || !envelope.ciphertext) {
+  if (envelope.format !== FORMAT || envelope.version !== VERSION || envelope.algorithm !== "AES-256-GCM" || envelope.kdf !== "PBKDF2-SHA256" || envelope.iterations !== ITERATIONS || !envelope.salt || !envelope.iv || !envelope.ciphertext || !envelope.deviceId || !envelope.createdAt || !envelope.updatedAt) {
     throw new Error("Pacote de sincronização incompatível.");
   }
   const key = await deriveKey(password, base64ToBytes(envelope.salt));
-  const plaintext = await crypto.subtle.decrypt({ name:"AES-GCM", iv:base64ToBytes(envelope.iv) as unknown as BufferSource }, key, base64ToBytes(envelope.ciphertext));
+  const aadText = `${FORMAT}|${VERSION}|${envelope.createdAt}|${envelope.updatedAt}|${envelope.deviceId}`;
+  const aad = enc.encode(aadText);
+  const plaintext = await crypto.subtle.decrypt({ name:"AES-GCM", iv:base64ToBytes(envelope.iv) as unknown as BufferSource, additionalData: aad }, key, base64ToBytes(envelope.ciphertext));
   const payload: unknown = JSON.parse(dec.decode(plaintext));
   if (!payload || typeof payload !== "object" || !("state" in payload) || typeof (payload as { updatedAt?: unknown }).updatedAt !== "string") {
     throw new Error("Conteúdo de sincronização inválido.");
@@ -88,5 +98,6 @@ export async function decryptEncryptedSyncPackage(raw: string, password: string)
 export function syncPackageMetadata(raw: string) {
   const parsed = JSON.parse(raw) as Partial<SyncEnvelope>;
   if (parsed.format !== FORMAT || parsed.version !== VERSION) return null;
+  if (parsed.algorithm !== "AES-256-GCM" || parsed.kdf !== "PBKDF2-SHA256" || parsed.iterations !== ITERATIONS) return null;
   return { deviceId: parsed.deviceId ?? "", createdAt: parsed.createdAt ?? "", updatedAt: parsed.updatedAt ?? "" };
 }
