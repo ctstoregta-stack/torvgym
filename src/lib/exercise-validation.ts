@@ -34,7 +34,7 @@ export function validateExercise(
     if (
       !optionalCustomField &&
       (typeof exercise[field] !== "string" || exercise[field].trim() === "")
-    {
+    ) {
       issues.push({
         code: "missing-field",
         exerciseId: exercise.id,
