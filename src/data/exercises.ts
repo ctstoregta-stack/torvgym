@@ -1,3 +1,4 @@
+import { validateExerciseDatabase } from "@/lib/exercise-validation";
 import type { Exercise } from "@/lib/types";
 
 /**
@@ -1165,6 +1166,14 @@ const ADDITIONAL_EXERCISES: Exercise[] = [
 ];
 
 export const EXERCISE_DB: Exercise[] = [...BASE_EXERCISE_DB, ...ADDITIONAL_EXERCISES];
+
+const EXERCISE_DATABASE_ISSUES = validateExerciseDatabase(EXERCISE_DB);
+if (EXERCISE_DATABASE_ISSUES.length > 0) {
+  throw new Error(
+    `Banco de exercícios inválido: ${EXERCISE_DATABASE_ISSUES.map((issue) => issue.message).join("; ")}`,
+  );
+}
+
 export const CATEGORIES = Array.from(
   new Set(EXERCISE_DB.map((e) => e.category)),
 ).sort();
