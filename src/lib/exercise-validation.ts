@@ -1,4 +1,4 @@
-import type { Exercise } from "@/lib/types";
+import type { Exercise } from "./types";
 
 export type ExerciseDatabaseIssue = {
   code:
