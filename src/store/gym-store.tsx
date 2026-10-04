@@ -399,7 +399,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
       setState((s) => {
         if (!s.activeSession) return s;
 
-        const historicalBest = analyticsIndex.get(exerciseId)?.pr ?? 0;
+        const historicalBest = getAnalyticsIndex().get(exerciseId)?.pr ?? 0;
 
         const nextEntries = s.activeSession.entries.map((entry) =>
           entry.exerciseId === exerciseId
