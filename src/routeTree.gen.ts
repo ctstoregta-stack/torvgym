@@ -18,6 +18,7 @@ import { Route as ExecutarWorkoutIdRouteImport } from './routes/executar.$workou
 import { Route as ExercicioExerciseIdRouteImport } from './routes/exercicio.$exerciseId'
 import { Route as TreinoWorkoutIdRouteImport } from './routes/treino.$workoutId'
 import { Route as ProgressoRouteImport } from './routes/progresso'
+import { Route as RelatoriosRouteImport } from './routes/relatorios'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,11 @@ const ProgressoRoute = ProgressoRouteImport.update({
   path: '/progresso',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RelatoriosRoute = RelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,8 +81,7 @@ export interface FileRoutesByFullPath {
   '/exercicio/$exerciseId': typeof ExercicioExerciseIdRoute
   '/treino/$workoutId': typeof TreinoWorkoutIdRoute
   '/progresso': typeof ProgressoRoute
-  '/progresso': typeof ProgressoRoute
-  '/progresso': typeof ProgressoRoute
+  '/relatorios': typeof RelatoriosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -111,6 +116,7 @@ export interface FileRouteTypes {
     | '/exercicio/$exerciseId'
     | '/treino/$workoutId'
     | '/progresso'
+    | '/relatorios'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +128,7 @@ export interface FileRouteTypes {
     | '/exercicio/$exerciseId'
     | '/treino/$workoutId'
     | '/progresso'
+    | '/relatorios'
   id:
     | '__root__'
     | '/'
@@ -133,6 +140,7 @@ export interface FileRouteTypes {
     | '/exercicio/$exerciseId'
     | '/treino/$workoutId'
     | '/progresso'
+    | '/relatorios'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +153,7 @@ export interface RootRouteChildren {
   ExercicioExerciseIdRoute: typeof ExercicioExerciseIdRoute
   TreinoWorkoutIdRoute: typeof TreinoWorkoutIdRoute
   ProgressoRoute: typeof ProgressoRoute
+  RelatoriosRoute: typeof RelatoriosRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -225,6 +234,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExercicioExerciseIdRoute: ExercicioExerciseIdRoute,
   TreinoWorkoutIdRoute: TreinoWorkoutIdRoute,
   ProgressoRoute: ProgressoRoute,
+  RelatoriosRoute: RelatoriosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
