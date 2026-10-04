@@ -187,6 +187,163 @@ export function buildExerciseAnalyticsIndex(sessions: Session[]) {
 
   return index;
 }
+export type WorkoutAnalytics = {
+  workoutId: string;
+  workoutName: string;
+  sessions: {
+    sessionId: string;
+    date: string;
+    durationSeconds: number;
+    volume: number;
+    sets: number;
+    exercises: number;
+  }[];
+  totalVolume: number;
+  totalSets: number;
+  averageDurationSeconds: number;
+  latestVolume: number;
+  previousVolume: number | null;
+  volumeChangePercent: number | null;
+};
+
+export type PeriodAnalytics = {
+  key: string;
+  label: string;
+  sessions: number;
+  volume: number;
+  sets: number;
+};
+
+export function sessionVolume(session: Session) {
+  return session.entries.reduce(
+    (total, entry) =>
+      total +
+      entry.sets.reduce((sum, set) => sum + setVolume(set), 0),
+    0,
+  );
+}
+
+export function sessionSetCount(session: Session) {
+  return session.entries.reduce((total, entry) => total + entry.sets.length, 0);
+}
+
+export function sessionDurationSeconds(session: Session) {
+  if (!session.finishedAt) return 0;
+  return Math.max(
+    0,
+    Math.floor(
+      (new Date(session.finishedAt).getTime() - new Date(session.startedAt).getTime()) /
+        1000,
+    ),
+  );
+}
+
+function percentChange(current: number, prior: number) {
+  return prior > 0 ? Math.round(((current - prior) / prior) * 1000) / 10 : null;
+}
+
+export function buildWorkoutAnalyticsIndex(sessions: Session[]) {
+  const index = new Map<string, WorkoutAnalytics>();
+  const sortedSessions = [...sessions]
+    .filter((session) => session.finishedAt)
+    .sort(
+      (a, b) =>
+        new Date(b.finishedAt ?? b.startedAt).getTime() -
+        new Date(a.finishedAt ?? a.startedAt).getTime(),
+    );
+
+  for (const session of sortedSessions) {
+    const current = index.get(session.workoutId) ?? {
+      workoutId: session.workoutId,
+      workoutName: session.workoutName,
+      sessions: [],
+      totalVolume: 0,
+      totalSets: 0,
+      averageDurationSeconds: 0,
+      latestVolume: 0,
+      previousVolume: null,
+      volumeChangePercent: null,
+    };
+
+    const volume = sessionVolume(session);
+    const sets = sessionSetCount(session);
+    current.sessions.push({
+      sessionId: session.id,
+      date: session.finishedAt ?? session.startedAt,
+      durationSeconds: sessionDurationSeconds(session),
+      volume,
+      sets,
+      exercises: session.entries.length,
+    });
+    current.totalVolume += volume;
+    current.totalSets += sets;
+
+    index.set(session.workoutId, current);
+  }
+
+  for (const value of index.values()) {
+    const durations = value.sessions.map((session) => session.durationSeconds);
+    value.averageDurationSeconds = durations.length
+      ? Math.round(durations.reduce((sum, duration) => sum + duration, 0) / durations.length)
+      : 0;
+    value.latestVolume = value.sessions[0]?.volume ?? 0;
+    value.previousVolume = value.sessions[1]?.volume ?? null;
+    value.volumeChangePercent =
+      value.previousVolume != null
+        ? percentChange(value.latestVolume, value.previousVolume)
+        : null;
+  }
+
+  return index;
+}
+
+export function buildPeriodAnalytics(
+  sessions: Session[],
+  period: "week" | "month",
+) {
+  const groups = new Map<string, PeriodAnalytics>();
+
+  for (const session of sessions) {
+    if (!session.finishedAt) continue;
+    const date = new Date(session.finishedAt);
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+
+    let key: string;
+    let label: string;
+    if (period === "week") {
+      const mondayOffset = (date.getDay() + 6) % 7;
+      const start = new Date(year, month, day - mondayOffset);
+      key = start.toISOString().slice(0, 10);
+      label = start.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+      });
+    } else {
+      key = `${year}-${String(month + 1).padStart(2, "0")}`;
+      label = date.toLocaleDateString("pt-BR", {
+        month: "short",
+        year: "numeric",
+      });
+    }
+
+    const current = groups.get(key) ?? {
+      key,
+      label,
+      sessions: 0,
+      volume: 0,
+      sets: 0,
+    };
+    current.sessions += 1;
+    current.volume += sessionVolume(session);
+    current.sets += sessionSetCount(session);
+    groups.set(key, current);
+  }
+
+  return [...groups.values()].sort((a, b) => a.key.localeCompare(b.key));
+}
+
 export type WorkoutExerciseAnalytics = {
   lastSets: SetLog[] | null;
 };
