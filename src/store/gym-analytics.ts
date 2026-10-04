@@ -344,6 +344,93 @@ export function buildPeriodAnalytics(
   return [...groups.values()].sort((a, b) => a.key.localeCompare(b.key));
 }
 
+export type DashboardAnalytics = {
+  totalSessions: number;
+  totalVolume: number;
+  totalSets: number;
+  totalPRs: number;
+  averageDurationSeconds: number;
+  sessionsLast7Days: number;
+  volumeChangePercent: number | null;
+  topExercises: {
+    exerciseId: string;
+    volume: number;
+    estimated1RM: number;
+    pr: number | null;
+  }[];
+};
+
+export function buildDashboardAnalytics(sessions: Session[]): DashboardAnalytics {
+  const completed = sessions.filter((session) => session.finishedAt);
+  const sorted = [...completed].sort(
+    (a, b) =>
+      new Date(b.finishedAt ?? b.startedAt).getTime() -
+      new Date(a.finishedAt ?? a.startedAt).getTime(),
+  );
+  const totalVolume = completed.reduce((sum, session) => sum + sessionVolume(session), 0);
+  const totalSets = completed.reduce((sum, session) => sum + sessionSetCount(session), 0);
+  const totalPRs = completed.reduce(
+    (sum, session) =>
+      sum +
+      session.entries.reduce(
+        (entrySum, entry) =>
+          entrySum + entry.sets.filter((set) => set.completed && set.isPR).length,
+        0,
+      ),
+    0,
+  );
+  const durations = completed.map(sessionDurationSeconds);
+  const latest = sorted[0];
+  const previous = sorted[1];
+  const sessionsLast7Days = completed.filter(
+    (session) =>
+      Date.now() - new Date(session.finishedAt ?? session.startedAt).getTime() <=
+      7 * 24 * 60 * 60 * 1000,
+  ).length;
+
+  const exerciseMap = new Map<
+    string,
+    { volume: number; estimated1RM: number; pr: number | null }
+  >();
+  for (const session of completed) {
+    for (const entry of session.entries) {
+      const current = exerciseMap.get(entry.exerciseId) ?? {
+        volume: 0,
+        estimated1RM: 0,
+        pr: null,
+      };
+      for (const set of entry.sets) {
+        if (!set.completed) continue;
+        current.volume += setVolume(set);
+        current.estimated1RM = Math.max(current.estimated1RM, estimateSet1RM(set));
+        if (set.weight != null) {
+          current.pr = current.pr == null ? set.weight : Math.max(current.pr, set.weight);
+        }
+      }
+      exerciseMap.set(entry.exerciseId, current);
+    }
+  }
+
+  return {
+    totalSessions: completed.length,
+    totalVolume,
+    totalSets,
+    totalPRs,
+    averageDurationSeconds: durations.length
+      ? Math.round(durations.reduce((sum, value) => sum + value, 0) / durations.length)
+      : 0,
+    sessionsLast7Days,
+    volumeChangePercent:
+      latest && previous
+        ? percentChange(sessionVolume(latest), sessionVolume(previous))
+        : null,
+    topExercises: [...exerciseMap.entries()]
+      .map(([exerciseId, data]) => ({ exerciseId, ...data }))
+      .sort((a, b) => b.volume - a.volume)
+      .slice(0, 5),
+  };
+}
+
 export type WorkoutExerciseAnalytics = {
   lastSets: SetLog[] | null;
 };
