@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { Button, Card, EmptyState, MutedTag, Tag } from "@/components/ui-kit";
 import { muscleGroupsOf, useGym } from "@/store/gym-store";
 import { WEEKDAYS, WEEKDAYS_FULL } from "@/lib/types";
+import { buildDashboardAnalytics } from "@/store/gym-analytics";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -32,6 +33,7 @@ function Home() {
   const todayWorkouts = useMemo(() => workouts.filter((w) => w.days.includes(today)), [workouts, today]);
   const totalSessions = useMemo(() => state.sessions.reduce((count, session) => count + (session.finishedAt ? 1 : 0), 0), [state.sessions]);
   const activeSession = state.activeSession;
+  const dashboard = useMemo(() => buildDashboardAnalytics(state.sessions), [state.sessions]);
   const weeklySessions = useMemo(() => {
     const since = Date.now() - 7 * 24 * 60 * 60 * 1000;
     return state.sessions.filter((s) => s.finishedAt && new Date(s.finishedAt).getTime() >= since);
@@ -68,6 +70,74 @@ function Home() {
           {totalSessions} concluído{totalSessions === 1 ? "" : "s"}
         </span>
       </div>
+
+      {dashboard.totalSessions > 0 && (
+        <section className="mb-6">
+          <div className="mb-2 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-muted-foreground">Seu progresso</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">Resumo do seu desempenho recente.</p>
+            </div>
+            <Link to="/historico" className="text-xs font-semibold text-primary">Ver histórico</Link>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <Card className="p-3">
+              <p className="text-[11px] text-muted-foreground">Treinos</p>
+              <p className="mt-1 text-xl font-bold tabular-nums">{dashboard.sessionsLast7Days}<span className="ml-1 text-xs font-medium text-muted-foreground">7d</span></p>
+            </Card>
+            <Card className="p-3">
+              <p className="text-[11px] text-muted-foreground">Volume total</p>
+              <p className="mt-1 text-xl font-bold tabular-nums">{Math.round(dashboard.totalVolume).toLocaleString("pt-BR")}<span className="ml-1 text-xs font-medium text-muted-foreground">kg</span></p>
+            </Card>
+            <Card className="p-3">
+              <p className="text-[11px] text-muted-foreground">Séries</p>
+              <p className="mt-1 text-xl font-bold tabular-nums">{dashboard.totalSets}</p>
+            </Card>
+            <Card className="p-3">
+              <p className="text-[11px] text-muted-foreground">PRs</p>
+              <p className="mt-1 text-xl font-bold tabular-nums text-gold">{dashboard.totalPRs}</p>
+            </Card>
+          </div>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            <Card className="p-3">
+              <p className="text-xs font-semibold">Tendência</p>
+              <p className="mt-1 text-sm">
+                {dashboard.volumeChangePercent == null
+                  ? "Continue treinando para gerar uma comparação."
+                  : dashboard.volumeChangePercent >= 0
+                    ? `Seu último treino teve +${dashboard.volumeChangePercent}% de volume.`
+                    : `Seu último treino teve ${dashboard.volumeChangePercent}% de volume.`}
+              </p>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {dashboard.averageDurationSeconds
+                  ? `Duração média: ${Math.round(dashboard.averageDurationSeconds / 60)} min`
+                  : "Duração média indisponível"}
+              </p>
+            </Card>
+            {dashboard.topExercises.length > 0 && (
+              <Card className="p-3">
+                <p className="text-xs font-semibold">Exercícios com maior volume</p>
+                <div className="mt-2 space-y-1.5">
+                  {dashboard.topExercises.slice(0, 3).map((item) => {
+                    const exercise = getExercise(item.exerciseId);
+                    return (
+                      <Link
+                        key={item.exerciseId}
+                        to="/exercicio/$exerciseId"
+                        params={{ exerciseId: item.exerciseId }}
+                        className="flex items-center justify-between gap-3 rounded-lg bg-elevated px-2.5 py-2 text-xs tap"
+                      >
+                        <span className="min-w-0 truncate font-medium">{exercise?.name ?? item.exerciseId}</span>
+                        <span className="shrink-0 font-bold tabular-nums">{Math.round(item.volume).toLocaleString("pt-BR")} kg</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
+          </div>
+        </section>
+      )}
 
       {!activeRoutine ? (
         <EmptyState
