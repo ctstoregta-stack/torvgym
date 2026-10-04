@@ -131,7 +131,7 @@ function ExecutePage() {
       });
       return next;
     });
-  }, [defaultRest, updateSessionContext]);
+  }, [updateSessionContext]);
 
   const handleRestSkip = useCallback(() => {
     setRest(null);
@@ -143,7 +143,7 @@ function ExecutePage() {
     const next = { total: seconds, remaining: seconds, running: true, startedAt: Date.now() } as RestState;
     setRest(next);
     updateSessionContext({ restStartedAt: startedAt, restTotal: seconds, restRemaining: seconds, restRunning: true });
-  }, [updateSessionContext]);
+  }, [defaultRest, updateSessionContext]);
 
   const handleSetUpdate = useCallback((exerciseId: string, setIndex: number, completed: boolean) => {
     updateSet(exerciseId, setIndex, { completed });
