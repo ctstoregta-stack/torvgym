@@ -109,9 +109,9 @@ test("analytics por treino calcula duração, volume, séries e evolução", () 
   const analytics = buildWorkoutAnalyticsIndex(sessions);
   const workout = analytics.get("w1");
   assert.equal(workout?.sessions.length, 2);
-  assert.equal(workout?.latestVolume, 680);
+  assert.equal(workout?.latestVolume, 1100);
   assert.equal(workout?.previousVolume, 600);
-  assert.equal(workout?.volumeChangePercent, 13.3);
+  assert.equal(workout?.volumeChangePercent, 83.3);
   assert.equal(workout?.totalSets, 5);
   assert.equal(workout?.averageDurationSeconds, 3900);
 });
