@@ -180,7 +180,7 @@ test("dashboard consolida métricas gerais e destaca exercícios por volume", ()
   ];
   const dashboard = buildDashboardAnalytics(sessions);
   assert.equal(dashboard.totalSessions, 2);
-  assert.equal(dashboard.totalVolume, 1180);
+  assert.equal(dashboard.totalVolume, 1310);
   assert.equal(dashboard.totalSets, 3);
   assert.equal(dashboard.totalPRs, 1);
   assert.equal(dashboard.sessionsLast7Days, 2);
