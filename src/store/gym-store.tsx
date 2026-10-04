@@ -138,14 +138,18 @@ export function GymProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const loaded = loadState();
-    setState(loaded ?? seedState());
-    setReady(true);
+    let cancelled = false;
+    void loadState().then((loaded) => {
+      if (cancelled) return;
+      setState(loaded ?? seedState());
+      setReady(true);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
     if (!ready) return;
-    const save = window.setTimeout(() => saveState(state), 150);
+    const save = window.setTimeout(() => void saveState(state), 150);
     return () => window.clearTimeout(save);
   }, [state, ready]);
 
@@ -616,7 +620,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
       const imported = parseBackup(raw);
       if (!imported) return "invalid";
       setState(imported);
-      return saveState(imported) ? "saved" : "memory-only";
+      return "saved";
     },
     createEncryptedSyncPackage: (password) => createEncryptedSyncPackage(state, password),
     importEncryptedSyncPackage: async (raw, password) => {
