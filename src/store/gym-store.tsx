@@ -4,12 +4,13 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { EXERCISE_DB } from "@/data/exercises";
 import { createBackup, emptyState, loadState, parseBackup, saveState, storageSizeBytes, uid } from "@/lib/storage";
-import { buildExerciseAnalyticsIndex, buildWorkoutExerciseAnalyticsIndex } from "@/store/gym-analytics";
+import { buildExerciseAnalyticsIndex, exerciseHistoryFor, lastExerciseSets, sessionPRFor } from "@/store/gym-analytics";
 import type {
   AppState,
   Exercise,
@@ -209,49 +210,58 @@ export function GymProvider({ children }: { children: ReactNode }) {
     [state.sessions],
   );
 
-  const analyticsIndex = useMemo(
-    () => buildExerciseAnalyticsIndex(finishedSessions),
-    [finishedSessions],
-  );
+  // O índice completo só é criado quando uma tela realmente solicita
+  // histórico/analytics. Isso evita trabalho pesado durante a navegação comum.
+  const analyticsCache = useRef<{
+    sessions: Session[];
+    index: ReturnType<typeof buildExerciseAnalyticsIndex>;
+  } | null>(null);
 
-  const workoutAnalyticsIndex = useMemo(
-    () => buildWorkoutExerciseAnalyticsIndex(finishedSessions),
-    [finishedSessions],
-  );
-
-  const activeAnalyticsIndex = useMemo(
-    () =>
-      state.activeSession
-        ? buildExerciseAnalyticsIndex([state.activeSession])
-        : new Map(),
-    [state.activeSession],
-  );
+  const getAnalyticsIndex = useCallback(() => {
+    if (!analyticsCache.current || analyticsCache.current.sessions !== finishedSessions) {
+      analyticsCache.current = {
+        sessions: finishedSessions,
+        index: buildExerciseAnalyticsIndex(finishedSessions),
+      };
+    }
+    return analyticsCache.current.index;
+  }, [finishedSessions]);
 
   const prFor = useCallback(
     (exerciseId: string) => {
-      const historical = analyticsIndex.get(exerciseId)?.pr ?? null;
-      const active = activeAnalyticsIndex.get(exerciseId)?.pr ?? null;
+      const historical = sessionPRFor(finishedSessions, exerciseId);
+      const active = state.activeSession ? sessionPRFor([state.activeSession], exerciseId) : null;
       if (historical == null) return active;
       if (active == null) return historical;
       return Math.max(historical, active);
     },
-    [analyticsIndex, activeAnalyticsIndex],
+    [finishedSessions, state.activeSession],
   );
 
   const lastSetsForWorkout = useCallback(
-    (workoutId: string, exerciseId: string) =>
-      workoutAnalyticsIndex.get(`${workoutId}::${exerciseId}`)?.lastSets ?? null,
-    [workoutAnalyticsIndex],
+    (workoutId: string, exerciseId: string) => {
+      for (const session of finishedSessions) {
+        if (session.workoutId !== workoutId) continue;
+        const entry = session.entries.find((item) => item.exerciseId === exerciseId);
+        const sets = entry?.sets.filter((set) => set.completed) ?? [];
+        if (sets.length) return sets;
+      }
+      return null;
+    },
+    [finishedSessions],
   );
 
   const historyFor = useCallback(
-    (exerciseId: string) => analyticsIndex.get(exerciseId)?.history ?? [],
-    [analyticsIndex],
+    (exerciseId: string) => {
+      getAnalyticsIndex();
+      return exerciseHistoryFor(finishedSessions, exerciseId);
+    },
+    [finishedSessions, getAnalyticsIndex],
   );
 
   const lastSetsFor = useCallback(
-    (exerciseId: string) => analyticsIndex.get(exerciseId)?.lastSets ?? null,
-    [analyticsIndex],
+    (exerciseId: string) => lastExerciseSets(finishedSessions, exerciseId),
+    [finishedSessions],
   );
 
   const updateSessionContext = useCallback((patch: Partial<Pick<Session, "currentExerciseIndex" | "restStartedAt" | "restTotal" | "restRemaining" | "restRunning">>) => {
