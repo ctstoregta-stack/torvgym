@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.Settings;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -38,6 +39,8 @@ final class TorvGymUpdater {
     private static final String PREFS = "torvgym_updater";
     private static final String PREF_LAST_DISMISSED = "last_dismissed_tag";
     private static final String PREF_PENDING_DOWNLOAD_ID = "pending_download_id";
+    private static final String PREF_LAST_CHECK_MS = "last_check_ms";
+    private static final long CHECK_INTERVAL_MS = 6L * 60L * 60L * 1000L;
     private static final Pattern VERSION_TAG = Pattern.compile("^v1\\.0\\.(\\d+)$");
 
     private final BridgeActivity activity;
@@ -79,6 +82,7 @@ final class TorvGymUpdater {
     }
 
     private Release fetchLatestRelease() throws Exception {
+        preferences.edit().putLong(PREF_LAST_CHECK_MS, System.currentTimeMillis()).apply();
         HttpURLConnection connection = (HttpURLConnection) new URL(
             UPDATE_MANIFEST_URL + "?v=" + BuildConfig.VERSION_CODE
         ).openConnection();
@@ -110,6 +114,11 @@ final class TorvGymUpdater {
 
             String assetUrl = json.optString("apkUrl", "");
             if (!assetUrl.startsWith(UPDATE_SITE_PREFIX)) return null;
+            Uri parsedAsset = Uri.parse(assetUrl);
+            if (!"https".equalsIgnoreCase(parsedAsset.getScheme())
+                || !"ctstoregta-stack.github.io".equalsIgnoreCase(parsedAsset.getHost())) {
+                return null;
+            }
 
             return new Release(versionCode, tag, assetUrl);
         } finally {
@@ -154,7 +163,14 @@ final class TorvGymUpdater {
             resumePendingDownload();
             return;
         }
-        if (pendingAssetUrl == null) return;
+        if (pendingAssetUrl == null) {
+            long lastCheck = preferences.getLong(PREF_LAST_CHECK_MS, 0L);
+            if (System.currentTimeMillis() - lastCheck >= CHECK_INTERVAL_MS) {
+                preferences.edit().putLong(PREF_LAST_CHECK_MS, System.currentTimeMillis()).apply();
+                checkForUpdate();
+            }
+            return;
+        }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O
             || activity.getPackageManager().canRequestPackageInstalls()) {
             startDownload();
@@ -205,6 +221,9 @@ final class TorvGymUpdater {
             } else if (status == DownloadManager.STATUS_FAILED) {
                 Log.w(TAG, "Download da atualização falhou; será permitido tentar novamente.");
                 clearPendingDownload();
+                activity.runOnUiThread(() ->
+                    Toast.makeText(activity, "Não foi possível baixar a atualização. Tente novamente.", Toast.LENGTH_LONG).show()
+                );
             }
         } catch (Exception e) {
             Log.w(TAG, "Não foi possível recuperar o download da atualização", e);
