@@ -169,7 +169,7 @@ function Home() {
             <p className="mt-1 text-xs text-muted-foreground">Dashboard de evolução</p>
           </Card>
         </Link>
-        <Link to="/conquistas">
+        <Link to="/conquistas" search={{}}>
           <Card className="h-full">
             <p className="text-sm font-semibold">Conquistas</p>
             <p className="mt-1 text-xs text-muted-foreground">XP, níveis e sequência</p>
