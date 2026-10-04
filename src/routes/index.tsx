@@ -163,12 +163,12 @@ function Home() {
             </p>
           </Card>
         </Link>
-        <Link to="/progresso" search={{}}>
+        <a href="/progresso">
           <Card className="h-full">
             <p className="text-sm font-semibold">Progresso</p>
             <p className="mt-1 text-xs text-muted-foreground">Dashboard de evolução</p>
           </Card>
-        </Link>
+        </a>
         <Link to="/historico">
           <Card className="h-full">
             <p className="text-sm font-semibold">Histórico</p>
