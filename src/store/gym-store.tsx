@@ -84,6 +84,7 @@ type Ctx = {
   setActiveRoutine: (id: string) => void;
   // workouts
   createWorkout: (routineId: string, name: string) => string;
+  duplicateWorkout: (workoutId: string) => string | null;
   updateWorkout: (workoutId: string, patch: Partial<Workout>) => void;
   deleteWorkout: (workoutId: string) => void;
   toggleWorkoutDay: (workoutId: string, day: number) => void;
@@ -330,6 +331,27 @@ export function GymProvider({ children }: { children: ReactNode }) {
         ),
       }));
       return id;
+    },
+    duplicateWorkout: (workoutId) => {
+      let duplicatedId: string | null = null;
+      setState((s) => ({
+        ...s,
+        routines: s.routines.map((routine) => {
+          const source = routine.workouts.find((workout) => workout.id === workoutId);
+          if (!source) return routine;
+          duplicatedId = uid("wk");
+          const copy: Workout = {
+            ...source,
+            id: duplicatedId,
+            name: `${source.name} (cópia)`,
+            days: [...source.days],
+            exerciseIds: [...source.exerciseIds],
+            targetSets: { ...source.targetSets },
+          };
+          return { ...routine, workouts: [...routine.workouts, copy] };
+        }),
+      }));
+      return duplicatedId;
     },
     updateWorkout: (workoutId, patch) =>
       mapWorkout(workoutId, (w) => ({ ...w, ...patch })),

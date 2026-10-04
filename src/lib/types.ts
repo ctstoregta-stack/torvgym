@@ -18,6 +18,8 @@ export type Workout = {
   exerciseIds: string[];
   /** target sets per exercise */
   targetSets: Record<string, number>;
+  restSeconds?: number;
+  notes?: string;
 };
 
 export type Routine = {

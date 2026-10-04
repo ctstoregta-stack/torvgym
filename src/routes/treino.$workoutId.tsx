@@ -51,6 +51,8 @@ function WorkoutPage() {
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState("");
   const [confirmStart, setConfirmStart] = useState(false);
+  const [notes, setNotes] = useState("");
+  const [restSeconds, setRestSeconds] = useState(60);
 
   const found = ready ? findWorkout(workoutId) : null;
 
@@ -96,6 +98,8 @@ function WorkoutPage() {
   }
 
   const { workout, routine } = found;
+  const currentNotes = workout.notes ?? "";
+  const currentRest = workout.restSeconds ?? 60;
   const groups = muscleGroupsOf(workout.exerciseIds, getExercise);
   const activeOther =
     state.activeSession && state.activeSession.workoutId !== workout.id;
@@ -158,6 +162,33 @@ function WorkoutPage() {
               {label}
             </button>
           ))}
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <label className="text-xs font-semibold text-muted-foreground">
+            Descanso padrão
+            <select
+              className="mt-1 h-10 w-full rounded-lg border border-border bg-elevated px-3 text-sm font-normal text-foreground"
+              value={currentRest}
+              onChange={(e) => setRestSeconds(Number(e.target.value))}
+              onBlur={() => updateWorkout(workout.id, { restSeconds: Math.max(15, Math.min(600, restSeconds || currentRest)) })}
+            >
+              {[30,45,60,75,90,120,150,180].map((seconds) => <option key={seconds} value={seconds}>{seconds}s</option>)}
+            </select>
+          </label>
+          <label className="text-xs font-semibold text-muted-foreground">
+            Observações do treino
+            <textarea
+              className="mt-1 min-h-10 w-full rounded-lg border border-border bg-elevated px-3 py-2 text-sm font-normal text-foreground"
+              maxLength={1000}
+              defaultValue={currentNotes}
+              placeholder="Ex.: foco em técnica, amplitude..."
+              onBlur={(e) => {
+                setNotes(e.target.value);
+                updateWorkout(workout.id, { notes: e.target.value.slice(0, 1000) });
+              }}
+            />
+          </label>
         </div>
 
         <p className="mt-4 text-xs font-semibold text-muted-foreground">

@@ -42,6 +42,7 @@ function RoutinesPage() {
     renameRoutine,
     deleteRoutine,
     createWorkout,
+    duplicateWorkout,
     toggleWorkoutDay,
     deleteWorkout,
     getExercise,
@@ -180,6 +181,12 @@ function RoutinesPage() {
                             {w.exerciseIds.length === 1 ? "" : "s"}
                           </p>
                         </Link>
+                        <button
+                          className="text-xs font-semibold text-primary"
+                          onClick={() => duplicateWorkout(w.id)}
+                        >
+                          Duplicar
+                        </button>
                         <button
                           className="text-xs font-semibold text-destructive"
                           onClick={() => {
