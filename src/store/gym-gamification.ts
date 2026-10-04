@@ -1,5 +1,5 @@
 import type { Session } from "@/lib/types";
-import { sessionSetCount, sessionVolume } from "@/store/gym-analytics";
+import { sessionSetCount, sessionVolume } from "./gym-analytics.ts";
 
 export type Achievement = {
   id: string;
