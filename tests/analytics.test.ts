@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildExerciseAnalyticsIndex, estimateSet1RM, setVolume, exerciseProgressionFor } from "../src/store/gym-analytics.ts";
+import { buildExerciseAnalyticsIndex, buildPeriodAnalytics, buildWorkoutAnalyticsIndex, estimateSet1RM, setVolume, exerciseProgressionFor } from "../src/store/gym-analytics.ts";
 
 test("calcula volume e 1RM estimado de uma série", () => {
   const set = { weight: 60, reps: 10, completed: true };
@@ -106,7 +106,6 @@ test("analytics por treino calcula duração, volume, séries e evolução", () 
       ],
     },
   ];
-  const { buildWorkoutAnalyticsIndex } = require("../src/store/gym-analytics.ts");
   const analytics = buildWorkoutAnalyticsIndex(sessions);
   const workout = analytics.get("w1");
   assert.equal(workout?.sessions.length, 2);
@@ -138,7 +137,6 @@ test("analytics semanal e mensal agrupam sessões, volume e séries", () => {
       entries: [{ exerciseId: "supino", sets: [{ weight: 70, reps: 5, completed: true }] }],
     },
   ];
-  const { buildPeriodAnalytics } = require("../src/store/gym-analytics.ts");
   const weekly = buildPeriodAnalytics(sessions, "week");
   const monthly = buildPeriodAnalytics(sessions, "month");
   assert.equal(weekly.length, 2);
