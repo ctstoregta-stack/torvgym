@@ -40,7 +40,7 @@ final class TorvGymUpdater {
     private static final String PREF_LAST_DISMISSED = "last_dismissed_tag";
     private static final String PREF_PENDING_DOWNLOAD_ID = "pending_download_id";
     private static final String PREF_LAST_CHECK_MS = "last_check_ms";
-    private static final long CHECK_INTERVAL_MS = 6L * 60L * 60L * 1000L;
+    private static final long CHECK_INTERVAL_MS = 30L * 60L * 1000L;
     private static final Pattern VERSION_TAG = Pattern.compile("^v1\\.0\\.(\\d+)$");
 
     private final BridgeActivity activity;
@@ -91,6 +91,8 @@ final class TorvGymUpdater {
         connection.setRequestMethod("GET");
         connection.setRequestProperty("Accept", "application/json");
         connection.setRequestProperty("User-Agent", "TorvGym-Updater");
+        connection.setUseCaches(false);
+        connection.setRequestProperty("Cache-Control", "no-cache");
 
         try {
             if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) return null;
@@ -113,6 +115,9 @@ final class TorvGymUpdater {
             }
 
             String assetUrl = json.optString("apkUrl", "");
+            if (assetUrl.isEmpty()) {
+                assetUrl = json.optString("downloadUrl", "");
+            }
             if (!assetUrl.startsWith(UPDATE_SITE_PREFIX)) return null;
             Uri parsedAsset = Uri.parse(assetUrl);
             if (!"https".equalsIgnoreCase(parsedAsset.getScheme())
