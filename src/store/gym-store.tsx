@@ -601,6 +601,13 @@ export function GymProvider({ children }: { children: ReactNode }) {
       setState(imported);
       return saveState(imported) ? "saved" : "memory-only";
     },
+    createEncryptedSyncPackage: (password) => createEncryptedSyncPackage(state, password),
+    importEncryptedSyncPackage: async (raw, password) => {
+      const payload = await decryptEncryptedSyncPackage(raw, password);
+      const imported = payload.state;
+      setState(imported);
+      return saveState(imported) ? "saved" : "memory-only";
+    },
     storageSizeBytes,
 
     prFor,
@@ -617,14 +624,6 @@ export function useGym() {
   if (!ctx) throw new Error("useGym deve ser usado dentro de GymProvider");
   return ctx;
 }
-
-    createEncryptedSyncPackage: (password) => createEncryptedSyncPackage(state, password),
-    importEncryptedSyncPackage: async (raw, password) => {
-      const payload = await decryptEncryptedSyncPackage(raw, password);
-      const imported = payload.state;
-      setState(imported);
-      return saveState(imported) ? "saved" : "memory-only";
-    },
 
 /** Grupos musculares derivados automaticamente dos exercícios do treino. */
 export function muscleGroupsOf(
@@ -643,11 +642,4 @@ export function muscleGroupsOf(
 export function estimate1RM(weight: number, reps: number) {
   if (!weight || !reps) return 0;
   return Math.round(weight * (1 + reps / 30) * 10) / 10;
-}    createEncryptedSyncPackage: (password) => createEncryptedSyncPackage(state, password),
-    importEncryptedSyncPackage: async (raw, password) => {
-      const payload = await decryptEncryptedSyncPackage(raw, password);
-      const imported = payload.state;
-      setState(imported);
-      return saveState(imported) ? "saved" : "memory-only";
-    },
-
+}
