@@ -57,7 +57,7 @@ function Settings() {
         return;
       }
 
-      const result = importBackup(raw);
+      const result = await importBackup(raw);
       if (result === "saved") {
         toast.success("Backup restaurado com sucesso.");
       } else if (result === "memory-only") {
