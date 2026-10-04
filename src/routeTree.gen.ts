@@ -92,6 +92,8 @@ export interface FileRoutesByTo {
   '/executar/$workoutId': typeof ExecutarWorkoutIdRoute
   '/exercicio/$exerciseId': typeof ExercicioExerciseIdRoute
   '/treino/$workoutId': typeof TreinoWorkoutIdRoute
+  '/progresso': typeof ProgressoRoute
+  '/relatorios': typeof RelatoriosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -103,6 +105,8 @@ export interface FileRoutesById {
   '/executar/$workoutId': typeof ExecutarWorkoutIdRoute
   '/exercicio/$exerciseId': typeof ExercicioExerciseIdRoute
   '/treino/$workoutId': typeof TreinoWorkoutIdRoute
+  '/progresso': typeof ProgressoRoute
+  '/relatorios': typeof RelatoriosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -219,6 +223,13 @@ declare module '@tanstack/react-router' {
       path: '/progresso'
       fullPath: '/progresso'
       preLoaderRoute: typeof ProgressoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/relatorios': {
+      id: '/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof RelatoriosRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
