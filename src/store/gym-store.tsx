@@ -112,7 +112,7 @@ type Ctx = {
   discardSession: () => void;
   // data safety
   createBackup: () => string;
-  importBackup: (raw: string) => "invalid" | "saved" | "memory-only";
+  importBackup: (raw: string) => Promise<"invalid" | "saved" | "memory-only">;
   createEncryptedSyncPackage: (password: string) => Promise<string>;
   importEncryptedSyncPackage: (raw: string, password: string) => Promise<"saved" | "memory-only">;
   storageSizeBytes: () => number;
@@ -616,11 +616,11 @@ export function GymProvider({ children }: { children: ReactNode }) {
     updateSessionContext,
     discardSession: () => setState((s) => ({ ...s, activeSession: null })),
     createBackup: () => createBackup(state),
-    importBackup: (raw) => {
+    importBackup: async (raw) => {
       const imported = parseBackup(raw);
       if (!imported) return "invalid";
       setState(imported);
-      return "saved";
+      return (await saveState(imported)) ? "saved" : "memory-only";
     },
     createEncryptedSyncPackage: (password) => createEncryptedSyncPackage(state, password),
     importEncryptedSyncPackage: async (raw, password) => {
