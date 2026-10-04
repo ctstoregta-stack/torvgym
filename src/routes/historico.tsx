@@ -97,7 +97,8 @@ function HistoryPage() {
 
           {sessions.length > 1 && (
             <Card className="my-4 p-3">
-              <p className="mb-1 text-sm font-semibold">Evolução dos últimos treinos</p>\n              <p className="mb-3 text-xs text-muted-foreground">Volume de cada sessão concluída.</p>
+              <p className="mb-1 text-sm font-semibold">Evolução dos últimos treinos</p>
+              <p className="mb-3 text-xs text-muted-foreground">Volume de cada sessão concluída.</p>
               <div className="h-44 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={sessions.slice(0, 8).reverse().map((session) => ({
