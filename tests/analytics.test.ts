@@ -70,3 +70,79 @@ test("gera tendência e sugestão conservadora de progressão", () => {
   assert.equal(progression?.volumeChangePercent, 5.7);
   assert.equal(progression?.recommendation, "increase-load");
 });
+
+
+test("analytics por treino calcula duração, volume, séries e evolução", () => {
+  const sessions = [
+    {
+      id: "s2",
+      routineId: "r1",
+      workoutId: "w1",
+      workoutName: "Treino A",
+      startedAt: "2026-10-03T10:00:00.000Z",
+      finishedAt: "2026-10-03T11:10:00.000Z",
+      entries: [
+        { exerciseId: "supino", sets: [
+          { weight: 70, reps: 5, completed: true },
+          { weight: 70, reps: 5, completed: true },
+        ] },
+        { exerciseId: "voador", sets: [
+          { weight: 40, reps: 10, completed: true },
+        ] },
+      ],
+    },
+    {
+      id: "s1",
+      routineId: "r1",
+      workoutId: "w1",
+      workoutName: "Treino A",
+      startedAt: "2026-10-01T10:00:00.000Z",
+      finishedAt: "2026-10-01T11:00:00.000Z",
+      entries: [
+        { exerciseId: "supino", sets: [
+          { weight: 60, reps: 5, completed: true },
+          { weight: 60, reps: 5, completed: true },
+        ] },
+      ],
+    },
+  ];
+  const { buildWorkoutAnalyticsIndex } = require("../src/store/gym-analytics.ts");
+  const analytics = buildWorkoutAnalyticsIndex(sessions);
+  const workout = analytics.get("w1");
+  assert.equal(workout?.sessions.length, 2);
+  assert.equal(workout?.latestVolume, 680);
+  assert.equal(workout?.previousVolume, 600);
+  assert.equal(workout?.volumeChangePercent, 13.3);
+  assert.equal(workout?.totalSets, 5);
+  assert.equal(workout?.averageDurationSeconds, 3900);
+});
+
+test("analytics semanal e mensal agrupam sessões, volume e séries", () => {
+  const sessions = [
+    {
+      id: "s1",
+      routineId: "r1",
+      workoutId: "w1",
+      workoutName: "Treino A",
+      startedAt: "2026-10-01T10:00:00.000Z",
+      finishedAt: "2026-10-01T11:00:00.000Z",
+      entries: [{ exerciseId: "supino", sets: [{ weight: 60, reps: 5, completed: true }] }],
+    },
+    {
+      id: "s2",
+      routineId: "r1",
+      workoutId: "w1",
+      workoutName: "Treino A",
+      startedAt: "2026-10-08T10:00:00.000Z",
+      finishedAt: "2026-10-08T11:00:00.000Z",
+      entries: [{ exerciseId: "supino", sets: [{ weight: 70, reps: 5, completed: true }] }],
+    },
+  ];
+  const { buildPeriodAnalytics } = require("../src/store/gym-analytics.ts");
+  const weekly = buildPeriodAnalytics(sessions, "week");
+  const monthly = buildPeriodAnalytics(sessions, "month");
+  assert.equal(weekly.length, 2);
+  assert.equal(weekly[0]?.sessions, 1);
+  assert.equal(monthly.length, 1);
+  assert.equal(monthly[0]?.volume, 650);
+});
