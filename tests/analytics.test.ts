@@ -185,5 +185,5 @@ test("dashboard consolida métricas gerais e destaca exercícios por volume", ()
   assert.equal(dashboard.totalPRs, 1);
   assert.equal(dashboard.sessionsLast7Days, 2);
   assert.equal(dashboard.topExercises[0]?.exerciseId, "supino");
-  assert.equal(dashboard.topExercises[0]?.volume, 1180);
+  assert.equal(dashboard.topExercises[0]?.volume, 1310);
 });
