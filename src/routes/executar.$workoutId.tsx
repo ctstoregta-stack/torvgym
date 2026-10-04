@@ -317,153 +317,111 @@ function ExecutePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-[34px_62px_1fr_1fr_52px] items-center gap-2 px-3 pt-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-            <span>Sér</span>
-            <span>Ant.</span>
-            <span className="text-center">Carga</span>
-            <span className="text-center">Reps</span>
-            <span className="text-center">✓</span>
-          </div>
-
           <div className="space-y-2 p-3">
             {current.sets.map((set, i) => {
               const prev = previous?.[i];
               const prevLabel = prev
-                ? `${prev.weight ?? "-"}×${prev.reps ?? "-"}`
-                : "—";
+                ? `${prev.weight ?? "-"} kg × ${prev.reps ?? "-"}`
+                : "Sem registro anterior";
+              const isActiveSet = !set.completed && i === currentSetIndex;
+
               return (
                 <div
                   key={i}
-                  className={`rounded-xl px-1 py-1 ${set.completed ? "bg-success/10" : "bg-elevated/30"}`}
+                  className={`rounded-2xl border p-3 ${
+                    set.completed
+                      ? "border-success/30 bg-success/5"
+                      : isActiveSet
+                        ? "border-primary/40 bg-primary/5"
+                        : "border-border bg-elevated/20"
+                  }`}
                 >
-                  <div className="grid grid-cols-[34px_62px_1fr_1fr_52px] items-center gap-2">
-                  <span className="flex items-center gap-1 text-base font-bold tabular-nums">
-                    {i + 1}
-                    {set.isPR && <PRBadge small />}
-                  </span>
-                  <span className="truncate text-xs text-muted-foreground tabular-nums">
-                    {prevLabel}
-                  </span>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    step="0.5"
-                    aria-label={`Carga da série ${i + 1} (kg)`}
-                    value={set.weight ?? prev?.weight ?? ""}
-                    placeholder="0"
-                    onChange={(e) =>
-                      updateSet(current.exerciseId, i, {
-                        weight: e.target.value === "" ? null : Number(e.target.value),
-                      })
-                    }
-                    className="h-12 w-full rounded-xl border border-input bg-elevated px-2 text-center text-lg font-semibold tabular-nums outline-none transition-colors focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/40"
-                  />
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    aria-label={`Repetições da série ${i + 1}`}
-                    value={set.reps ?? prev?.reps ?? ""}
-                    placeholder="0"
-                    onChange={(e) =>
-                      updateSet(current.exerciseId, i, {
-                        reps: e.target.value === "" ? null : Number(e.target.value),
-                      })
-                    }
-                    className="h-12 w-full rounded-xl border border-input bg-elevated px-2 text-center text-lg font-semibold tabular-nums outline-none transition-colors focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/40"
-                  />
-                  <button
-                    aria-label={`Concluir série ${i + 1}`}
-                    onClick={() => {
-                      if (set.completed) {
-                        updateSet(current.exerciseId, i, {
-                          completed: false,
-                          isPR: false,
-                        });
-                        return;
-                      }
-                      const weight = set.weight ?? prev?.weight ?? null;
-                      const reps = set.reps ?? prev?.reps ?? null;
-                      const sessionBest = Math.max(
-                        0,
-                        ...current.sets
-                          .filter((s) => s.completed && s.weight != null)
-                          .map((s) => s.weight!),
-                      );
-                      const best = Math.max(storedPR ?? 0, sessionBest);
-                      const isPR = weight != null && weight > best;
-                      updateSet(current.exerciseId, i, {
-                        weight,
-                        reps,
-                        completed: true,
-                        isPR,
-                      });
-                      if (isPR) {
-                        toast.success(`🏆 Novo recorde! ${weight} kg em ${ex.name}`, { duration: 2200 });
-                      } else {
-                        toast.success(`Série ${i + 1} concluída`);
-                      }
-                      startRest();
-                    }}
-                    className={`mx-auto flex h-12 w-12 items-center justify-center rounded-xl tap active:scale-90 ${
-                      set.completed
-                        ? "bg-success text-background"
-                        : "bg-elevated text-muted-foreground"
-                    }`}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="h-6 w-6"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                    >
-                      <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="text-sm font-bold tabular-nums">Série {i + 1}</span>
+                      {set.isPR && <PRBadge small />}
+                    </div>
+                    <span className="truncate text-[11px] text-muted-foreground tabular-nums">
+                      Anterior: {prevLabel}
+                    </span>
                   </div>
-                  <div className="mt-1 space-y-1.5 pl-[96px]">
-                    {!set.completed && (
-                      <div className="grid grid-cols-4 gap-1.5">
-                        <QuickAdjust label="-2,5" ariaLabel="Diminuir 2,5 kg" onClick={() => updateSet(current.exerciseId, i, { weight: Math.max(0, (set.weight ?? prev?.weight ?? 0) - 2.5) })} />
-                        <QuickAdjust label="+2,5" ariaLabel="Aumentar 2,5 kg" onClick={() => updateSet(current.exerciseId, i, { weight: (set.weight ?? prev?.weight ?? 0) + 2.5 })} />
-                        <QuickAdjust label="-1 rep" ariaLabel="Diminuir uma repetição" onClick={() => updateSet(current.exerciseId, i, { reps: Math.max(0, (set.reps ?? prev?.reps ?? 0) - 1) })} />
-                        <QuickAdjust label="+1 rep" ariaLabel="Aumentar uma repetição" onClick={() => updateSet(current.exerciseId, i, { reps: (set.reps ?? prev?.reps ?? 0) + 1 })} />
-                      </div>
-                    )}
-                    <div className="grid grid-cols-[72px_minmax(0,1fr)_auto] gap-1.5">
-                      <select
-                        aria-label={`RPE da série ${i + 1}`}
-                        value={set.rpe ?? ""}
-                        onChange={(e) => updateSet(current.exerciseId, i, { rpe: e.target.value ? Number(e.target.value) : null })}
-                        className="h-9 rounded-lg border border-input bg-card px-1 text-xs font-semibold outline-none focus:border-primary"
-                      >
-                        <option value="">RPE</option>
-                        {Array.from({ length: 10 }, (_, n) => n + 1).map((value) => (
-                          <option key={value} value={value}>{value}</option>
-                        ))}
-                      </select>
-                      <input
-                        type="text"
-                        maxLength={500}
-                        aria-label={`Observação da série ${i + 1}`}
-                        value={set.note ?? ""}
-                        placeholder="Observação..."
-                        onChange={(e) => updateSet(current.exerciseId, i, { note: e.target.value })}
-                        className="h-9 min-w-0 rounded-lg border border-input bg-card px-2 text-xs outline-none focus:border-primary"
+
+                  <div className="mt-2 grid grid-cols-[1fr_1fr_48px] gap-2">
+                    <label className="min-w-0">
+                      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Carga · kg</span>
+                      <input type="number" inputMode="decimal" step="0.5"
+                        aria-label={`Carga da série ${i + 1} (kg)`}
+                        value={set.weight ?? prev?.weight ?? ""}
+                        placeholder={prev?.weight != null ? String(prev.weight) : "0"}
+                        onChange={(e) => updateSet(current.exerciseId, i, { weight: e.target.value === "" ? null : Number(e.target.value) })}
+                        className="h-12 w-full rounded-xl border border-input bg-card px-2 text-center text-lg font-semibold tabular-nums outline-none transition-colors focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/40"
                       />
+                    </label>
+
+                    <label className="min-w-0">
+                      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Repetições</span>
+                      <input type="number" inputMode="numeric"
+                        aria-label={`Repetições da série ${i + 1}`}
+                        value={set.reps ?? prev?.reps ?? ""}
+                        placeholder={prev?.reps != null ? String(prev.reps) : "0"}
+                        onChange={(e) => updateSet(current.exerciseId, i, { reps: e.target.value === "" ? null : Number(e.target.value) })}
+                        className="h-12 w-full rounded-xl border border-input bg-card px-2 text-center text-lg font-semibold tabular-nums outline-none transition-colors focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/40"
+                      />
+                    </label>
+
+                    <button aria-label={`Concluir série ${i + 1}`}
+                      onClick={() => {
+                        if (set.completed) { updateSet(current.exerciseId, i, { completed: false, isPR: false }); return; }
+                        const weight = set.weight ?? prev?.weight ?? null;
+                        const reps = set.reps ?? prev?.reps ?? null;
+                        const sessionBest = Math.max(0, ...current.sets.filter((s) => s.completed && s.weight != null).map((s) => s.weight!));
+                        const best = Math.max(storedPR ?? 0, sessionBest);
+                        const isPR = weight != null && weight > best;
+                        updateSet(current.exerciseId, i, { weight, reps, completed: true, isPR });
+                        if (isPR) toast.success(`🏆 Novo recorde! ${weight} kg em ${ex.name}`, { duration: 2200 });
+                        else toast.success(`Série ${i + 1} concluída`);
+                        startRest();
+                      }}
+                      className={`mt-5 flex h-12 w-12 items-center justify-center rounded-xl tap active:scale-90 ${set.completed ? "bg-success text-background" : "bg-elevated text-muted-foreground"}`}
+                    >
+                      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="3">
+                        <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {!set.completed && isActiveSet && (
+                    <div className="mt-2 grid grid-cols-4 gap-1.5">
+                      <QuickAdjust label="-2,5" ariaLabel="Diminuir 2,5 kg" onClick={() => updateSet(current.exerciseId, i, { weight: Math.max(0, (set.weight ?? prev?.weight ?? 0) - 2.5) })} />
+                      <QuickAdjust label="+2,5" ariaLabel="Aumentar 2,5 kg" onClick={() => updateSet(current.exerciseId, i, { weight: (set.weight ?? prev?.weight ?? 0) + 2.5 })} />
+                      <QuickAdjust label="-1 rep" ariaLabel="Diminuir uma repetição" onClick={() => updateSet(current.exerciseId, i, { reps: Math.max(0, (set.reps ?? prev?.reps ?? 0) - 1) })} />
+                      <QuickAdjust label="+1 rep" ariaLabel="Aumentar uma repetição" onClick={() => updateSet(current.exerciseId, i, { reps: (set.reps ?? prev?.reps ?? 0) + 1 })} />
+                    </div>
+                  )}
+
+                  {!set.completed && prev && (
+                    <button type="button" className="mt-2 min-h-9 w-full rounded-lg bg-primary/10 px-2 text-xs font-semibold text-primary tap active:scale-95"
+                      onClick={() => updateSet(current.exerciseId, i, { weight: prev.weight, reps: prev.reps })}
+                    >Usar anterior · {prevLabel}</button>
+                  )}
+
+                  <details className="mt-2">
+                    <summary className="flex min-h-8 cursor-pointer list-none items-center justify-between rounded-lg px-1 text-[11px] font-semibold text-muted-foreground">
+                      <span>Mais opções</span><span>⌄</span>
+                    </summary>
+                    <div className="mt-1.5 grid grid-cols-[72px_minmax(0,1fr)_auto] gap-1.5">
+                      <select aria-label={`RPE da série ${i + 1}`} value={set.rpe ?? ""} onChange={(e) => updateSet(current.exerciseId, i, { rpe: e.target.value ? Number(e.target.value) : null })} className="h-9 rounded-lg border border-input bg-card px-1 text-xs font-semibold outline-none focus:border-primary">
+                        <option value="">RPE</option>
+                        {Array.from({ length: 10 }, (_, n) => n + 1).map((value) => <option key={value} value={value}>{value}</option>)}
+                      </select>
+                      <input type="text" maxLength={500} aria-label={`Observação da série ${i + 1}`} value={set.note ?? ""} placeholder="Observação..." onChange={(e) => updateSet(current.exerciseId, i, { note: e.target.value })} className="h-9 min-w-0 rounded-lg border border-input bg-card px-2 text-xs outline-none focus:border-primary" />
                       <button type="button" aria-label={`Repetir série ${i + 1}`} onClick={() => duplicateSet(current.exerciseId, i)} className="h-9 rounded-lg bg-card px-2 text-xs font-semibold text-muted-foreground tap active:scale-95">+ repetir</button>
                     </div>
-                    {!set.completed && prev && (
-                      <button type="button" className="w-full min-h-9 rounded-lg bg-primary/10 px-2 text-xs font-semibold text-primary tap active:scale-95" onClick={() => updateSet(current.exerciseId, i, { weight: prev.weight, reps: prev.reps })}>
-                        Usar anterior: {prevLabel}
-                      </button>
-                    )}
-                  </div>
+                  </details>
                 </div>
               );
             })}
           </div>
-
           <div className="flex gap-2 border-t border-border p-3">
             <Button
               variant="outline"
