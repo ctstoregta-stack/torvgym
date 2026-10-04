@@ -47,18 +47,20 @@ function normalizeWorkout(input: unknown): Workout | null {
     ? Object.fromEntries(Object.entries(rawTargets).filter(([, sets]) => typeof sets === "number" && Number.isFinite(sets) && sets > 0).map(([key, sets]) => [key, Math.max(1, Math.round(sets as number))]))
     : {};
 
-  return {
+  const workout: Workout = {
     id,
     name,
     days: [...new Set(days)],
     exerciseIds,
     targetSets,
-    restSeconds:
-      typeof input["restSeconds"] === "number" && Number.isFinite(input["restSeconds"])
-        ? Math.max(15, Math.min(600, Math.round(input["restSeconds"])))
-        : undefined,
-    notes: typeof input["notes"] === "string" ? input["notes"].slice(0, 1000) : undefined,
   };
+  if (typeof input["restSeconds"] === "number" && Number.isFinite(input["restSeconds"])) {
+    workout.restSeconds = Math.max(15, Math.min(600, Math.round(input["restSeconds"])));
+  }
+  if (typeof input["notes"] === "string") {
+    workout.notes = input["notes"].slice(0, 1000);
+  }
+  return workout;
 }
 
 function normalizeRoutine(input: unknown): Routine | null {
