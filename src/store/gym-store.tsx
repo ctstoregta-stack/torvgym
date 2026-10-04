@@ -240,7 +240,10 @@ export function GymProvider({ children }: { children: ReactNode }) {
 
   const lastSetsForWorkout = useCallback(
     (workoutId: string, exerciseId: string) => {
-      for (const session of finishedSessions) {
+      // A referência anterior precisa ser a sessão mais recente, não a primeira
+      // encontrada no histórico. O histórico é cronológico (mais antigo → mais novo).
+      for (let i = finishedSessions.length - 1; i >= 0; i -= 1) {
+        const session = finishedSessions[i];
         if (session.workoutId !== workoutId) continue;
         const entry = session.entries.find((item) => item.exerciseId === exerciseId);
         const sets = entry?.sets.filter((set) => set.completed) ?? [];
