@@ -315,7 +315,7 @@ export function buildPeriodAnalytics(
     if (period === "week") {
       const mondayOffset = (date.getDay() + 6) % 7;
       const start = new Date(year, month, day - mondayOffset);
-      key = start.toISOString().slice(0, 10);
+      key = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
       label = start.toLocaleDateString("pt-BR", {
         day: "2-digit",
         month: "2-digit",
