@@ -32,42 +32,42 @@ afterEach(() => {
   delete (globalThis as GlobalWithWindow).window;
 });
 
-test("loadState retorna null quando não há dados salvos", () => {
-  assert.equal(loadState(), null);
+test("loadState retorna null quando não há dados salvos", async () => {
+  assert.equal(await loadState(), null);
 });
 
-test("loadState recupera do snapshot quando o estado principal está corrompido", () => {
+test("loadState recupera do snapshot quando o estado principal está corrompido", async () => {
   const state = {
     ...emptyState,
     routines: [{ id: "r-recovery", name: "Recuperação", createdAt: "2026-01-01T00:00:00.000Z", workouts: [] }],
     activeRoutineId: "r-recovery",
   };
-  saveState(state);
+  await saveState(state);
   storage.setItem(KEY, "{isso não é json");
-  assert.deepEqual(loadState(), state);
+  assert.deepEqual(await loadState(), state);
   assert.equal(storage.getItem(VERSION_KEY), "4");
 });
 
-test("loadState usa o backup interno quando o estado principal e o snapshot estão corrompidos", () => {
+test("loadState usa o backup interno quando o estado principal e o snapshot estão corrompidos", async () => {
   const state = {
     ...emptyState,
     routines: [{ id: "r-auto", name: "Backup automático", createdAt: "2026-01-01T00:00:00.000Z", workouts: [] }],
     activeRoutineId: "r-auto",
   };
-  saveState(state);
+  await saveState(state);
   storage.setItem(KEY, "{corrompido");
   storage.setItem(RECOVERY_KEY, "{corrompido");
-  assert.deepEqual(loadState(), state);
+  assert.deepEqual(await loadState(), state);
 });
 
-test("loadState retorna null quando todas as cópias estão inválidas", () => {
+test("loadState retorna null quando todas as cópias estão inválidas", async () => {
   storage.setItem(KEY, "{corrompido");
   storage.setItem(RECOVERY_KEY, "{corrompido");
   storage.setItem(AUTO_BACKUP_KEY, "{corrompido");
-  assert.equal(loadState(), null);
+  assert.equal(await loadState(), null);
 });
 
-test("saveState e loadState preservam os dados (ida e volta)", () => {
+test("saveState e loadState preservam os dados (ida e volta)", async () => {
   const state = {
     ...emptyState,
     routines: [
@@ -82,13 +82,13 @@ test("saveState e loadState preservam os dados (ida e volta)", () => {
     ],
     activeRoutineId: "r1",
   };
-  assert.equal(saveState(state), true);
-  assert.deepEqual(loadState(), state);
+  assert.equal(await saveState(state), true);
+  assert.deepEqual(await loadState(), state);
   assert.ok(storage.getItem(RECOVERY_KEY));
   assert.ok(storage.getItem(AUTO_BACKUP_KEY));
 });
 
-test("loadState descarta itens inválidos e preenche padrões", () => {
+test("loadState descarta itens inválidos e preenche padrões", async () => {
   storage.setItem(
     KEY,
     JSON.stringify({
@@ -101,7 +101,7 @@ test("loadState descarta itens inválidos e preenche padrões", () => {
       sessions: [{ id: "s1" }, "lixo"],
     }),
   );
-  const state = loadState();
+  const state = await loadState();
   assert.ok(state);
   assert.equal(state.routines.length, 1);
 
@@ -116,7 +116,7 @@ test("loadState descarta itens inválidos e preenche padrões", () => {
   assert.equal(state.activeSession, null);
 });
 
-test("activeRoutineId inexistente cai para a primeira rotina", () => {
+test("activeRoutineId inexistente cai para a primeira rotina", async () => {
   storage.setItem(
     KEY,
     JSON.stringify({
@@ -124,16 +124,16 @@ test("activeRoutineId inexistente cai para a primeira rotina", () => {
       activeRoutineId: "nao-existe",
     }),
   );
-  assert.equal(loadState()?.activeRoutineId, "r1");
+  assert.equal(await loadState()?.activeRoutineId, "r1");
 });
 
-test("dados da versão antiga são migrados e a versão atual é gravada", () => {
+test("dados da versão antiga são migrados e a versão atual é gravada", async () => {
   storage.setItem(KEY, JSON.stringify({ routines: [], customExercises: [], sessions: [] }));
-  assert.ok(loadState());
+  assert.ok(await loadState());
   assert.equal(storage.getItem(VERSION_KEY), "4");
 });
 
-test("sessão em andamento mantém os campos do cronômetro de descanso", () => {
+test("sessão em andamento mantém os campos do cronômetro de descanso", async () => {
   storage.setItem(
     KEY,
     JSON.stringify({
@@ -149,14 +149,14 @@ test("sessão em andamento mantém os campos do cronômetro de descanso", () => 
       },
     }),
   );
-  const session = loadState()?.activeSession;
+  const session = await loadState()?.activeSession;
   assert.equal(session?.currentExerciseIndex, 2);
   assert.equal(session?.restTotal, 90);
   assert.equal(session?.restRemaining, 30);
   assert.equal(session?.restRunning, true);
 });
 
-test("migração preserva RPE e observação da série", () => {
+test("migração preserva RPE e observação da série", async () => {
   storage.setItem(
     KEY,
     JSON.stringify({
@@ -169,18 +169,18 @@ test("migração preserva RPE e observação da série", () => {
       },
     }),
   );
-  const set = loadState()?.activeSession?.entries[0]?.sets[0];
+  const set = await loadState()?.activeSession?.entries[0]?.sets[0];
   assert.equal(set?.rpe, 9);
   assert.equal(set?.note, "Última série pesada");
   assert.equal(storage.getItem(VERSION_KEY), "4");
 });
-test("uid gera ids com o prefixo pedido e sem repetição", () => {
+test("uid gera ids com o prefixo pedido e sem repetição", async () => {
   const ids = new Set(Array.from({ length: 200 }, () => uid("rt")));
   assert.equal(ids.size, 200);
   for (const id of ids) assert.ok(id.startsWith("rt_"));
 });
 
-test("createBackup e parseBackup fazem round-trip validado", () => {
+test("createBackup e parseBackup fazem round-trip validado", async () => {
   const state = {
     ...emptyState,
     routines: [
@@ -197,7 +197,7 @@ test("createBackup e parseBackup fazem round-trip validado", () => {
   assert.deepEqual(parseBackup(backup), state);
 });
 
-test("parseBackup rejeita formato desconhecido e JSON inválido", () => {
+test("parseBackup rejeita formato desconhecido e JSON inválido", async () => {
   assert.equal(parseBackup("{nao-json"), null);
   assert.equal(
     parseBackup(JSON.stringify({ format: "outro", version: 1, state: emptyState })),
@@ -205,8 +205,8 @@ test("parseBackup rejeita formato desconhecido e JSON inválido", () => {
   );
 });
 
-test("storageSizeBytes reflete o estado salvo", () => {
-  saveState({
+test("storageSizeBytes reflete o estado salvo", async () => {
+  await saveState({
     ...emptyState,
     routines: [{ id: "r", name: "Rotina", createdAt: "2026-01-01T00:00:00.000Z", workouts: [] }],
     activeRoutineId: "r",
