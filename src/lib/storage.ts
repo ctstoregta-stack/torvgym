@@ -151,9 +151,23 @@ async function readStoredState(key: string): Promise<AppState | null> {
   try {
     const raw = window.localStorage.getItem(key);
     if (!raw) return null;
+
+    const parsed: unknown = JSON.parse(raw);
+    const looksEncrypted =
+      isRecord(parsed) &&
+      parsed.format === "torvgym-local" &&
+      parsed.version === 1 &&
+      typeof parsed.ciphertext === "string";
+
     const decrypted = await decryptLocal(raw);
     if (decrypted) return normalizeState(JSON.parse(decrypted));
-    return normalizeState(JSON.parse(raw));
+
+    // Um envelope criptografado válido que falhou na autenticação não pode
+    // voltar a ser tratado como estado legado. Isso garante que adulterações
+    // AES-GCM acionem o mecanismo de recuperação em vez de produzir estado vazio.
+    if (looksEncrypted) return null;
+
+    return normalizeState(parsed);
   } catch {
     return null;
   }
