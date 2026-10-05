@@ -10,8 +10,19 @@ type Props = {
 };
 
 function proxiedGifUrl(url: string) {
-  if (!/^https?:\/\//i.test(url) || url.includes("wsrv.nl")) return url;
-  return `https://wsrv.nl/?url=${encodeURIComponent(url)}&n=-1&output=gif&w=480&h=480&fit=inside&maxage=30d`;
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    if (
+      parsed.protocol !== "https:" ||
+      (host !== "fitnessprogramer.com" && !host.endsWith(".fitnessprogramer.com"))
+    ) {
+      return url;
+    }
+    return `https://wsrv.nl/?url=${encodeURIComponent(url)}&n=-1&output=gif&w=480&h=480&fit=inside&maxage=30d`;
+  } catch {
+    return url;
+  }
 }
 
 export function ExerciseMedia({
