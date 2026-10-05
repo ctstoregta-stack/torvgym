@@ -323,6 +323,55 @@ EOF
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
         with:
           token: ${{ github.token }}
+      - name: Verify public update channel
+        if: \${{ github.event_name == 'push' }}
+        run: |
+          set -euo pipefail
+          TAG="v1.0.\${GITHUB_RUN_NUMBER}"
+          MANIFEST_URL="https://ctstoregta-stack.github.io/torvgym/manifest.json"
+          APK_URL="https://ctstoregta-stack.github.io/torvgym/releases/\$TAG/torvgym-release.apk"
+          curl --fail --silent --show-error --location --retry 8 --retry-delay 5 --retry-all-errors "\$MANIFEST_URL" -o "\$RUNNER_TEMP/manifest.json"
+          test -s "\$RUNNER_TEMP/manifest.json"
+          python - "\$RUNNER_TEMP/manifest.json" "\$TAG" "\$APK_URL" <<'PY'
+import json, sys
+from pathlib import Path
+manifest=json.loads(Path(sys.argv[1]).read_text())
+expected_tag=sys.argv[2]
+expected_url=sys.argv[3]
+required=("schemaVersion","tag","versionCode","versionName","apkUrl","sha256","sizeBytes")
+missing=[k for k in required if k not in manifest]
+if missing:
+    raise SystemExit(f"manifest.json missing fields: {', '.join(missing)}")
+if manifest["schemaVersion"] != 1 or manifest["tag"] != expected_tag or manifest["apkUrl"] != expected_url:
+    raise SystemExit("manifest.json contains an unexpected update target")
+if not isinstance(manifest["versionCode"], int) or manifest["versionCode"] <= 0:
+    raise SystemExit("manifest versionCode is invalid")
+if not isinstance(manifest["versionName"], str) or not manifest["versionName"]:
+    raise SystemExit("manifest versionName is invalid")
+if not isinstance(manifest["sha256"], str) or len(manifest["sha256"]) != 64:
+    raise SystemExit("manifest sha256 is invalid")
+if not isinstance(manifest["sizeBytes"], int) or manifest["sizeBytes"] <= 0:
+    raise SystemExit("manifest sizeBytes is invalid")
+PY
+          curl --fail --silent --show-error --location --retry 8 --retry-delay 5 --retry-all-errors "\$APK_URL" -o "\$RUNNER_TEMP/public-release.apk"
+          test -s "\$RUNNER_TEMP/public-release.apk"
+          EXPECTED_SHA="\$(python - "\$RUNNER_TEMP/manifest.json" <<'PY'
+import json,sys
+print(json.load(open(sys.argv[1]))["sha256"].lower())
+PY
+)"
+          ACTUAL_SHA="\$(sha256sum "\$RUNNER_TEMP/public-release.apk" | awk '{print \$1}')"
+          test "\$ACTUAL_SHA" = "\$EXPECTED_SHA"
+          EXPECTED_SIZE="\$(python - "\$RUNNER_TEMP/manifest.json" <<'PY'
+import json,sys
+print(json.load(open(sys.argv[1]))["sizeBytes"])
+PY
+)"
+          ACTUAL_SIZE="\$(stat -c '%s' "\$RUNNER_TEMP/public-release.apk")"
+          test "\$ACTUAL_SIZE" = "\$EXPECTED_SIZE"
+          echo "Canal público validado: manifest, APK, tamanho e SHA-256 correspondem."
+          rm -f "\$RUNNER_TEMP/manifest.json" "\$RUNNER_TEMP/public-release.apk"
+
       - name: Commit Android platform
         run: |
           git config user.name "github-actions[bot]"
@@ -373,4 +422,8 @@ EOF
           else
             gh release create "$TAG" --target "$GITHUB_SHA" --title "TorvGym $TAG" --generate-notes "$APK" "$AAB"
           fi
-          echo "Release automática publicada: $TAG"
+          echo "Release automática publicada: \$TAG"
+          gh release view "\$TAG" --json tagName,isDraft,isPrerelease,assets --jq '{tagName,isDraft,isPrerelease,assets:[.assets[]|{name,size}]}'
+          gh release view "\$TAG" --json isDraft,isPrerelease --jq 'if .isDraft or .isPrerelease then error("Release não está publicada como release estável") else "Release estável confirmada" end'
+          gh release view "\$TAG" --json assets --jq '.assets[].name' | grep -qx 'app-release.apk'
+          gh release view "\$TAG" --json assets --jq '.assets[].name' | grep -qx 'app-release.aab'
