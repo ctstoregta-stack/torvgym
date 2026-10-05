@@ -25,13 +25,15 @@ function formatBytes(bytes: number) {
 }
 
 function Settings() {
-  const { ready, state, createBackup, importBackup, createProtectedBackup, importProtectedBackup, storageSizeBytes, createEncryptedSyncPackage, importEncryptedSyncPackage } = useGym();
+  const { ready, state, createBackup, importBackup, createProtectedBackup, importProtectedBackup, storageSizeBytes, createEncryptedSyncPackage, importEncryptedSyncPackage, createRecoveryPackage, importRecoveryPackage } = useGym();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [syncPassword, setSyncPassword] = useState("");
   const [syncInput, setSyncInput] = useState<HTMLInputElement | null>(null);
   const [backupPassword, setBackupPassword] = useState("");
   const [protectedBackupInput, setProtectedBackupInput] = useState<HTMLInputElement | null>(null);
+  const [recoveryCode, setRecoveryCode] = useState("");
+  const [recoveryInput, setRecoveryInput] = useState<HTMLInputElement | null>(null);
 
   function handleExport() {
     try {
@@ -120,6 +122,51 @@ function Settings() {
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  async function handleRecoveryExport() {
+    try {
+      const { raw, code } = await createRecoveryPackage();
+      const blob = new Blob([raw], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `torvgym-recuperacao-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      setRecoveryCode(code);
+      toast.success("Pacote de recuperação exportado. Guarde o código mostrado abaixo em local seguro.");
+    } catch {
+      toast.error("Não foi possível criar o pacote de recuperação.");
+    }
+  }
+
+  async function handleRecoveryImport(file: File) {
+    const code = recoveryCode.trim();
+    if (!code) {
+      toast.error("Informe o código de recuperação.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const raw = await file.text();
+      if (state.activeSession && !window.confirm("Existe um treino em andamento. Restaurar a recuperação substituirá esse estado. Continuar?")) return;
+      const result = await importRecoveryPackage(raw, code);
+      if (result === "saved") {
+        toast.success("Recuperação concluída com sucesso neste dispositivo.");
+      } else if (result === "memory-only") {
+        toast.warning("Recuperação concluída em memória, mas não foi possível gravar no armazenamento local.");
+      } else {
+        toast.error("O pacote foi aberto, mas os dados não passaram na validação.");
+      }
+    } catch {
+      toast.error("Não foi possível abrir a recuperação. Verifique o código e o arquivo.");
+    } finally {
+      setBusy(false);
+      if (recoveryInput) recoveryInput.value = "";
     }
   }
 
@@ -287,6 +334,43 @@ function Settings() {
         </Card>
 
         <Card>
+          <h2 className="text-base font-semibold">Recuperação entre dispositivos</h2>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            Crie uma cópia de recuperação cifrada para restaurar seus dados em outro aparelho. O TorvGym não armazena o código de recuperação; quem tiver apenas o arquivo não consegue descriptografá-lo.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button onClick={() => void handleRecoveryExport()}>Gerar recuperação</Button>
+            <Button variant="outline" disabled={busy} onClick={() => recoveryInput?.click()}>
+              {busy ? "Restaurando…" : "Restaurar recuperação"}
+            </Button>
+          </div>
+          <label className="mt-4 block text-xs font-semibold text-muted-foreground">
+            Código de recuperação
+            <input
+              type="text"
+              autoComplete="off"
+              value={recoveryCode}
+              onChange={(event) => setRecoveryCode(event.target.value)}
+              placeholder="Cole o código de recuperação"
+              className="mt-1 h-11 w-full rounded-lg border border-border bg-elevated px-3 text-sm font-normal text-foreground"
+            />
+          </label>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            O código é exibido somente quando você gera uma nova recuperação. Salve-o separadamente do arquivo.
+          </p>
+          <input
+            ref={setRecoveryInput}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void handleRecoveryImport(file);
+            }}
+          />
+        </Card>
+
+        <Card>
           <h2 className="text-base font-semibold">Armazenamento local</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             O TorvGym mantém seus dados localmente neste dispositivo.
@@ -306,7 +390,7 @@ function Settings() {
         <Card>
           <h2 className="text-base font-semibold">Segurança dos dados</h2>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            O backup é validado antes de ser restaurado. O backup protegido usa AES-256-GCM com PBKDF2-SHA256 e exige uma senha de pelo menos 12 caracteres. Mantenha uma cópia fora do aparelho para reduzir o risco de perda após desinstalação ou limpeza dos dados do aplicativo.
+            O backup é validado antes de ser restaurado. Backups protegidos e recuperações entre dispositivos usam AES-256-GCM com PBKDF2-SHA256. A recuperação usa um código aleatório de alta entropia que não é armazenado pelo TorvGym. Mantenha os arquivos e códigos fora do aparelho para reduzir o risco de perda após desinstalação ou limpeza dos dados do aplicativo.
           </p>
         </Card>
       </div>
