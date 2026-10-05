@@ -117,3 +117,104 @@ export function syncPackageMetadata(raw: string) {
   if (parsed.algorithm !== "AES-256-GCM" || parsed.kdf !== "PBKDF2-SHA256" || parsed.iterations !== ITERATIONS) return null;
   return { deviceId: parsed.deviceId ?? "", createdAt: parsed.createdAt ?? "", updatedAt: parsed.updatedAt ?? "" };
 }
+
+
+const RECOVERY_FORMAT = "torvgym-recovery";
+const RECOVERY_VERSION = 1;
+
+export type RecoveryPackage = {
+  raw: string;
+  code: string;
+};
+
+export function generateRecoveryCode() {
+  const bytes = crypto.getRandomValues(new Uint8Array(24));
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("").match(/.{1,4}/g)?.join("-") ?? "";
+}
+
+export async function createEncryptedRecoveryPackage(state: AppState): Promise<RecoveryPackage> {
+  const code = generateRecoveryCode();
+  const password = code.replaceAll("-", "");
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKeyWithIterations(password, salt, ITERATIONS);
+  const now = new Date().toISOString();
+  const aad = enc.encode(`${RECOVERY_FORMAT}|${RECOVERY_VERSION}|${now}`);
+  const plaintext = enc.encode(JSON.stringify({ state, updatedAt: now }));
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv, additionalData: aad },
+    key,
+    plaintext,
+  );
+
+  const envelope = {
+    format: RECOVERY_FORMAT,
+    version: RECOVERY_VERSION,
+    createdAt: now,
+    updatedAt: now,
+    salt: bytesToBase64(salt),
+    iv: bytesToBase64(iv),
+    ciphertext: bytesToBase64(new Uint8Array(ciphertext)),
+    algorithm: "AES-256-GCM" as const,
+    kdf: "PBKDF2-SHA256" as const,
+    iterations: ITERATIONS,
+  };
+
+  return { raw: JSON.stringify(envelope, null, 2), code };
+}
+
+export async function decryptEncryptedRecoveryPackage(
+  raw: string,
+  code: string,
+): Promise<{ state: AppState; updatedAt: string }> {
+  const password = code.replaceAll("-", "").trim();
+  if (!/^[0-9a-f]{48}$/i.test(password)) throw new Error("Código de recuperação inválido.");
+
+  const parsed: unknown = JSON.parse(raw);
+  if (!parsed || typeof parsed !== "object") throw new Error("Pacote de recuperação inválido.");
+  const envelope = parsed as {
+    format?: unknown;
+    version?: unknown;
+    createdAt?: unknown;
+    updatedAt?: unknown;
+    salt?: unknown;
+    iv?: unknown;
+    ciphertext?: unknown;
+    algorithm?: unknown;
+    kdf?: unknown;
+    iterations?: unknown;
+  };
+
+  if (
+    envelope.format !== RECOVERY_FORMAT ||
+    envelope.version !== RECOVERY_VERSION ||
+    envelope.algorithm !== "AES-256-GCM" ||
+    envelope.kdf !== "PBKDF2-SHA256" ||
+    envelope.iterations !== ITERATIONS ||
+    typeof envelope.createdAt !== "string" ||
+    typeof envelope.updatedAt !== "string" ||
+    typeof envelope.salt !== "string" ||
+    typeof envelope.iv !== "string" ||
+    typeof envelope.ciphertext !== "string"
+  ) {
+    throw new Error("Pacote de recuperação incompatível.");
+  }
+
+  const key = await deriveKeyWithIterations(password, base64ToBytes(envelope.salt), ITERATIONS);
+  const aad = enc.encode(`${RECOVERY_FORMAT}|${RECOVERY_VERSION}|${envelope.createdAt}`);
+  const plaintext = await crypto.subtle.decrypt(
+    {
+      name: "AES-GCM",
+      iv: base64ToBytes(envelope.iv) as unknown as BufferSource,
+      additionalData: aad,
+    },
+    key,
+    base64ToBytes(envelope.ciphertext),
+  );
+
+  const payload: unknown = JSON.parse(dec.decode(plaintext));
+  if (!payload || typeof payload !== "object") throw new Error("Conteúdo de recuperação inválido.");
+  const data = payload as { state?: AppState; updatedAt?: unknown };
+  if (!data.state || typeof data.updatedAt !== "string") throw new Error("Conteúdo de recuperação inválido.");
+  return { state: data.state, updatedAt: data.updatedAt };
+}
