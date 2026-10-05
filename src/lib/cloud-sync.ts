@@ -30,7 +30,7 @@ async function deriveKeyWithIterations(password: string, salt: Uint8Array, itera
 
 export type SyncEnvelope = {
   format: typeof FORMAT;
-  version: typeof VERSION;
+  version: typeof VERSION | typeof LEGACY_VERSION;
   createdAt: string;
   updatedAt: string;
   deviceId: string;
