@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { Exercise } from "@/lib/types";
 
 type Props = {
@@ -25,7 +25,7 @@ function proxiedGifUrl(url: string) {
   }
 }
 
-export function ExerciseMedia({
+export const ExerciseMedia = memo(function ExerciseMedia({
   exercise,
   className = "",
   rounded = "rounded-xl",
@@ -154,4 +154,4 @@ export function ExerciseMedia({
       )}
     </div>
   );
-}
+});
