@@ -4,8 +4,13 @@ type NativeSecureStorage = { encrypt(o:{plaintext:string}):Promise<{iv:string;ci
 const Native=registerPlugin<NativeSecureStorage>("TorvGymSecureStorage");
 const DB="torvgym-secure", STORE="keys";
 type Envelope={format:"torvgym-local";version:1;iv:string;ciphertext:string};
+let memoryKey: CryptoKey | null = null;
 
 async function browserKey():Promise<CryptoKey>{
+  if (typeof indexedDB === "undefined") {
+    if (!memoryKey) memoryKey = await crypto.subtle.generateKey({name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+    return memoryKey;
+  }
   const db=await new Promise<IDBDatabase>((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
   return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,"readwrite"),s=tx.objectStore(STORE),g=s.get("local-state");
     g.onsuccess=async()=>{if(g.result)return resolve(g.result as CryptoKey);const k=await crypto.subtle.generateKey({name:"AES-GCM",length:256},false,["encrypt","decrypt"]);s.put(k,"local-state");resolve(k);};g.onerror=()=>reject(g.error);});
