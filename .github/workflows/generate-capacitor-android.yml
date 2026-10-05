@@ -331,3 +331,20 @@ jobs:
           fi
           echo "Release automática publicada: $TAG"
 
+      - name: Verify published APK integrity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="v1.0.${GITHUB_RUN_NUMBER}"
+          APK="release-assets/app-release.apk"
+          EXPECTED_SHA256="$(sha256sum "$APK" | awk '{print $1}')"
+          VERIFY_DIR="$RUNNER_TEMP/torvgym-release-verify"
+          mkdir -p "$VERIFY_DIR"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "app-release.apk" --dir "$VERIFY_DIR"
+          DOWNLOADED_APK="$VERIFY_DIR/app-release.apk"
+          test -s "$DOWNLOADED_APK"
+          ACTUAL_SHA256="$(sha256sum "$DOWNLOADED_APK" | awk '{print $1}')"
+          test "$EXPECTED_SHA256" = "$ACTUAL_SHA256"
+          echo "APK público do Release $TAG corresponde exatamente ao APK assinado gerado no workflow."
+
