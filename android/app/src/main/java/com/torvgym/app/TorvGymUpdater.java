@@ -33,10 +33,6 @@ import java.util.regex.Pattern;
 
 final class TorvGymUpdater {
     private static final String TAG = "TorvGymUpdater";
-    private static final String UPDATE_MANIFEST_URL =
-        "https://ctstoregta-stack.github.io/torvgym/manifest.json";
-    private static final String UPDATE_SITE_PREFIX =
-        "https://ctstoregta-stack.github.io/torvgym/";
     private static final String PREFS = "torvgym_updater";
     private static final String PREF_LAST_DISMISSED = "last_dismissed_tag";
     private static final String PREF_PENDING_DOWNLOAD_ID = "pending_download_id";
