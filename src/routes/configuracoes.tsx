@@ -202,9 +202,13 @@ function Settings() {
       const raw = await file.text();
       if (state.activeSession && !window.confirm("Existe um treino em andamento. Restaurar a sincronização substituirá esse estado. Continuar?")) return;
       const result = await importEncryptedSyncPackage(raw, syncPassword);
-      toast[result === "saved" ? "success" : "warning"](
-        result === "saved" ? "Dados E2EE sincronizados neste dispositivo." : "Dados sincronizados em memória, mas não puderam ser gravados no armazenamento local.",
-      );
+      if (result === "saved") {
+        toast.success("Dados E2EE restaurados neste dispositivo.");
+      } else if (result === "memory-only") {
+        toast.warning("Dados E2EE restaurados em memória, mas não puderam ser gravados no armazenamento local.");
+      } else {
+        toast.error("O pacote foi aberto, mas os dados não passaram na validação.");
+      }
     } catch {
       toast.error("Não foi possível abrir o pacote. Verifique a senha e o arquivo.");
     } finally {
