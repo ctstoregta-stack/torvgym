@@ -393,7 +393,7 @@ EOF
           MANIFEST_URL="https://ctstoregta-stack.github.io/torvgym/manifest.json"
           APK_URL="https://ctstoregta-stack.github.io/torvgym/releases/$TAG/torvgym-release.apk"
           curl --fail --silent --show-error --location --retry 10 --retry-delay 5 --retry-all-errors "$MANIFEST_URL" -o "$RUNNER_TEMP/manifest.json"
-          python "$RUNNER_TEMP/manifest.json" "$TAG" "$APK_URL" "$GITHUB_RUN_NUMBER" <<'PY'
+          python - "$RUNNER_TEMP/manifest.json" "$TAG" "$APK_URL" "$GITHUB_RUN_NUMBER" <<'PY'
 import json
 import sys
 from pathlib import Path
