@@ -119,7 +119,7 @@ type Ctx = {
   createEncryptedSyncPackage: (password: string) => Promise<string>;
   createRecoveryPackage: () => Promise<{ raw: string; code: string }>;
   importRecoveryPackage: (raw: string, code: string) => Promise<"invalid" | "saved" | "memory-only">;
-  importEncryptedSyncPackage: (raw: string, password: string) => Promise<"saved" | "memory-only">;
+  importEncryptedSyncPackage: (raw: string, password: string) => Promise<"invalid" | "saved" | "memory-only">;
   storageSizeBytes: () => number;
   // analytics
   prFor: (exerciseId: string) => number | null;
