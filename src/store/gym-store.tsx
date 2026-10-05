@@ -13,6 +13,7 @@ import { createBackup, emptyState, loadState, parseBackup, saveState, storageSiz
 import { buildExerciseAnalyticsIndex, sessionPRFor } from "@/store/gym-analytics";
 import { validateExercise } from "@/lib/exercise-validation";
 import { createEncryptedSyncPackage, decryptEncryptedSyncPackage } from "@/lib/cloud-sync";
+import { createProtectedBackup, decryptProtectedBackup } from "@/lib/protected-backup";
 import { startNativeWorkoutNotification, stopNativeWorkoutNotification } from "@/lib/native-workout";
 import type {
   AppState,
@@ -113,6 +114,8 @@ type Ctx = {
   // data safety
   createBackup: () => string;
   importBackup: (raw: string) => Promise<"invalid" | "saved" | "memory-only">;
+  createProtectedBackup: (password: string) => Promise<string>;
+  importProtectedBackup: (raw: string, password: string) => Promise<"invalid" | "saved" | "memory-only">;
   createEncryptedSyncPackage: (password: string) => Promise<string>;
   importEncryptedSyncPackage: (raw: string, password: string) => Promise<"saved" | "memory-only">;
   storageSizeBytes: () => number;
@@ -617,8 +620,16 @@ export function GymProvider({ children }: { children: ReactNode }) {
     updateSessionContext,
     discardSession: () => setState((s) => ({ ...s, activeSession: null })),
     createBackup: () => createBackup(state),
+    createProtectedBackup: (password) => createProtectedBackup(createBackup(state), password),
     importBackup: async (raw) => {
       const imported = parseBackup(raw);
+      if (!imported) return "invalid";
+      setState(imported);
+      return (await saveState(imported)) ? "saved" : "memory-only";
+    },
+    importProtectedBackup: async (raw, password) => {
+      const decrypted = await decryptProtectedBackup(raw, password);
+      const imported = parseBackup(decrypted);
       if (!imported) return "invalid";
       setState(imported);
       return (await saveState(imported)) ? "saved" : "memory-only";
