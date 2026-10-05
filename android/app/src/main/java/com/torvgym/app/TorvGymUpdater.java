@@ -23,6 +23,7 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.security.MessageDigest;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
@@ -39,6 +40,7 @@ final class TorvGymUpdater {
     private static final String PREFS = "torvgym_updater";
     private static final String PREF_LAST_DISMISSED = "last_dismissed_tag";
     private static final String PREF_PENDING_DOWNLOAD_ID = "pending_download_id";
+    private static final String PREF_PENDING_SHA256 = "pending_sha256";
     private static final String PREF_LAST_CHECK_MS = "last_check_ms";
     private static final long CHECK_INTERVAL_MS = 30L * 60L * 1000L;
     private static final Pattern VERSION_TAG = Pattern.compile("^v1\\.0\\.(\\d+)$");
@@ -60,12 +62,14 @@ final class TorvGymUpdater {
     private long pendingDownloadId = -1L;
     private String pendingAssetUrl;
     private String pendingTag;
+    private String pendingSha256;
     private boolean receiverRegistered;
 
     TorvGymUpdater(@NonNull BridgeActivity activity) {
         this.activity = activity;
         this.preferences = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         this.pendingDownloadId = preferences.getLong(PREF_PENDING_DOWNLOAD_ID, -1L);
+        this.pendingSha256 = preferences.getString(PREF_PENDING_SHA256, null);
     }
 
     void checkForUpdate() {
@@ -114,6 +118,9 @@ final class TorvGymUpdater {
                 versionCode = Integer.parseInt(matcher.group(1));
             }
 
+            String sha256 = json.optString("sha256", "").trim();
+            if (!sha256.matches("(?i)^[0-9a-f]{64}$")) return null;
+
             String assetUrl = json.optString("apkUrl", "");
             if (assetUrl.isEmpty()) {
                 assetUrl = json.optString("downloadUrl", "");
@@ -125,7 +132,7 @@ final class TorvGymUpdater {
                 return null;
             }
 
-            return new Release(versionCode, tag, assetUrl);
+            return new Release(versionCode, tag, assetUrl, sha256.toUpperCase(java.util.Locale.ROOT));
         } finally {
             connection.disconnect();
         }
@@ -144,6 +151,7 @@ final class TorvGymUpdater {
     private void beginUpdate(Release release) {
         pendingAssetUrl = release.assetUrl;
         pendingTag = release.tag;
+        pendingSha256 = release.sha256;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             && !activity.getPackageManager().canRequestPackageInstalls()) {
@@ -201,7 +209,10 @@ final class TorvGymUpdater {
         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
 
         pendingDownloadId = downloadManager.enqueue(request);
-        preferences.edit().putLong(PREF_PENDING_DOWNLOAD_ID, pendingDownloadId).apply();
+        preferences.edit()
+            .putLong(PREF_PENDING_DOWNLOAD_ID, pendingDownloadId)
+            .putString(PREF_PENDING_SHA256, pendingSha256)
+            .apply();
         pendingAssetUrl = null;
         pendingTag = null;
     }
@@ -221,6 +232,15 @@ final class TorvGymUpdater {
             int status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
             if (status == DownloadManager.STATUS_SUCCESSFUL) {
                 long completedId = pendingDownloadId;
+                Uri uri = downloadManager.getUriForDownloadedFile(completedId);
+                if (uri == null || pendingSha256 == null || !verifySha256(uri, pendingSha256)) {
+                    downloadManager.remove(completedId);
+                    clearPendingDownload();
+                    activity.runOnUiThread(() ->
+                        Toast.makeText(activity, "A atualização foi rejeitada: integridade do APK não pôde ser confirmada.", Toast.LENGTH_LONG).show()
+                    );
+                    return;
+                }
                 clearPendingDownload();
                 openDownloadedApk(completedId);
             } else if (status == DownloadManager.STATUS_FAILED) {
@@ -237,7 +257,28 @@ final class TorvGymUpdater {
 
     private void clearPendingDownload() {
         pendingDownloadId = -1L;
-        preferences.edit().remove(PREF_PENDING_DOWNLOAD_ID).apply();
+        preferences.edit().remove(PREF_PENDING_DOWNLOAD_ID).remove(PREF_PENDING_SHA256).apply();
+    }
+
+
+    private boolean verifySha256(Uri uri, String expected) {
+        try (InputStream stream = activity.getContentResolver().openInputStream(uri)) {
+            if (stream == null) return false;
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = stream.read(buffer)) != -1) {
+                digest.update(buffer, 0, read);
+            }
+            StringBuilder actual = new StringBuilder(64);
+            for (byte value : digest.digest()) {
+                actual.append(String.format(java.util.Locale.ROOT, "%02x", value));
+            }
+            return actual.toString().equalsIgnoreCase(expected);
+        } catch (Exception e) {
+            Log.w(TAG, "Não foi possível validar o SHA-256 do APK baixado", e);
+            return false;
+        }
     }
 
     @SuppressWarnings("deprecation")
@@ -286,11 +327,13 @@ final class TorvGymUpdater {
         final int versionCode;
         final String tag;
         final String assetUrl;
+        final String sha256;
 
-        Release(int versionCode, String tag, String assetUrl) {
+        Release(int versionCode, String tag, String assetUrl, String sha256) {
             this.versionCode = versionCode;
             this.tag = tag;
             this.assetUrl = assetUrl;
+            this.sha256 = sha256;
         }
     }
 }
