@@ -104,3 +104,26 @@ test("índice por treino: separa as últimas séries por treino e exercício", (
   assert.equal(index.get("w2::supino")?.lastSets?.[0]?.weight, 62.5);
   assert.equal(index.has("w1::agachamento"), false);
 });
+
+
+test("dashboard calcula sequência consecutiva e PR mais recente", async () => {
+  const data = [
+    makeSession("d1", "w1", "2026-10-02T10:00:00.000Z", [
+      { exerciseId: "supino", sets: [{ weight: 70, reps: 8, completed: true, isPR: true }] },
+    ]),
+    makeSession("d2", "w1", "2026-10-03T10:00:00.000Z", [
+      { exerciseId: "supino", sets: [{ weight: 72.5, reps: 8, completed: true, isPR: true }] },
+    ]),
+    makeSession("d3", "w1", "2026-10-04T10:00:00.000Z", [
+      { exerciseId: "supino", sets: [{ weight: 75, reps: 8, completed: true, isPR: true }] },
+    ]),
+  ];
+  const { buildDashboardAnalytics } = await import("../src/store/gym-analytics.ts");
+  const dashboard = buildDashboardAnalytics(data);
+  assert.equal(dashboard.streakDays, 3);
+  assert.deepEqual(dashboard.latestPR, {
+    exerciseId: "supino",
+    weight: 75,
+    date: "2026-10-04T10:00:00.000Z",
+  });
+});
