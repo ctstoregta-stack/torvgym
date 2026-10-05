@@ -49,11 +49,11 @@ export function validateExercise(
   ) {
     try {
       const url = new URL(exercise.gif_url);
-      if (url.protocol !== "http:" && url.protocol !== "https:") {
+      if (url.protocol !== "https:") {
         issues.push({
           code: "invalid-gif-url",
           exerciseId: exercise.id,
-          message: "A URL da mídia deve usar HTTP ou HTTPS.",
+          message: "A URL da mídia deve usar HTTPS.",
         });
       }
     } catch {
