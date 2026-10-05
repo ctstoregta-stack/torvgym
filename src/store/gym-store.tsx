@@ -363,10 +363,11 @@ export function GymProvider({ children }: { children: ReactNode }) {
         routines: s.routines.map((routine) => {
           const source = routine.workouts.find((workout) => workout.id === workoutId);
           if (!source) return routine;
-          duplicatedId = uid("wk");
+          const newWorkoutId = uid("wk");
+          duplicatedId = newWorkoutId;
           const copy: Workout = {
             ...source,
-            id: duplicatedId,
+            id: newWorkoutId,
             name: `${source.name} (cópia)`,
             days: [...source.days],
             exerciseIds: [...source.exerciseIds],
@@ -627,7 +628,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
       const payload = await decryptEncryptedSyncPackage(raw, password);
       const imported = payload.state;
       setState(imported);
-      return saveState(imported) ? "saved" : "memory-only";
+      return (await saveState(imported)) ? "saved" : "memory-only";
     },
     storageSizeBytes,
 
