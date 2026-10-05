@@ -1,4 +1,5 @@
 import type { AppState, Exercise, Routine, Session, Workout } from "./types";
+import { decryptLocal, encryptLocal } from "./secure-storage";
 
 const KEY = "gymtrack.state.v1";
 const VERSION_KEY = "gymtrack.state.version";
@@ -146,130 +147,73 @@ function migrate(raw: unknown, version: number): AppState | null {
   return null;
 }
 
-function readStoredState(key: string): AppState | null {
+async function readStoredState(key: string): Promise<AppState | null> {
   try {
     const raw = window.localStorage.getItem(key);
     if (!raw) return null;
+    const decrypted = await decryptLocal(raw);
+    if (decrypted) return normalizeState(JSON.parse(decrypted));
     return normalizeState(JSON.parse(raw));
   } catch {
     return null;
   }
 }
 
-function repairPrimary(state: AppState) {
+async function repairStorage(state: AppState) {
   try {
-    window.localStorage.setItem(KEY, JSON.stringify(state));
+    const encrypted = await encryptLocal(JSON.stringify(state));
+    window.localStorage.setItem(KEY, encrypted);
+    window.localStorage.setItem(RECOVERY_KEY, encrypted);
+    window.localStorage.setItem(AUTO_BACKUP_KEY, encrypted);
     window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION));
+    return true;
   } catch {
-    // A recuperação continua válida em memória mesmo se o storage estiver cheio.
+    // Mantém os dados antigos intactos se a proteção não puder ser concluída.
+    return false;
   }
 }
 
-export function loadState(): AppState | null {
+export async function loadState(): Promise<AppState | null> {
   if (typeof window === "undefined") return null;
-
   try {
     const storedVersion = Number(window.localStorage.getItem(VERSION_KEY) ?? 1);
     const version = Number.isFinite(storedVersion) ? storedVersion : 1;
-    const state = migrate(readRawPrimary(), version);
+    const state = migrate(await readStoredState(KEY), version);
     if (state) {
-      if (version !== CURRENT_VERSION) repairPrimary(state);
+      if (version !== CURRENT_VERSION || !isEncryptedValue(window.localStorage.getItem(KEY))) await repairStorage(state);
       return state;
     }
-
-    // O estado principal pode estar ausente/corrompido. Tenta primeiro o
-    // snapshot de recuperação e depois o backup interno independente.
-    const recovery = readStoredState(RECOVERY_KEY);
-    if (recovery) {
-      repairPrimary(recovery);
-      return recovery;
-    }
-
-    const automaticBackup = readStoredState(AUTO_BACKUP_KEY);
-    if (automaticBackup) {
-      repairPrimary(automaticBackup);
-      return automaticBackup;
-    }
-
+    const recovery = await readStoredState(RECOVERY_KEY);
+    if (recovery) { await repairStorage(recovery); return recovery; }
+    const automaticBackup = await readStoredState(AUTO_BACKUP_KEY);
+    if (automaticBackup) { await repairStorage(automaticBackup); return automaticBackup; }
     return null;
   } catch {
     return null;
   }
 }
 
-function readRawPrimary(): unknown {
+function isEncryptedValue(raw: string | null): boolean {
+  if (!raw) return false;
   try {
-    const raw = window.localStorage.getItem(KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+    const parsed = JSON.parse(raw);
+    return parsed?.format === "torvgym-local" && parsed?.version === 1 && typeof parsed?.ciphertext === "string";
+  } catch { return false; }
 }
 
-export function saveState(state: AppState): boolean {
+export async function saveState(state: AppState): Promise<boolean> {
   if (typeof window === "undefined") return false;
-
-  const serialized = JSON.stringify(state);
+  let encrypted: string;
+  try { encrypted = await encryptLocal(JSON.stringify(state)); } catch { return false; }
   let primarySaved = false;
-
   try {
-    window.localStorage.setItem(KEY, serialized);
+    window.localStorage.setItem(KEY, encrypted);
     window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION));
     primarySaved = true;
-  } catch {
-    // Continua tentando os snapshots independentes abaixo.
-  }
-
-  try {
-    window.localStorage.setItem(RECOVERY_KEY, serialized);
-  } catch {
-    // O snapshot de recuperação é best-effort.
-  }
-
-  try {
-    window.localStorage.setItem(AUTO_BACKUP_KEY, serialized);
-  } catch {
-    // O backup interno é best-effort.
-  }
-
+  } catch {}
+  try { window.localStorage.setItem(RECOVERY_KEY, encrypted); } catch {}
+  try { window.localStorage.setItem(AUTO_BACKUP_KEY, encrypted); } catch {}
   return primarySaved;
 }
 
-export function createBackup(state: AppState): string {
-  return JSON.stringify(
-    {
-      format: BACKUP_FORMAT,
-      version: BACKUP_VERSION,
-      exportedAt: new Date().toISOString(),
-      state,
-    },
-    null,
-    2,
-  );
-}
 
-export function parseBackup(raw: string): AppState | null {
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    if (!isRecord(parsed) || parsed["format"] !== BACKUP_FORMAT || parsed["version"] !== BACKUP_VERSION) {
-      return null;
-    }
-    return normalizeState(parsed["state"]);
-  } catch {
-    return null;
-  }
-}
-
-export function storageSizeBytes(): number {
-  if (typeof window === "undefined") return 0;
-  try {
-    const keys = [KEY, VERSION_KEY, RECOVERY_KEY, AUTO_BACKUP_KEY];
-    return keys.reduce((total, key) => total + ((window.localStorage.getItem(key)?.length ?? 0) * 2), 0);
-  } catch {
-    return 0;
-  }
-}
-
-export function uid(prefix = "id") {
-  return `${prefix}_${Math.random().toString(36).slice(2, 9)}${Date.now().toString(36).slice(-4)}`;
-}

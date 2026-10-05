@@ -112,7 +112,7 @@ type Ctx = {
   discardSession: () => void;
   // data safety
   createBackup: () => string;
-  importBackup: (raw: string) => "invalid" | "saved" | "memory-only";
+  importBackup: (raw: string) => Promise<"invalid" | "saved" | "memory-only">;
   createEncryptedSyncPackage: (password: string) => Promise<string>;
   importEncryptedSyncPackage: (raw: string, password: string) => Promise<"saved" | "memory-only">;
   storageSizeBytes: () => number;
@@ -138,14 +138,18 @@ export function GymProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const loaded = loadState();
-    setState(loaded ?? seedState());
-    setReady(true);
+    let cancelled = false;
+    void loadState().then((loaded) => {
+      if (cancelled) return;
+      setState(loaded ?? seedState());
+      setReady(true);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
     if (!ready) return;
-    const save = window.setTimeout(() => saveState(state), 150);
+    const save = window.setTimeout(() => void saveState(state), 150);
     return () => window.clearTimeout(save);
   }, [state, ready]);
 
@@ -612,11 +616,11 @@ export function GymProvider({ children }: { children: ReactNode }) {
     updateSessionContext,
     discardSession: () => setState((s) => ({ ...s, activeSession: null })),
     createBackup: () => createBackup(state),
-    importBackup: (raw) => {
+    importBackup: async (raw) => {
       const imported = parseBackup(raw);
       if (!imported) return "invalid";
       setState(imported);
-      return saveState(imported) ? "saved" : "memory-only";
+      return (await saveState(imported)) ? "saved" : "memory-only";
     },
     createEncryptedSyncPackage: (password) => createEncryptedSyncPackage(state, password),
     importEncryptedSyncPackage: async (raw, password) => {

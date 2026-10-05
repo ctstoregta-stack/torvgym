@@ -57,7 +57,7 @@ function Settings() {
         return;
       }
 
-      const result = importBackup(raw);
+      const result = await importBackup(raw);
       if (result === "saved") {
         toast.success("Backup restaurado com sucesso.");
       } else if (result === "memory-only") {
@@ -74,7 +74,7 @@ function Settings() {
   }
 
   async function handleSyncExport() {
-    if (syncPassword.length < 8) {
+    if (syncPassword.length < 12) {
       toast.error("Use uma senha de pelo menos 12 caracteres para proteger a sincronização.");
       return;
     }
@@ -184,7 +184,7 @@ function Settings() {
               minLength={12}
               value={syncPassword}
               onChange={(event) => setSyncPassword(event.target.value)}
-              placeholder="Mínimo de 8 caracteres"
+              placeholder="Mínimo de 12 caracteres"
               className="mt-1 h-11 w-full rounded-lg border border-border bg-elevated px-3 text-sm font-normal text-foreground"
             />
           </label>

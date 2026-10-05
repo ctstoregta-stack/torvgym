@@ -10,6 +10,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(TorvGymWorkoutPlugin.class);
+        registerPlugin(TorvGymSecureStoragePlugin.class);
         super.onCreate(savedInstanceState);
         updater = new TorvGymUpdater(this);
         updater.checkForUpdate();
