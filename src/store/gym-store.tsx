@@ -153,7 +153,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || state.activeSession) return;
     const save = window.setTimeout(() => void saveState(state), 150);
     return () => window.clearTimeout(save);
   }, [state, ready]);
