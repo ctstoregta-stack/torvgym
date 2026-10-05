@@ -215,5 +215,41 @@ export async function saveState(state: AppState): Promise<boolean> {
   try { window.localStorage.setItem(AUTO_BACKUP_KEY, encrypted); } catch {}
   return primarySaved;
 }
+export function createBackup(state: AppState): string {
+  return JSON.stringify(
+    {
+      format: BACKUP_FORMAT,
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      state,
+    },
+    null,
+    2,
+  );
+}
 
+export function parseBackup(raw: string): AppState | null {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!isRecord(parsed) || parsed["format"] !== BACKUP_FORMAT || parsed["version"] !== BACKUP_VERSION) {
+      return null;
+    }
+    return normalizeState(parsed["state"]);
+  } catch {
+    return null;
+  }
+}
 
+export function storageSizeBytes(): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const keys = [KEY, VERSION_KEY, RECOVERY_KEY, AUTO_BACKUP_KEY];
+    return keys.reduce((total, key) => total + ((window.localStorage.getItem(key)?.length ?? 0) * 2), 0);
+  } catch {
+    return 0;
+  }
+}
+
+export function uid(prefix = "id") {
+  return `${prefix}_${Math.random().toString(36).slice(2, 9)}${Date.now().toString(36).slice(-4)}`;
+}
