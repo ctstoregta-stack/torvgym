@@ -124,7 +124,7 @@ test("activeRoutineId inexistente cai para a primeira rotina", async () => {
       activeRoutineId: "nao-existe",
     }),
   );
-  assert.equal(await loadState()?.activeRoutineId, "r1");
+  assert.equal((await loadState())?.activeRoutineId, "r1");
 });
 
 test("dados da versão antiga são migrados e a versão atual é gravada", async () => {
@@ -149,7 +149,7 @@ test("sessão em andamento mantém os campos do cronômetro de descanso", async 
       },
     }),
   );
-  const session = await loadState()?.activeSession;
+  const session = (await loadState())?.activeSession;
   assert.equal(session?.currentExerciseIndex, 2);
   assert.equal(session?.restTotal, 90);
   assert.equal(session?.restRemaining, 30);
@@ -169,7 +169,7 @@ test("migração preserva RPE e observação da série", async () => {
       },
     }),
   );
-  const set = await loadState()?.activeSession?.entries[0]?.sets[0];
+  const set = (await loadState())?.activeSession?.entries[0]?.sets[0];
   assert.equal(set?.rpe, 9);
   assert.equal(set?.note, "Última série pesada");
   assert.equal(storage.getItem(VERSION_KEY), "4");
