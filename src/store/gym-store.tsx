@@ -14,6 +14,7 @@ import { buildExerciseAnalyticsIndex, sessionPRFor } from "@/store/gym-analytics
 import { validateExercise } from "@/lib/exercise-validation";
 import { createEncryptedRecoveryPackage, createEncryptedSyncPackage, decryptEncryptedRecoveryPackage, decryptEncryptedSyncPackage } from "@/lib/cloud-sync";
 import { createProtectedBackup, decryptProtectedBackup } from "@/lib/protected-backup";
+import { createWorkoutSession, finishWorkoutSession, updateWorkoutSessionSet } from "@/store/gym-session";
 import { startNativeWorkoutNotification, stopNativeWorkoutNotification } from "@/lib/native-workout";
 import type {
   AppState,
@@ -490,54 +491,23 @@ export function GymProvider({ children }: { children: ReactNode }) {
       if (!found) return null;
       const { routine, workout } = found;
       const id = uid("ses");
-      const session: Session = {
-        id,
-        routineId: routine.id,
-        workoutId: workout.id,
-        workoutName: workout.name,
-        startedAt: new Date().toISOString(),
-        finishedAt: null,
-        entries: workout.exerciseIds.map((exerciseId) => ({
-          exerciseId,
-          sets: Array.from(
-            { length: workout.targetSets[exerciseId] ?? 3 },
-            () => ({ weight: null, reps: null, completed: false }),
-          ),
-        })),
-      };
+      const session = createWorkoutSession(routine, workout, id, new Date().toISOString());
       setState((s) => ({ ...s, activeSession: session }));
       return id;
     },
     updateSet: (exerciseId, index, patch) =>
       setState((s) => {
         if (!s.activeSession) return s;
-
         const historicalBest = getAnalyticsIndex().get(exerciseId)?.pr ?? 0;
-
-        const nextEntries = s.activeSession.entries.map((entry) =>
-          entry.exerciseId === exerciseId
-            ? { ...entry, sets: entry.sets.map((set, i) => i === index ? { ...set, ...patch } : set) }
-            : entry,
-        );
-        const target = nextEntries.find((entry) => entry.exerciseId === exerciseId);
-        if (!target) return { ...s, activeSession: { ...s.activeSession, entries: nextEntries } };
-
-        let runningBest = historicalBest;
-        const recalculated = target.sets.map((set) => {
-          if (!set.completed || set.weight == null) return { ...set, isPR: false };
-          const isPR = set.weight > runningBest;
-          runningBest = Math.max(runningBest, set.weight);
-          return { ...set, isPR };
-        });
-
         return {
           ...s,
-          activeSession: {
-            ...s.activeSession,
-            entries: nextEntries.map((entry) =>
-              entry.exerciseId === exerciseId ? { ...entry, sets: recalculated } : entry,
-            ),
-          },
+          activeSession: updateWorkoutSessionSet(
+            s.activeSession,
+            exerciseId,
+            index,
+            patch,
+            historicalBest,
+          ),
         };
       }),
     addSet: (exerciseId) =>
@@ -596,19 +566,9 @@ export function GymProvider({ children }: { children: ReactNode }) {
       ),
     finishSession: () => {
       const current = state.activeSession;
-      let saved: Session | null = null;
-      if (current) {
-        const entries = current.entries
-          .map((e) => ({ ...e, sets: e.sets.filter((x) => x.completed) }))
-          .filter((e) => e.sets.length > 0);
-        if (entries.length) {
-          saved = {
-            ...current,
-            entries,
-            finishedAt: new Date().toISOString(),
-          };
-        }
-      }
+      const saved = current
+        ? finishWorkoutSession(current, new Date().toISOString())
+        : null;
       setState((s) => {
         if (!s.activeSession) return s;
         return {
