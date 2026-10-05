@@ -1,4 +1,4 @@
-import type { Routine, Session, SetLog, Workout } from "@/lib/types";
+import type { Routine, Session, SetLog, Workout } from "../lib/types";
 
 export function createWorkoutSession(
   routine: Routine,
