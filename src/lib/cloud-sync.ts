@@ -7,6 +7,7 @@ const LEGACY_VERSION = 1;
 const LEGACY_ITERATIONS = 150000;
 const enc = new TextEncoder();
 const dec = new TextDecoder();
+let memoryDeviceId = "";
 
 function bytesToBase64(bytes: Uint8Array) {
   let binary = "";
@@ -43,6 +44,10 @@ export type SyncEnvelope = {
 };
 
 export function getSyncDeviceId() {
+  if (typeof window === "undefined") {
+    if (!memoryDeviceId) memoryDeviceId = crypto.randomUUID();
+    return memoryDeviceId;
+  }
   const key = "torvgym.sync.device-id";
   const current = window.localStorage.getItem(key);
   if (current) return current;
