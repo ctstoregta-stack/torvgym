@@ -12,7 +12,7 @@ import { EXERCISE_DB } from "@/data/exercises";
 import { createBackup, emptyState, loadState, parseBackup, saveState, storageSizeBytes, uid } from "@/lib/storage";
 import { buildExerciseAnalyticsIndex, sessionPRFor } from "@/store/gym-analytics";
 import { validateExercise } from "@/lib/exercise-validation";
-import { createEncryptedSyncPackage, decryptEncryptedSyncPackage } from "@/lib/cloud-sync";
+import { createEncryptedRecoveryPackage, createEncryptedSyncPackage, decryptEncryptedRecoveryPackage, decryptEncryptedSyncPackage } from "@/lib/cloud-sync";
 import { createProtectedBackup, decryptProtectedBackup } from "@/lib/protected-backup";
 import { startNativeWorkoutNotification, stopNativeWorkoutNotification } from "@/lib/native-workout";
 import type {
@@ -117,6 +117,8 @@ type Ctx = {
   createProtectedBackup: (password: string) => Promise<string>;
   importProtectedBackup: (raw: string, password: string) => Promise<"invalid" | "saved" | "memory-only">;
   createEncryptedSyncPackage: (password: string) => Promise<string>;
+  createRecoveryPackage: () => Promise<{ raw: string; code: string }>;
+  importRecoveryPackage: (raw: string, code: string) => Promise<"invalid" | "saved" | "memory-only">;
   importEncryptedSyncPackage: (raw: string, password: string) => Promise<"saved" | "memory-only">;
   storageSizeBytes: () => number;
   // analytics
@@ -635,9 +637,28 @@ export function GymProvider({ children }: { children: ReactNode }) {
       return (await saveState(imported)) ? "saved" : "memory-only";
     },
     createEncryptedSyncPackage: (password) => createEncryptedSyncPackage(state, password),
+    createRecoveryPackage: () => createEncryptedRecoveryPackage(state),
     importEncryptedSyncPackage: async (raw, password) => {
       const payload = await decryptEncryptedSyncPackage(raw, password);
-      const imported = payload.state;
+      const imported = parseBackup(JSON.stringify({
+        format: "torvgym-backup",
+        version: 1,
+        exportedAt: payload.updatedAt,
+        state: payload.state,
+      }));
+      if (!imported) return "invalid";
+      setState(imported);
+      return (await saveState(imported)) ? "saved" : "memory-only";
+    },
+    importRecoveryPackage: async (raw, code) => {
+      const payload = await decryptEncryptedRecoveryPackage(raw, code);
+      const imported = parseBackup(JSON.stringify({
+        format: "torvgym-backup",
+        version: 1,
+        exportedAt: payload.updatedAt,
+        state: payload.state,
+      }));
+      if (!imported) return "invalid";
       setState(imported);
       return (await saveState(imported)) ? "saved" : "memory-only";
     },
