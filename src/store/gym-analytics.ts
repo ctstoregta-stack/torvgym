@@ -351,6 +351,12 @@ export type DashboardAnalytics = {
   totalPRs: number;
   averageDurationSeconds: number;
   sessionsLast7Days: number;
+  streakDays: number;
+  latestPR: {
+    exerciseId: string;
+    weight: number;
+    date: string;
+  } | null;
   volumeChangePercent: number | null;
   topExercises: {
     exerciseId: string;
@@ -388,6 +394,36 @@ export function buildDashboardAnalytics(sessions: Session[]): DashboardAnalytics
       7 * 24 * 60 * 60 * 1000,
   ).length;
 
+  const dayKeys = new Set(
+    completed.map((session) => {
+      const date = new Date(session.finishedAt ?? session.startedAt);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    }),
+  );
+  const latestDate = sorted[0]?.finishedAt ?? sorted[0]?.startedAt;
+  let streakDays = 0;
+  if (latestDate) {
+    const cursor = new Date(latestDate);
+    cursor.setHours(0, 0, 0, 0);
+    while (dayKeys.has(`${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`)) {
+      streakDays += 1;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+  }
+
+  let latestPR: DashboardAnalytics["latestPR"] = null;
+  for (const session of sorted) {
+    if (!session.finishedAt) continue;
+    for (const entry of session.entries) {
+      const prSet = entry.sets.find((set) => set.completed && set.isPR && set.weight != null);
+      if (prSet?.weight != null) {
+        latestPR = { exerciseId: entry.exerciseId, weight: prSet.weight, date: session.finishedAt };
+        break;
+      }
+    }
+    if (latestPR) break;
+  }
+
   const exerciseMap = new Map<
     string,
     { volume: number; estimated1RM: number; pr: number | null }
@@ -420,6 +456,8 @@ export function buildDashboardAnalytics(sessions: Session[]): DashboardAnalytics
       ? Math.round(durations.reduce((sum, value) => sum + value, 0) / durations.length)
       : 0,
     sessionsLast7Days,
+    streakDays,
+    latestPR,
     volumeChangePercent:
       latest && previous
         ? percentChange(sessionVolume(latest), sessionVolume(previous))
