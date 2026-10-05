@@ -87,13 +87,15 @@ final class TorvGymUpdater {
 
     private Release fetchLatestRelease() throws Exception {
         preferences.edit().putLong(PREF_LAST_CHECK_MS, System.currentTimeMillis()).apply();
+
         HttpURLConnection connection = (HttpURLConnection) new URL(
-            UPDATE_MANIFEST_URL + "?v=" + BuildConfig.VERSION_CODE
+            "https://api.github.com/repos/ctstoregta-stack/torvgym/releases/latest"
         ).openConnection();
         connection.setConnectTimeout(8000);
         connection.setReadTimeout(10000);
         connection.setRequestMethod("GET");
-        connection.setRequestProperty("Accept", "application/json");
+        connection.setRequestProperty("Accept", "application/vnd.github+json");
+        connection.setRequestProperty("X-GitHub-Api-Version", "2022-11-28");
         connection.setRequestProperty("User-Agent", "TorvGym-Updater");
         connection.setUseCaches(false);
         connection.setRequestProperty("Cache-Control", "no-cache");
@@ -109,26 +111,38 @@ final class TorvGymUpdater {
             }
 
             JSONObject json = new JSONObject(body.toString());
-            String tag = json.optString("tag", "");
+            String tag = json.optString("tag_name", "");
             Matcher matcher = VERSION_TAG.matcher(tag);
             if (!matcher.matches()) return null;
 
-            int versionCode = json.optInt("versionCode", -1);
-            if (versionCode < 0) {
-                versionCode = Integer.parseInt(matcher.group(1));
+            int versionCode = Integer.parseInt(matcher.group(1));
+            if (versionCode <= BuildConfig.VERSION_CODE) return null;
+
+            org.json.JSONArray assets = json.optJSONArray("assets");
+            if (assets == null) return null;
+
+            String assetUrl = "";
+            String sha256 = "";
+            for (int i = 0; i < assets.length(); i++) {
+                JSONObject asset = assets.optJSONObject(i);
+                if (asset == null || !"app-release.apk".equals(asset.optString("name", ""))) continue;
+
+                assetUrl = asset.optString("browser_download_url", "");
+                String digest = asset.optString("digest", "").trim();
+                if (digest.startsWith("sha256:")) {
+                    sha256 = digest.substring("sha256:".length()).trim();
+                }
+                break;
             }
 
-            String sha256 = json.optString("sha256", "").trim();
+            if (!assetUrl.matches("^https://github\\.com/ctstoregta-stack/torvgym/releases/download/v1\\.0\\.\\d+/app-release\\.apk$")) {
+                return null;
+            }
             if (!sha256.matches("(?i)^[0-9a-f]{64}$")) return null;
 
-            String assetUrl = json.optString("apkUrl", "");
-            if (assetUrl.isEmpty()) {
-                assetUrl = json.optString("downloadUrl", "");
-            }
-            if (!assetUrl.startsWith(UPDATE_SITE_PREFIX)) return null;
             Uri parsedAsset = Uri.parse(assetUrl);
             if (!"https".equalsIgnoreCase(parsedAsset.getScheme())
-                || !"ctstoregta-stack.github.io".equalsIgnoreCase(parsedAsset.getHost())) {
+                || !"github.com".equalsIgnoreCase(parsedAsset.getHost())) {
                 return null;
             }
 
