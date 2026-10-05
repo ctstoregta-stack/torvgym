@@ -155,9 +155,9 @@ async function readStoredState(key: string): Promise<AppState | null> {
     const parsed: unknown = JSON.parse(raw);
     const looksEncrypted =
       isRecord(parsed) &&
-      parsed.format === "torvgym-local" &&
-      parsed.version === 1 &&
-      typeof parsed.ciphertext === "string";
+      parsed["format"] === "torvgym-local" &&
+      parsed["version"] === 1 &&
+      typeof parsed["ciphertext"] === "string";
 
     const decrypted = await decryptLocal(raw);
     if (decrypted) return normalizeState(JSON.parse(decrypted));
