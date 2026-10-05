@@ -48,3 +48,9 @@ test("aceita mídia HTTPS que não termina necessariamente em .gif", () => {
     true,
   );
 });
+
+
+test("rejeita mídia HTTP para evitar conteúdo inseguro", () => {
+  const issues = validateExercise(makeExercise({ gif_url: "http://example.com/exercicio.gif" }));
+  assert.ok(issues.some((issue) => issue.code === "invalid-gif-url"));
+});
