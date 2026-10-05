@@ -25,11 +25,13 @@ function formatBytes(bytes: number) {
 }
 
 function Settings() {
-  const { ready, state, createBackup, importBackup, storageSizeBytes, createEncryptedSyncPackage, importEncryptedSyncPackage } = useGym();
+  const { ready, state, createBackup, importBackup, createProtectedBackup, importProtectedBackup, storageSizeBytes, createEncryptedSyncPackage, importEncryptedSyncPackage } = useGym();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [syncPassword, setSyncPassword] = useState("");
   const [syncInput, setSyncInput] = useState<HTMLInputElement | null>(null);
+  const [backupPassword, setBackupPassword] = useState("");
+  const [protectedBackupInput, setProtectedBackupInput] = useState<HTMLInputElement | null>(null);
 
   function handleExport() {
     try {
@@ -46,6 +48,54 @@ function Settings() {
       toast.success("Backup exportado com sucesso.");
     } catch {
       toast.error("Não foi possível criar o backup.");
+    }
+  }
+
+  async function handleProtectedExport() {
+    if (backupPassword.length < 12) {
+      toast.error("Use uma senha de pelo menos 12 caracteres para proteger o backup.");
+      return;
+    }
+    try {
+      const backup = await createProtectedBackup(backupPassword);
+      const blob = new Blob([backup], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `torvgym-backup-protegido-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Backup protegido exportado com sucesso.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível criar o backup protegido.");
+    }
+  }
+
+  async function handleProtectedImport(file: File) {
+    if (backupPassword.length < 12) {
+      toast.error("Informe a senha de pelo menos 12 caracteres usada no backup.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const raw = await file.text();
+      if (state.activeSession && !window.confirm("Existe um treino em andamento. Restaurar o backup protegido substituirá esse estado. Continuar?")) return;
+
+      const result = await importProtectedBackup(raw, backupPassword);
+      if (result === "saved") {
+        toast.success("Backup protegido restaurado com sucesso.");
+      } else if (result === "memory-only") {
+        toast.warning("Backup restaurado em memória, mas o armazenamento local está cheio ou indisponível.");
+      } else {
+        toast.error("O conteúdo descriptografado não é um backup válido do TorvGym.");
+      }
+    } catch {
+      toast.error("Não foi possível abrir o backup protegido. Verifique a senha e o arquivo.");
+    } finally {
+      setBusy(false);
+      if (protectedBackupInput) protectedBackupInput.value = "";
     }
   }
 
@@ -151,6 +201,9 @@ function Settings() {
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button onClick={handleExport}>Exportar backup</Button>
+            <Button variant="outline" onClick={() => void handleProtectedExport()}>
+              Exportar backup protegido
+            </Button>
             <Button
               variant="outline"
               disabled={busy}
@@ -159,6 +212,33 @@ function Settings() {
               {busy ? "Restaurando…" : "Restaurar backup"}
             </Button>
           </div>
+          <label className="mt-4 block text-xs font-semibold text-muted-foreground">
+            Senha do backup protegido
+            <input
+              type="password"
+              autoComplete="new-password"
+              minLength={12}
+              value={backupPassword}
+              onChange={(event) => setBackupPassword(event.target.value)}
+              placeholder="Mínimo de 12 caracteres"
+              className="mt-1 h-11 w-full rounded-lg border border-border bg-elevated px-3 text-sm font-normal text-foreground"
+            />
+          </label>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button variant="outline" disabled={busy} onClick={() => protectedBackupInput?.click()}>
+              {busy ? "Restaurando…" : "Restaurar backup protegido"}
+            </Button>
+          </div>
+          <input
+            ref={setProtectedBackupInput}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void handleProtectedImport(file);
+            }}
+          />
           <input
             ref={inputRef}
             type="file"
@@ -226,7 +306,7 @@ function Settings() {
         <Card>
           <h2 className="text-base font-semibold">Segurança dos dados</h2>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            O backup é validado antes de ser restaurado. Mantenha uma cópia fora do aparelho para reduzir o risco de perda após desinstalação ou limpeza dos dados do aplicativo.
+            O backup é validado antes de ser restaurado. O backup protegido usa AES-256-GCM com PBKDF2-SHA256 e exige uma senha de pelo menos 12 caracteres. Mantenha uma cópia fora do aparelho para reduzir o risco de perda após desinstalação ou limpeza dos dados do aplicativo.
           </p>
         </Card>
       </div>
