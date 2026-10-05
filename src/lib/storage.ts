@@ -1,5 +1,5 @@
 import type { AppState, Exercise, Routine, Session, Workout } from "./types";
-import { decryptLocal, encryptLocal } from "./secure-storage";
+import { decryptLocal, encryptLocal } from "./secure-storage.ts";
 
 const KEY = "gymtrack.state.v1";
 const VERSION_KEY = "gymtrack.state.version";
