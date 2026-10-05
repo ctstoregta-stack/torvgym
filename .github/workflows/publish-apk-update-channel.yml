@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   publish-update-channel:
-    if: \${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -28,13 +28,13 @@ jobs:
         with:
           name: torvgym-release-signed-apk
           path: release-assets
-          github-token: \${{ github.token }}
-          repository: \${{ github.repository }}
-          run-id: \${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
 
       - name: Prepare public update channel
         env:
-          RUN_NUMBER: \${{ github.event.workflow_run.run_number }}
+          RUN_NUMBER: ${{ github.event.workflow_run.run_number }}
         run: |
           set -euo pipefail
           TAG="v1.0.$RUN_NUMBER"
@@ -61,7 +61,7 @@ EOF
       - name: Upload public update channel
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
-          path: \${{ runner.temp }}/torvgym-pages
+          path: ${{ runner.temp }}/torvgym-pages
 
       - name: Deploy public update channel
         id: deployment
@@ -69,8 +69,8 @@ EOF
 
       - name: Verify public update channel and release
         env:
-          RUN_NUMBER: \${{ github.event.workflow_run.run_number }}
-          GH_TOKEN: \${{ github.token }}
+          RUN_NUMBER: ${{ github.event.workflow_run.run_number }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           TAG="v1.0.$RUN_NUMBER"
