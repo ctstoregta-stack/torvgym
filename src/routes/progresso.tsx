@@ -29,7 +29,7 @@ function formatDuration(seconds: number) {
 }
 
 function ProgressPage() {
-  const { ready, state, getExercise } = useGym();
+  const { ready, state, activeRoutine, getExercise } = useGym();
   const completed = useMemo(
     () => state.sessions.filter((session) => session.finishedAt),
     [state.sessions],
@@ -38,6 +38,20 @@ function ProgressPage() {
   const weekly = useMemo(() => buildPeriodAnalytics(completed, "week").slice(-8), [completed]);
   const monthly = useMemo(() => buildPeriodAnalytics(completed, "month").slice(-6), [completed]);
   const exerciseIndex = useMemo(() => buildExerciseAnalyticsIndex(completed), [completed]);
+  const nextWorkout = useMemo(() => {
+    if (state.activeSession) {
+      return { workout: activeRoutine?.workouts.find((item) => item.id === state.activeSession?.workoutId) ?? null, label: "Treino em andamento" };
+    }
+    if (!activeRoutine?.workouts.length) return { workout: null, label: "Nenhum treino programado" };
+    const today = new Date().getDay();
+    for (let offset = 0; offset < 7; offset += 1) {
+      const day = (today + offset) % 7;
+      const workout = activeRoutine.workouts.find((item) => item.days.includes(day));
+      if (workout) return { workout, label: offset === 0 ? "Treino de hoje" : "Próximo treino" };
+    }
+    return { workout: null, label: "Nenhum treino programado" };
+  }, [activeRoutine, state.activeSession]);
+
   const progressions = useMemo(
     () =>
       [...exerciseIndex.entries()]
@@ -117,6 +131,18 @@ function ProgressPage() {
           )}
         </Card>
       </div>
+
+      <Card className="mt-4">
+        <p className="text-[11px] text-muted-foreground">{nextWorkout.label}</p>
+        {nextWorkout.workout ? (
+          <>
+            <p className="mt-1 truncate text-base font-bold">{nextWorkout.workout.name}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{nextWorkout.workout.exerciseIds.length} exercícios · {nextWorkout.workout.exerciseIds.reduce((sum, id) => sum + (nextWorkout.workout?.targetSets[id] ?? 3), 0)} séries planejadas</p>
+          </>
+        ) : (
+          <p className="mt-1 text-sm text-muted-foreground">Atribua um dia a um treino na rotina para vê-lo aqui.</p>
+        )}
+      </Card>
 
       <Card className="mt-4">
         <p className="text-sm font-semibold">Semanas recentes</p>
