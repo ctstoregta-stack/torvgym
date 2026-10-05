@@ -210,9 +210,19 @@ export async function saveState(state: AppState): Promise<boolean> {
     window.localStorage.setItem(KEY, encrypted);
     window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION));
     primarySaved = true;
-  } catch {}
-  try { window.localStorage.setItem(RECOVERY_KEY, encrypted); } catch {}
-  try { window.localStorage.setItem(AUTO_BACKUP_KEY, encrypted); } catch {}
+  } catch {
+    // A gravação principal pode falhar sem impedir os snapshots de recuperação.
+  }
+  try {
+    window.localStorage.setItem(RECOVERY_KEY, encrypted);
+  } catch {
+    // O snapshot de recuperação é best-effort.
+  }
+  try {
+    window.localStorage.setItem(AUTO_BACKUP_KEY, encrypted);
+  } catch {
+    // O backup automático é best-effort.
+  }
   return primarySaved;
 }
 export function createBackup(state: AppState): string {
