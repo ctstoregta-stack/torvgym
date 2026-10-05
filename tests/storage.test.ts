@@ -48,6 +48,23 @@ test("loadState recupera do snapshot quando o estado principal está corrompido"
   assert.equal(storage.getItem(VERSION_KEY), "4");
 });
 
+test("loadState recupera do snapshot quando o envelope criptografado foi adulterado", async () => {
+  const state = {
+    ...emptyState,
+    routines: [{ id: "r-tamper", name: "Integridade", createdAt: "2026-01-02T00:00:00.000Z", workouts: [] }],
+    activeRoutineId: "r-tamper",
+  };
+  await saveState(state);
+
+  const encrypted = JSON.parse(storage.getItem(KEY) ?? "{}");
+  assert.equal(encrypted.format, "torvgym-local");
+  assert.equal(typeof encrypted.ciphertext, "string");
+  encrypted.ciphertext = encrypted.ciphertext.slice(0, -2) + "AA";
+  storage.setItem(KEY, JSON.stringify(encrypted));
+
+  assert.deepEqual(await loadState(), state);
+});
+
 test("loadState usa o backup interno quando o estado principal e o snapshot estão corrompidos", async () => {
   const state = {
     ...emptyState,
