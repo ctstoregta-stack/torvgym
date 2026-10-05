@@ -97,6 +97,27 @@ function ProgressPage() {
         )}
       </Card>
 
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <Card className="p-3">
+          <p className="text-[11px] text-muted-foreground">Sequência atual</p>
+          <p className="mt-1 text-xl font-bold tabular-nums">
+            {dashboard.streakDays} dia{dashboard.streakDays === 1 ? "" : "s"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">Dias consecutivos com treino concluído.</p>
+        </Card>
+        <Card className="p-3">
+          <p className="text-[11px] text-muted-foreground">PR mais recente</p>
+          {dashboard.latestPR ? (
+            <>
+              <p className="mt-1 truncate text-base font-bold">{getExercise(dashboard.latestPR.exerciseId)?.name ?? dashboard.latestPR.exerciseId}</p>
+              <p className="text-xs text-gold">{dashboard.latestPR.weight} kg · {new Date(dashboard.latestPR.date).toLocaleDateString("pt-BR")}</p>
+            </>
+          ) : (
+            <p className="mt-1 text-sm text-muted-foreground">Nenhum PR marcado ainda.</p>
+          )}
+        </Card>
+      </div>
+
       <Card className="mt-4">
         <p className="text-sm font-semibold">Semanas recentes</p>
         <div className="mt-3 space-y-2">
