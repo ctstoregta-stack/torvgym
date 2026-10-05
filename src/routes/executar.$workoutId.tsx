@@ -240,13 +240,6 @@ function ExecutePage() {
     <AppShell
       title={session.workoutName}
       back={{ to: "/" }}
-      action={
-        currentIndex === entries.length - 1 ? (
-          <Button className="px-3 py-2 text-xs" disabled={doneSets === 0} onClick={doneSets >= totalSets ? finish : () => setFinishConfirm(true)}>
-            Finalizar
-          </Button>
-        ) : null
-      }
     >
       <div className="surface mb-3 grid grid-cols-3 divide-x divide-border p-3 text-center">
         <div>
