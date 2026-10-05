@@ -159,13 +159,17 @@ async function readStoredState(key: string): Promise<AppState | null> {
   }
 }
 
-async function repairPrimary(state: AppState) {
+async function repairStorage(state: AppState) {
   try {
     const encrypted = await encryptLocal(JSON.stringify(state));
     window.localStorage.setItem(KEY, encrypted);
+    window.localStorage.setItem(RECOVERY_KEY, encrypted);
+    window.localStorage.setItem(AUTO_BACKUP_KEY, encrypted);
     window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION));
+    return true;
   } catch {
     // Mantém os dados antigos intactos se a proteção não puder ser concluída.
+    return false;
   }
 }
 
@@ -176,13 +180,13 @@ export async function loadState(): Promise<AppState | null> {
     const version = Number.isFinite(storedVersion) ? storedVersion : 1;
     const state = migrate(await readStoredState(KEY), version);
     if (state) {
-      if (version !== CURRENT_VERSION || !isEncryptedValue(window.localStorage.getItem(KEY))) await repairPrimary(state);
+      if (version !== CURRENT_VERSION || !isEncryptedValue(window.localStorage.getItem(KEY))) await repairStorage(state);
       return state;
     }
     const recovery = await readStoredState(RECOVERY_KEY);
-    if (recovery) { await repairPrimary(recovery); return recovery; }
+    if (recovery) { await repairStorage(recovery); return recovery; }
     const automaticBackup = await readStoredState(AUTO_BACKUP_KEY);
-    if (automaticBackup) { await repairPrimary(automaticBackup); return automaticBackup; }
+    if (automaticBackup) { await repairStorage(automaticBackup); return automaticBackup; }
     return null;
   } catch {
     return null;
