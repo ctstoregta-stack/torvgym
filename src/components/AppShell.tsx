@@ -5,8 +5,7 @@ import { useGym } from "@/store/gym-store";
 const NAV = [
   { to: "/", label: "Início", icon: HomeIcon },
   { to: "/rotinas", label: "Rotinas", icon: LayersIcon },
-  { to: "/exercicios", label: "Exercícios", icon: DumbbellIcon },
-  { to: "/historico", label: "Histórico", icon: ChartIcon },
+  { to: "/perfil", label: "Perfil", icon: UserIcon },
 ] as const;
 
 export function AppShell({
@@ -58,9 +57,13 @@ export function AppShell({
       )}
 
       <nav aria-label="Navegação principal" className="fixed bottom-0 left-1/2 z-20 w-full max-w-6xl -translate-x-1/2 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-card/80">
-        <ul className="grid grid-cols-4">
+        <ul className="grid grid-cols-3">
           {NAV.map(({ to, label, icon: Icon }) => {
-            const isActive = to === "/" ? pathname === "/" : pathname.startsWith(to);
+            const isActive = to === "/"
+              ? pathname === "/"
+              : to === "/perfil"
+                ? pathname === "/perfil" || pathname.startsWith("/historico") || pathname.startsWith("/exercicios")
+                : pathname.startsWith(to);
             return (
               <li key={to}>
                 <Link
@@ -101,6 +104,14 @@ function DumbbellIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12" strokeLinecap="round" />
+    </svg>
+  );
+}
+function UserIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5 20c.8-3.5 3.1-5.5 7-5.5s6.2 2 7 5.5" strokeLinecap="round" />
     </svg>
   );
 }
