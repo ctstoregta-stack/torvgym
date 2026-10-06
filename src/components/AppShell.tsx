@@ -25,7 +25,7 @@ export function AppShell({
   const active = state.activeSession;
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col bg-background">
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col bg-background">
       {(title || back) && (
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/75">
           {back && (
@@ -45,7 +45,7 @@ export function AppShell({
         </header>
       )}
 
-      <main className="page-content flex-1 px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-5 sm:px-6 sm:pt-6 lg:px-8">{children}</main>
+      <main className="page-content min-w-0 flex-1 px-3 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-5 sm:px-6 sm:pt-6 lg:px-8">{children}</main>
 
       {active && pathname !== "/" && !pathname.startsWith("/executar") && (
         <Link
