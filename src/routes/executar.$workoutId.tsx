@@ -9,6 +9,7 @@ import { Button, EmptyState, PRBadge } from "@/components/ui-kit";
 import { useGym } from "@/store/gym-store";
 import type { Session, Workout } from "@/lib/types";
 import { workoutExerciseProgressionFor } from "@/store/gym-analytics";
+import { startNativeWorkoutNotification, stopNativeWorkoutNotification, updateNativeWorkoutNotification } from "@/lib/native-workout";
 
 const DEFAULT_REST = 60;
 
@@ -123,6 +124,19 @@ function ExecutePage() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [discardConfirm, setDiscardConfirm] = useState(false);
   const [finishConfirm, setFinishConfirm] = useState(false);
+
+  useEffect(() => {
+    if (!state.activeSession || state.activeSession.workoutId !== workoutId) return;
+    const exercise = state.activeSession.entries[index];
+    const completed = exercise?.sets.filter((set) => set.completed).length ?? 0;
+    const total = exercise?.sets.length ?? 0;
+    const payload = { workoutName: state.activeSession.workoutName, exerciseName: exercise ? getExercise(exercise.exerciseId)?.name : undefined, setLabel: exercise ? `Série ${Math.min(completed + 1, total)} de ${total}` : undefined, restRemaining: rest?.remaining ?? 0, canContinue: !!rest && !rest.running };
+    void updateNativeWorkoutNotification(payload.workoutName, payload);
+  }, [index, rest?.remaining, rest?.running, state.activeSession, workoutId, getExercise]);
+
+  useEffect(() => {
+    if (state.activeSession?.workoutId === workoutId) void startNativeWorkoutNotification(state.activeSession.workoutName);
+  }, [state.activeSession?.id, state.activeSession?.workoutName, workoutId]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -250,6 +264,7 @@ function ExecutePage() {
     const previous = state.sessions
       .filter((item) => item.workoutId === workoutId && item.finishedAt)
       .sort((a, b) => new Date(b.finishedAt!).getTime() - new Date(a.finishedAt!).getTime())[0];
+    void stopNativeWorkoutNotification();
     const saved = finishSession();
     const data = buildSummary(saved, getExercise, previous);
     toast.success("Treino salvo no histórico");
