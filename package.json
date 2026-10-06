@@ -17,7 +17,8 @@
     "cap:sync": "cap sync android",
     "cap:add:android": "cap add android",
     "cap:open:android": "cap open android",
-    "cap:run:android": "cap run android"
+    "cap:run:android": "cap run android",
+    "validate:exercise-gifs": "node scripts/validate-exercise-gifs.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1",
