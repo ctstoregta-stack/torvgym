@@ -29,5 +29,5 @@ test("fluxo completo: iniciar → séries → descanso persistido → finalizar 
 
   const progression = workoutExerciseProgressionFor([finished!], "w-e2e", "supino");
   assert.equal(progression?.latest.maxWeight, 62.5);
-  assert.equal(progression?.latest.totalReps, 18);
+  assert.equal(progression?.latest.volume, 1100);
 });
