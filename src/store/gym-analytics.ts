@@ -351,6 +351,8 @@ export type DashboardAnalytics = {
   totalPRs: number;
   averageDurationSeconds: number;
   sessionsLast7Days: number;
+  volumeLast7Days: number;
+  bestSessionVolume: number;
   streakDays: number;
   latestPR: {
     exerciseId: string;
@@ -388,11 +390,13 @@ export function buildDashboardAnalytics(sessions: Session[]): DashboardAnalytics
   const durations = completed.map(sessionDurationSeconds);
   const latest = sorted[0];
   const previous = sorted[1];
-  const sessionsLast7Days = completed.filter(
-    (session) =>
-      Date.now() - new Date(session.finishedAt ?? session.startedAt).getTime() <=
-      7 * 24 * 60 * 60 * 1000,
-  ).length;
+  const recentCutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const recentSessions = completed.filter(
+    (session) => new Date(session.finishedAt ?? session.startedAt).getTime() >= recentCutoff,
+  );
+  const sessionsLast7Days = recentSessions.length;
+  const volumeLast7Days = recentSessions.reduce((sum, session) => sum + sessionVolume(session), 0);
+  const bestSessionVolume = completed.reduce((best, session) => Math.max(best, sessionVolume(session)), 0);
 
   const dayKeys = new Set(
     completed.map((session) => {
@@ -456,6 +460,8 @@ export function buildDashboardAnalytics(sessions: Session[]): DashboardAnalytics
       ? Math.round(durations.reduce((sum, value) => sum + value, 0) / durations.length)
       : 0,
     sessionsLast7Days,
+    volumeLast7Days,
+    bestSessionVolume,
     streakDays,
     latestPR,
     volumeChangePercent:
