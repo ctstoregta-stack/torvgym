@@ -7,7 +7,7 @@ import { ExerciseMedia } from "@/components/ExerciseMedia";
 import { RestTimer, formatClock, type RestState } from "@/components/RestTimer";
 import { Button, EmptyState, PRBadge } from "@/components/ui-kit";
 import { useGym } from "@/store/gym-store";
-import type { Session } from "@/lib/types";
+import type { Session, Workout } from "@/lib/types";
 import { workoutExerciseProgressionFor } from "@/store/gym-analytics";
 
 const DEFAULT_REST = 60;
@@ -115,7 +115,7 @@ function ExecutePage() {
 
   const [now, setNow] = useState(() => Date.now());
 
-  function currentRestSeconds(workout: ReturnType<typeof findWorkout>["workout"] | undefined, exerciseId: string | undefined) {
+  function currentRestSeconds(workout: Workout | undefined, exerciseId: string | undefined) {
     if (!workout) return undefined;
     return exerciseId ? workout.restSecondsByExercise?.[exerciseId] ?? workout.restSeconds : workout.restSeconds;
   }
