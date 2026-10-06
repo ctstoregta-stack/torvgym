@@ -8,6 +8,7 @@ import { RestTimer, formatClock, type RestState } from "@/components/RestTimer";
 import { Button, EmptyState, PRBadge } from "@/components/ui-kit";
 import { useGym } from "@/store/gym-store";
 import type { Session } from "@/lib/types";
+import { workoutExerciseProgressionFor } from "@/store/gym-analytics";
 
 const DEFAULT_REST = 60;
 
@@ -218,6 +219,9 @@ function ExecutePage() {
     ? lastSetsForWorkout(session.workoutId, current.exerciseId) ?? lastSetsFor(current.exerciseId)
     : null;
   const storedPR = current ? prFor(current.exerciseId) : null;
+  const progression = current
+    ? workoutExerciseProgressionFor(state.sessions, session.workoutId, current.exerciseId)
+    : null;
   const currentSetIndex = current ? current.sets.findIndex((set) => !set.completed) : -1;
   const nextSetIndex = currentSetIndex >= 0 ? currentSetIndex : current ? current.sets.length : 0;
   const hasNextSet = !!current && nextSetIndex < current.sets.length;
@@ -316,6 +320,22 @@ function ExecutePage() {
             </div>
           </div>
 
+
+
+          {progression && (
+            <div className="border-b border-border bg-card px-3 py-2.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Orientação para este treino</p>
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                <span className="font-semibold">Última vez: {progression.latest.maxWeight || "—"} kg</span>
+                {progression.previous && <span className="text-muted-foreground">· anterior {progression.previous.maxWeight || "—"} kg</span>}
+                <span className="text-primary">
+                  {progression.recommendation === "increase-load" ? "Aumentar carga" :
+                   progression.recommendation === "add-reps" ? "Tentar mais repetições" :
+                   progression.recommendation === "recover" ? "Priorizar recuperação" : "Manter e consolidar"}
+                </span>
+              </div>
+            </div>
+          )}
           <div className="space-y-2 p-3">
             {current.sets.map((set, i) => {
               const prev = previous?.[i];
