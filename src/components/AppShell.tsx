@@ -100,25 +100,11 @@ function LayersIcon() {
     </svg>
   );
 }
-function DumbbellIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12" strokeLinecap="round" />
-    </svg>
-  );
-}
 function UserIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="12" cy="8" r="3.5" />
       <path d="M5 20c.8-3.5 3.1-5.5 7-5.5s6.2 2 7 5.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-function ChartIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" strokeLinecap="round" />
     </svg>
   );
 }
