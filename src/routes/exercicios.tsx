@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ExerciseMedia } from "@/components/ExerciseMedia";
 import { Button, Card, Input } from "@/components/ui-kit";
@@ -28,6 +28,7 @@ function ExercisesPage() {
   const { ready, exercises, addCustomExercise, updateCustomExercise, deleteCustomExercise, prFor } = useGym();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
+  const [equipment, setEquipment] = useState<string | null>(null);
   const [scope, setScope] = useState<"all" | "custom">("all");
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -41,6 +42,11 @@ function ExercisesPage() {
     primary: "",
     secondary: "",
   });
+
+  const equipmentOptions = useMemo(
+    () => Array.from(new Set(exercises.map((e) => e.equipment))).sort((a, b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" })),
+    [exercises],
+  );
 
   const categories = useMemo(
     () =>
@@ -57,13 +63,16 @@ function ExercisesPage() {
           (e) =>
             (scope === "all" || e.custom === true) &&
             (!category || e.category === category) &&
+            (!equipment || e.equipment === equipment) &&
             `${e.name} ${e.equipment}`.toLocaleLowerCase("pt-BR").includes(query.toLocaleLowerCase("pt-BR")),
         )
         .sort((a, b) =>
           a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }),
         ),
-    [exercises, query, category, scope],
+    [exercises, query, category, equipment, scope],
   );
+
+  useEffect(() => { setVisibleLimit(24); }, [query, category, equipment, scope]);
 
   const visibleExercises = filtered.slice(0, visibleLimit);
 
@@ -86,7 +95,7 @@ function ExercisesPage() {
       <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
         <button
           aria-pressed={scope === "all" && category === null}
-          onClick={() => { setScope("all"); setCategory(null); }}
+          onClick={() => { setScope("all"); setCategory(null); setEquipment(null); }}
           className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
             category === null ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"
           }`}
@@ -95,16 +104,26 @@ function ExercisesPage() {
         </button>
         <button
           aria-pressed={scope === "custom"}
-          onClick={() => { setScope("custom"); setCategory(null); }}
+          onClick={() => { setScope("custom"); setCategory(null); setEquipment(null); }}
           className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${scope === "custom" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
         >
           Personalizados
         </button>
+        {equipmentOptions.map((item) => (
+          <button
+            key={item}
+            aria-pressed={equipment === item}
+            onClick={() => { setScope("all"); setCategory(null); setEquipment(equipment === item ? null : item); }}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${equipment === item ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
+          >
+            {item}
+          </button>
+        ))}
         {categories.map((c) => (
           <button
             key={c}
             aria-pressed={scope === "all" && category === c}
-            onClick={() => { setScope("all"); setCategory(c); }}
+            onClick={() => { setScope("all"); setCategory(c); setEquipment(null); }}
             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
               category === c ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"
             }`}
@@ -133,7 +152,7 @@ function ExercisesPage() {
                   <div className="flex shrink-0 flex-col gap-1">
                     <button type="button" className="text-[11px] font-semibold text-primary" onClick={(event) => {
                       event.preventDefault(); event.stopPropagation();
-                      setEditingId(ex.id); setForm({
+                      setEditingId(ex.id); setCreating(true); setForm({
                         name: ex.name, category: ex.category, equipment: ex.equipment,
                         gif_url: ex.gif_url, execution: ex.execution,
                         primary: ex.primary_muscles.join(", "), secondary: ex.secondary_muscles.join(", "),
