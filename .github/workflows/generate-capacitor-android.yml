@@ -52,6 +52,8 @@ jobs:
 
       - name: Audit dependencies
         run: npm audit --audit-level=high
+      - name: Validate exercise media
+        run: npm run validate:exercise-gifs
 
       - name: Validate project
         run: npm run typecheck && npm test && npm run lint
