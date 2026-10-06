@@ -110,9 +110,15 @@ function ExecutePage() {
     updateSessionContext,
   } = useGym();
 
-  const defaultRest = findWorkout(workoutId)?.workout.restSeconds ?? DEFAULT_REST;
+  const workoutConfig = findWorkout(workoutId)?.workout;
+  const defaultRest = currentRestSeconds(workoutConfig, undefined) ?? DEFAULT_REST;
 
   const [now, setNow] = useState(() => Date.now());
+
+  function currentRestSeconds(workout: ReturnType<typeof findWorkout>["workout"] | undefined, exerciseId: string | undefined) {
+    if (!workout) return undefined;
+    return exerciseId ? workout.restSecondsByExercise?.[exerciseId] ?? workout.restSeconds : workout.restSeconds;
+  }
   const [index, setIndex] = useState(0);
   const [rest, setRest] = useState<RestState>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -148,12 +154,13 @@ function ExecutePage() {
     updateSessionContext({ restStartedAt: null, restTotal: 0, restRemaining: 0, restRunning: false });
   }, [updateSessionContext]);
 
-  const startRest = useCallback((seconds: number = defaultRest) => {
+  const startRest = useCallback((seconds?: number) => {
+    const resolvedSeconds = seconds ?? (current ? currentRestSeconds(workoutConfig, current.exerciseId) : undefined) ?? DEFAULT_REST;
     const startedAt = new Date().toISOString();
-    const next = { total: seconds, remaining: seconds, running: true, startedAt: Date.now() } as RestState;
+    const next = { total: resolvedSeconds, remaining: resolvedSeconds, running: true, startedAt: Date.now() } as RestState;
     setRest(next);
-    updateSessionContext({ restStartedAt: startedAt, restTotal: seconds, restRemaining: seconds, restRunning: true });
-  }, [defaultRest, updateSessionContext]);
+    updateSessionContext({ restStartedAt: startedAt, restTotal: resolvedSeconds, restRemaining: resolvedSeconds, restRunning: true });
+  }, [current, workoutConfig, updateSessionContext]);
 
   const handleSetUpdate = useCallback((exerciseId: string, setIndex: number, completed: boolean) => {
     updateSet(exerciseId, setIndex, { completed });
