@@ -15,7 +15,7 @@ jobs:
     # Secrets do repositório continuam disponíveis normalmente.
     environment: production
     permissions:
-      contents: write
+      contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -282,6 +282,8 @@ jobs:
 
 
       - name: Commit Android platform
+        permissions:
+          contents: write
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
