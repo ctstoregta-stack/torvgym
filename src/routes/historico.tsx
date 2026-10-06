@@ -22,12 +22,12 @@ function HistoryPage() {
   const { ready, state, getExercise } = useGym();
   const [range, setRange] = useState<7 | 30 | 90 | 0>(0);
 
-  const allSessions = useMemo(
-    () => [...state.sessions]
-      .filter((s) => s.finishedAt)
-      .sort((a, b) => new Date(b.finishedAt!).getTime() - new Date(a.finishedAt!).getTime()),
-    [state.sessions],
-  );
+  const allSessions = useMemo(() => {
+    const completed = state.sessions.filter((session) => Boolean(session.finishedAt));
+    return completed.sort(
+      (a, b) => new Date(b.finishedAt!).getTime() - new Date(a.finishedAt!).getTime(),
+    );
+  }, [state.sessions]);
   const sessions = useMemo(() => {
     const since = range ? Date.now() - range * 24 * 60 * 60 * 1000 : 0;
     return range
