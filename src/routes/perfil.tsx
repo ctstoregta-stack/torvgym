@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui-kit";
 
@@ -68,7 +69,7 @@ function ProfileLink({
   to: "/historico" | "/exercicios";
   title: string;
   description: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
 }) {
   return (
     <Link to={to} className="block">
