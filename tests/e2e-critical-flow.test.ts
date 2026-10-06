@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createBackup, parseBackup } from "@/lib/storage";
+import { createBackup, parseBackup } from "../src/lib/storage.ts";
 import {
   createWorkoutSession,
   finishWorkoutSession,
   updateWorkoutSessionSet,
-} from "@/store/gym-session";
-import type { Routine, Workout, AppState } from "@/lib/types";
+} from "../src/store/gym-session.ts";
+import type { Routine, Workout, AppState } from "../src/lib/types.ts";
 
 const routine: Routine = {
   id: "routine-e2e",
