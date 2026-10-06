@@ -130,7 +130,14 @@ function ExecutePage() {
     const exercise = state.activeSession.entries[index];
     const completed = exercise?.sets.filter((set) => set.completed).length ?? 0;
     const total = exercise?.sets.length ?? 0;
-    const exerciseName = exercise ? getExercise(exercise.exerciseId)?.name : undefined;\n    const payload = {\n      workoutName: state.activeSession.workoutName,\n      restRemaining: rest?.remaining ?? 0,\n      canContinue: !!rest && !rest.running,\n      ...(exerciseName ? { exerciseName } : {}),\n      ...(exercise ? { setLabel: `Série ${Math.min(completed + 1, total)} de ${total}` } : {}),\n    };
+    const exerciseName = exercise ? getExercise(exercise.exerciseId)?.name : undefined;
+    const payload = {
+      workoutName: state.activeSession.workoutName,
+      restRemaining: rest?.remaining ?? 0,
+      canContinue: !!rest && !rest.running,
+      ...(exerciseName ? { exerciseName } : {}),
+      ...(exercise ? { setLabel: `Série ${Math.min(completed + 1, total)} de ${total}` } : {}),
+    };
     void updateNativeWorkoutNotification(payload.workoutName, payload);
   }, [index, rest?.remaining, rest?.running, state.activeSession, workoutId, getExercise]);
 
