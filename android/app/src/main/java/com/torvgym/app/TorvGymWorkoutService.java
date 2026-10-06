@@ -88,16 +88,12 @@ public final class TorvGymWorkoutService extends Service {
 
     private String buildNotificationText(String workoutName, String exerciseName, String setLabel, int restRemaining, boolean canContinue) {
         StringBuilder text = new StringBuilder(workoutName);
-        if (exerciseName != null && !exerciseName.trim().isEmpty()) text.append("
-").append(exerciseName.trim());
+        if (exerciseName != null && !exerciseName.trim().isEmpty()) text.append("\n").append(exerciseName.trim());
         if (setLabel != null && !setLabel.trim().isEmpty()) text.append(" · ").append(setLabel.trim());
-        if (restRemaining > 0) text.append("
-Descanso: ").append(restRemaining).append("s");
-        if (canContinue) text.append("
-Toque para continuar");
+        if (restRemaining > 0) text.append("\nDescanso: ").append(restRemaining).append("s");
+        if (canContinue) text.append("\nToque para continuar");
         return text.toString();
     }
-
     private void stopWorkout() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE);
