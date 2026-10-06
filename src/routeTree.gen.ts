@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ExerciciosRouteImport } from './routes/exercicios'
 import { Route as HistoricoRouteImport } from './routes/historico'
@@ -24,6 +25,11 @@ import { Route as ConquistasRouteImport } from './routes/conquistas'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerfilRoute = PerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
@@ -79,6 +85,7 @@ const ConquistasRoute = ConquistasRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/perfil': typeof PerfilRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/exercicios': typeof ExerciciosRoute
   '/historico': typeof HistoricoRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/perfil': typeof PerfilRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/exercicios': typeof ExerciciosRoute
   '/historico': typeof HistoricoRoute
@@ -104,6 +112,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/perfil': typeof PerfilRoute
   '/': typeof IndexRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/exercicios': typeof ExerciciosRoute
@@ -118,6 +127,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/perfil'
     | '/'
     | '/configuracoes'
     | '/exercicios'
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/conquistas'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/perfil'
     | '/'
     | '/configuracoes'
     | '/exercicios'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/conquistas'
   id:
     | '__root__'
+    | '/perfil'
     | '/'
     | '/configuracoes'
     | '/exercicios'
@@ -158,6 +170,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PerfilRoute: typeof PerfilRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   ExerciciosRoute: typeof ExerciciosRoute
   HistoricoRoute: typeof HistoricoRoute
@@ -177,6 +190,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/perfil': {
+      id: '/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof PerfilRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/configuracoes': {
@@ -254,6 +274,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PerfilRoute: PerfilRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
   ExerciciosRoute: ExerciciosRoute,
   HistoricoRoute: HistoricoRoute,
