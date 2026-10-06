@@ -19,6 +19,8 @@ export type Workout = {
   /** target sets per exercise */
   targetSets: Record<string, number>;
   restSeconds?: number;
+  /** Descanso específico por exercício; quando ausente, usa restSeconds. */
+  restSecondsByExercise?: Record<string, number>;
   notes?: string;
 };
 
