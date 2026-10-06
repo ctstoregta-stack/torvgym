@@ -70,7 +70,7 @@ console.log(`Web JS total: ${jsBytes} bytes (${(jsBytes / 1024 / 1024).toFixed(2
 console.log(`Maior chunk JS: ${largestJs} bytes (${(largestJs / 1024).toFixed(1)} KiB)`);
 console.log(`Arquivos JS: ${jsFiles.length}`);
 console.log(`GIFs: ${gifUrls.length} referências / ${uniqueGifUrls.size} URLs únicas`);
-console.log(`createWorkoutSession: ${(sessionCreateMs / iterations).toFixed(4)} ms/op (n=${iterations})`);
+console.log(\n  `createWorkoutSession: ${(sessionCreateMs / iterations).toFixed(4)} ms/op (n=${iterations})`,\n);
 
 const apk = path.join(root, "android/app/build/outputs/apk/debug/app-debug.apk");
 if (await exists(apk)) {
