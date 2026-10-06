@@ -154,12 +154,12 @@ function ExecutePage() {
   }, [updateSessionContext]);
 
   const startRest = useCallback((seconds?: number) => {
-    const resolvedSeconds = seconds ?? (current ? currentRestSeconds(workoutConfig, current.exerciseId) : undefined) ?? DEFAULT_REST;
+    const resolvedSeconds = seconds ?? currentRestSeconds(workoutConfig, state.activeSession?.entries[index]?.exerciseId) ?? DEFAULT_REST;
     const startedAt = new Date().toISOString();
     const next = { total: resolvedSeconds, remaining: resolvedSeconds, running: true, startedAt: Date.now() } as RestState;
     setRest(next);
     updateSessionContext({ restStartedAt: startedAt, restTotal: resolvedSeconds, restRemaining: resolvedSeconds, restRunning: true });
-  }, [current, workoutConfig, updateSessionContext]);
+  }, [index, state.activeSession, workoutConfig, updateSessionContext]);
 
   const handleSetUpdate = useCallback((exerciseId: string, setIndex: number, completed: boolean) => {
     updateSet(exerciseId, setIndex, { completed });
