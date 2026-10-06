@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createWorkoutSession, finishWorkoutSession, updateWorkoutSessionSet } from "../src/store/gym-session.ts";
-import { workoutExerciseProgressionFor } from "../src/store/gym-analytics.ts";
+import {\n  createWorkoutSession,\n  finishWorkoutSession,\n  updateWorkoutSessionSet,\n} from "../src/store/gym-session.ts";
+import {\n  workoutExerciseProgressionFor,\n} from "../src/store/gym-analytics.ts";
 
 const routine = { id: "r-e2e", name: "E2E", createdAt: "2026-10-06T00:00:00.000Z", workouts: [] };
 const workout = { id: "w-e2e", name: "Treino E2E", days: [1], exerciseIds: ["supino"], targetSets: { supino: 2 }, restSecondsByExercise: { supino: 90 } };
