@@ -57,6 +57,28 @@ public final class TorvGymWorkoutPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void updateWorkout(PluginCall call) {
+        String workoutName = call.getString("workoutName", "Treino em andamento");
+        String exerciseName = call.getString("exerciseName", null);
+        String setLabel = call.getString("setLabel", null);
+        int restRemaining = call.getInt("restRemaining", 0);
+        boolean canContinue = call.getBoolean("canContinue", false);
+        Intent intent = new Intent(getContext(), TorvGymWorkoutService.class)
+            .setAction(TorvGymWorkoutService.ACTION_START)
+            .putExtra(TorvGymWorkoutService.EXTRA_WORKOUT_NAME, workoutName)
+            .putExtra(TorvGymWorkoutService.EXTRA_EXERCISE_NAME, exerciseName)
+            .putExtra(TorvGymWorkoutService.EXTRA_SET_LABEL, setLabel)
+            .putExtra(TorvGymWorkoutService.EXTRA_REST_REMAINING, restRemaining)
+            .putExtra(TorvGymWorkoutService.EXTRA_CAN_CONTINUE, canContinue);
+        try {
+            ContextCompat.startForegroundService(getContext(), intent);
+            call.resolve();
+        } catch (RuntimeException error) {
+            call.reject("Não foi possível atualizar a notificação do treino.", error);
+        }
+    }
+
+    @PluginMethod
     public void stopWorkout(PluginCall call) {
         Intent intent = new Intent(getContext(), TorvGymWorkoutService.class)
             .setAction(TorvGymWorkoutService.ACTION_STOP);
