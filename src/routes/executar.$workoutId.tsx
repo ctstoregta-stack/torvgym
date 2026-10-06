@@ -38,6 +38,7 @@ function elapsedSecs(startedAt: string, now: number) {
 function buildSummary(
   saved: Session | null,
   getExercise: (id: string) => { name: string } | undefined,
+  previous: Session | undefined,
 ): Summary {
   const entries = saved?.entries ?? [];
   return {
@@ -64,6 +65,10 @@ function buildSummary(
           .reduce((a, s) => a + s.weight! * s.reps!, 0),
       0,
     ),
+    completedExercises: entries.filter((entry) => entry.sets.some((set) => set.completed)).length,
+    previousVolume: previous
+      ? previous.entries.reduce((acc, entry) => acc + entry.sets.filter((set) => set.completed && set.weight != null && set.reps != null).reduce((a, set) => a + set.weight! * set.reps!, 0), 0)
+      : null,
     prs: entries.flatMap((e) =>
       e.sets
         .filter((s) => s.completed && s.isPR && s.weight != null)
@@ -81,6 +86,8 @@ type Summary = {
   sets: number;
   volume: number;
   prs: { name: string; weight: number }[];
+  completedExercises: number;
+  previousVolume: number | null;
 };
 
 function ExecutePage() {
@@ -234,8 +241,11 @@ function ExecutePage() {
       : undefined;
   const nextLabelPrefix = hasNextSet ? "Próxima série" : "Próximo exercício";
   const finish = () => {
+    const previous = state.sessions
+      .filter((item) => item.workoutId === workoutId && item.finishedAt)
+      .sort((a, b) => new Date(b.finishedAt!).getTime() - new Date(a.finishedAt!).getTime())[0];
     const saved = finishSession();
-    const data = buildSummary(saved, getExercise);
+    const data = buildSummary(saved, getExercise, previous);
     toast.success("Treino salvo no histórico");
     setSummary(data);
   };
@@ -567,11 +577,15 @@ function SummaryScreen({ summary }: { summary: Summary }) {
       <div className="surface p-5 text-center">
         <p className="text-sm text-muted-foreground">{summary.workoutName}</p>
         <p className="mt-1 text-2xl font-bold">Treino concluído</p>
-        <div className="mt-5 grid grid-cols-3 divide-x divide-border">
+        <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div><p className="text-[11px] text-muted-foreground">Duração</p><p className="text-lg font-bold tabular-nums">{formatClock(summary.durationSecs)}</p></div>
           <div><p className="text-[11px] text-muted-foreground">Séries</p><p className="text-lg font-bold tabular-nums">{summary.sets}</p></div>
           <div><p className="text-[11px] text-muted-foreground">Volume</p><p className="text-lg font-bold tabular-nums">{Math.round(summary.volume)} kg</p></div>
+          <div><p className="text-[11px] text-muted-foreground">Exercícios</p><p className="text-lg font-bold tabular-nums">{summary.completedExercises}</p></div>
         </div>
+        {summary.previousVolume != null && (
+          <p className="mt-3 text-xs text-muted-foreground">Volume vs. treino anterior: <strong className={summary.volume >= summary.previousVolume ? "text-success" : "text-foreground"}>{summary.previousVolume > 0 ? `${summary.volume >= summary.previousVolume ? "+" : ""}${Math.round(((summary.volume - summary.previousVolume) / summary.previousVolume) * 100)}%` : "—"}</strong></p>
+        )}
       </div>
       {summary.prs.length > 0 && (
         <div className="surface mt-4 p-4">
