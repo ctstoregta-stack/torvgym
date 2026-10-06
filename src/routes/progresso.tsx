@@ -90,6 +90,7 @@ function ProgressPage() {
         <Metric label="Volume" value={`${Math.round(dashboard.totalVolume).toLocaleString("pt-BR")} kg`} />
         <Metric label="Séries" value={dashboard.totalSets.toLocaleString("pt-BR")} />
         <Metric label="PRs" value={dashboard.totalPRs.toLocaleString("pt-BR")} />
+        <Metric label="Volume 7d" value={`${Math.round(dashboard.volumeLast7Days).toLocaleString("pt-BR")} kg`} />
       </div>
 
       <Card className="mt-4">
@@ -118,6 +119,7 @@ function ProgressPage() {
             {dashboard.streakDays} dia{dashboard.streakDays === 1 ? "" : "s"}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">Dias consecutivos com treino concluído.</p>
+          <p className="mt-2 text-[11px] text-muted-foreground">Melhor sessão: <strong className="text-foreground">{Math.round(dashboard.bestSessionVolume).toLocaleString("pt-BR")} kg</strong></p>
         </Card>
         <Card className="p-3">
           <p className="text-[11px] text-muted-foreground">PR mais recente</p>
