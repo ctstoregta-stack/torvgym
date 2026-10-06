@@ -70,7 +70,7 @@ export function AppShell({
                   to={to}
                   aria-current={isActive ? "page" : undefined}
                   className={`flex min-h-16 flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium tap ${
-                    isActive ? "text-primary" : "text-muted-foreground"
+                    isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-elevated/50 hover:text-foreground"
                   }`}
                 >
                   <Icon />
