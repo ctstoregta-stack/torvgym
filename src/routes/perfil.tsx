@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui-kit";
+import { buildDashboardAnalytics } from "@/store/gym-analytics";
+import { useGym } from "@/store/gym-store";
 
 export const Route = createFileRoute("/perfil")({
   head: () => ({
@@ -17,6 +19,9 @@ export const Route = createFileRoute("/perfil")({
 });
 
 function ProfilePage() {
+  const { ready, state } = useGym();
+  const dashboard = buildDashboardAnalytics(state.sessions);
+  if (!ready) return <AppShell title="Perfil"><div className="h-40 animate-pulse rounded-xl bg-card" /></AppShell>;
   return (
     <AppShell title="Perfil">
       <div className="space-y-4">
@@ -29,6 +34,14 @@ function ProfilePage() {
             Histórico e exercícios agora ficam organizados dentro do Perfil.
           </p>
         </section>
+
+        <Card className="p-4">
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div><p className="text-[11px] text-muted-foreground">Treinos</p><p className="mt-1 text-lg font-bold">{dashboard.totalSessions}</p></div>
+            <div><p className="text-[11px] text-muted-foreground">Volume</p><p className="mt-1 text-lg font-bold">{Math.round(dashboard.totalVolume).toLocaleString("pt-BR")} kg</p></div>
+            <div><p className="text-[11px] text-muted-foreground">Sequência</p><p className="mt-1 text-lg font-bold">{dashboard.streakDays}d</p></div>
+          </div>
+        </Card>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <ProfileLink
@@ -53,6 +66,7 @@ function ProfilePage() {
             <SecondaryLink to="/progresso" title="Progresso" description="Acompanhe sua evolução ao longo do tempo." />
             <SecondaryLink to="/conquistas" title="Conquistas" description="Consulte suas metas e marcos alcançados." />
             <SecondaryLink to="/configuracoes" title="Configurações" description="Backup, recuperação e segurança dos seus dados." />
+            <SecondaryLink to="/relatorios" title="Relatórios" description="Análises detalhadas e exportação dos seus treinos." />
           </div>
         </section>
       </div>
@@ -94,7 +108,7 @@ function SecondaryLink({
   title,
   description,
 }: {
-  to: "/progresso" | "/conquistas" | "/configuracoes";
+  to: "/progresso" | "/conquistas" | "/configuracoes" | "/relatorios";
   title: string;
   description: string;
 }) {
