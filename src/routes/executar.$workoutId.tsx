@@ -111,7 +111,6 @@ function ExecutePage() {
   } = useGym();
 
   const workoutConfig = findWorkout(workoutId)?.workout;
-  const defaultRest = currentRestSeconds(workoutConfig, undefined) ?? DEFAULT_REST;
 
   const [now, setNow] = useState(() => Date.now());
 
