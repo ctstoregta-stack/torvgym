@@ -495,3 +495,24 @@ export function buildWorkoutExerciseAnalyticsIndex(sessions: Session[]) {
 
   return index;
 }
+
+export function workoutExerciseHistoryFor(
+  sessions: Session[],
+  workoutId: string,
+  exerciseId: string,
+) {
+  return exerciseHistoryFor(
+    sessions.filter((session) => session.workoutId === workoutId),
+    exerciseId,
+  );
+}
+
+export function workoutExerciseProgressionFor(
+  sessions: Session[],
+  workoutId: string,
+  exerciseId: string,
+) {
+  return exerciseProgressionFromHistory(
+    workoutExerciseHistoryFor(sessions, workoutId, exerciseId),
+  );
+}
