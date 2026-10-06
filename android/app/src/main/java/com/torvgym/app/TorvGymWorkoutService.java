@@ -17,6 +17,10 @@ public final class TorvGymWorkoutService extends Service {
     static final String ACTION_START = "com.torvgym.app.action.START_WORKOUT";
     static final String ACTION_STOP = "com.torvgym.app.action.STOP_WORKOUT";
     static final String EXTRA_WORKOUT_NAME = "workout_name";
+    static final String EXTRA_EXERCISE_NAME = "exercise_name";
+    static final String EXTRA_SET_LABEL = "set_label";
+    static final String EXTRA_REST_REMAINING = "rest_remaining";
+    static final String EXTRA_CAN_CONTINUE = "can_continue";
     private static final String CHANNEL_ID = "active_workout";
     private static final int NOTIFICATION_ID = 4201;
 
@@ -33,14 +37,16 @@ public final class TorvGymWorkoutService extends Service {
             return START_NOT_STICKY;
         }
 
-        String workoutName = intent != null
-            ? intent.getStringExtra(EXTRA_WORKOUT_NAME)
-            : null;
-        startWorkout(workoutName);
+        String workoutName = intent != null ? intent.getStringExtra(EXTRA_WORKOUT_NAME) : null;
+        String exerciseName = intent != null ? intent.getStringExtra(EXTRA_EXERCISE_NAME) : null;
+        String setLabel = intent != null ? intent.getStringExtra(EXTRA_SET_LABEL) : null;
+        int restRemaining = intent != null ? intent.getIntExtra(EXTRA_REST_REMAINING, 0) : 0;
+        boolean canContinue = intent != null && intent.getBooleanExtra(EXTRA_CAN_CONTINUE, false);
+        startWorkout(workoutName, exerciseName, setLabel, restRemaining, canContinue);
         return START_STICKY;
     }
 
-    private void startWorkout(String workoutName) {
+    private void startWorkout(String workoutName, String exerciseName, String setLabel, int restRemaining, boolean canContinue) {
         String safeName = workoutName == null || workoutName.trim().isEmpty()
             ? "Treino em andamento"
             : workoutName.trim();
@@ -58,9 +64,9 @@ public final class TorvGymWorkoutService extends Service {
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.torvgym_logo)
             .setContentTitle("TorvGym — Treino ativo")
-            .setContentText(safeName + " continua ativo em segundo plano")
+            .setContentText(exerciseName == null || exerciseName.trim().isEmpty() ? safeName + " continua ativo" : exerciseName + (setLabel == null ? "" : " · " + setLabel))
             .setStyle(new NotificationCompat.BigTextStyle()
-                .bigText(safeName + " continua ativo em segundo plano. Toque para voltar ao TorvGym."))
+                .bigText(buildNotificationText(safeName, exerciseName, setLabel, restRemaining, canContinue)))
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
@@ -80,7 +86,7 @@ public final class TorvGymWorkoutService extends Service {
         }
     }
 
-    private void stopWorkout() {
+    private String buildNotificationText(String workoutName, String exerciseName, String setLabel, int restRemaining, boolean canContinue) {\n        StringBuilder text = new StringBuilder(workoutName);\n        if (exerciseName != null && !exerciseName.trim().isEmpty()) text.append("\\n").append(exerciseName.trim());\n        if (setLabel != null && !setLabel.trim().isEmpty()) text.append(" · ").append(setLabel.trim());\n        if (restRemaining > 0) text.append("\\nDescanso: ").append(restRemaining).append("s");\n        if (canContinue) text.append("\\nToque para continuar");\n        return text.toString();\n    }\n\n    private void stopWorkout() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE);
         } else {
