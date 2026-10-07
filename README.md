@@ -1,4 +1,6 @@
-# Lift Log
+# TorvGym
+
+> O repositório GitHub é a fonte oficial do código do projeto. O Lovable é utilizado apenas para preview/visualização e testes; alterações de código devem ser feitas no repositório.
 
 Use o arquivo lovable-specification.md anexado como a especificação principal e fonte de requisitos deste projeto.
 
