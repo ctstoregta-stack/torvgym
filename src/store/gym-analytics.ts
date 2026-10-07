@@ -577,3 +577,63 @@ export function buildPersonalRecords(sessions: Session[]): PersonalRecord[] {
     return b.estimated1RM - a.estimated1RM;
   });
 }
+
+
+export type ProgressionRecommendation = {
+  action: ExerciseProgression["recommendation"];
+  targetWeight: number | null;
+  targetReps: number | null;
+  reason: string;
+};
+
+function roundLoad(value: number) {
+  return Math.round(value * 2) / 2;
+}
+
+export function workoutExerciseRecommendationFor(
+  sessions: Session[],
+  workoutId: string,
+  exerciseId: string,
+): ProgressionRecommendation | null {
+  const history = workoutExerciseHistoryFor(sessions, workoutId, exerciseId);
+  const progression = exerciseProgressionFromHistory(history);
+  if (!progression) return null;
+
+  const latestSet = progression.latest.sets
+    .filter((set) => set.weight != null && set.reps != null)
+    .sort((a, b) => (b.reps ?? 0) - (a.reps ?? 0))[0];
+
+  const latestWeight = latestSet?.weight ?? progression.latest.maxWeight;
+  const latestReps = latestSet?.reps ?? null;
+
+  switch (progression.recommendation) {
+    case "increase-load":
+      return {
+        action: "increase-load",
+        targetWeight: latestWeight > 0 ? roundLoad(latestWeight * 1.025) : null,
+        targetReps: latestReps,
+        reason: "Seu 1RM estimado evoluiu o suficiente para testar uma pequena progressão de carga.",
+      };
+    case "add-reps":
+      return {
+        action: "add-reps",
+        targetWeight: latestWeight || null,
+        targetReps: latestReps != null ? latestReps + 1 : null,
+        reason: "Mantenha a carga atual e tente ganhar uma repetição com boa execução.",
+      };
+    case "recover":
+      return {
+        action: "recover",
+        targetWeight: latestWeight > 0 ? roundLoad(latestWeight * 0.9) : null,
+        targetReps: latestReps,
+        reason: "O desempenho caiu de forma relevante; reduza a carga e priorize recuperação.",
+      };
+    default:
+      return {
+        action: "maintain",
+        targetWeight: latestWeight || null,
+        targetReps: latestReps,
+        reason: "Consolide a carga atual antes de buscar nova progressão.",
+      };
+  }
+}
