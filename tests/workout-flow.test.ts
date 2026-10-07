@@ -68,7 +68,7 @@ test("finalização sem nenhuma série concluída não cria histórico", () => {
   const session = createWorkoutSession(routine, workout, "s1", "2026-10-05T10:00:00.000Z");
   assert.equal(finishWorkoutSession(session, "2026-10-05T11:00:00.000Z"), null);
 });
-import { workoutExerciseProgressionFor } from "../src/store/gym-analytics.ts";
+import { buildPersonalRecords, workoutExerciseProgressionFor } from "../src/store/gym-analytics.ts";
 
 test("progressão usa o histórico do mesmo treino, sem misturar outro treino", () => {
   const sessions = [
@@ -92,4 +92,38 @@ test("progressão usa o histórico do mesmo treino, sem misturar outro treino", 
   assert.equal(progression?.latest.maxWeight, 60);
   assert.equal(progression?.previous?.maxWeight, 50);
   assert.equal(progression?.recommendation, "increase-load");
+});
+
+
+test("recordes pessoais preservam o melhor peso, 1RM estimado e volume por exercício", () => {
+  const records = buildPersonalRecords([
+    {
+      id: "s1", routineId: "r1", workoutId: "w1", workoutName: "Treino A",
+      startedAt: "2026-10-05T10:00:00.000Z", finishedAt: "2026-10-05T11:00:00.000Z",
+      entries: [{
+        exerciseId: "supino",
+        sets: [
+          { weight: 60, reps: 10, completed: true },
+          { weight: 70, reps: 6, completed: true },
+        ],
+      }],
+    },
+    {
+      id: "s2", routineId: "r1", workoutId: "w1", workoutName: "Treino A",
+      startedAt: "2026-10-06T10:00:00.000Z", finishedAt: "2026-10-06T11:00:00.000Z",
+      entries: [{
+        exerciseId: "supino",
+        sets: [
+          { weight: 65, reps: 10, completed: true },
+          { weight: 72.5, reps: 5, completed: true },
+        ],
+      }],
+    },
+  ]);
+
+  assert.equal(records.length, 1);
+  assert.equal(records[0]?.maxWeight, 72.5);
+  assert.equal(records[0]?.maxVolume, 1020);
+  assert.equal(records[0]?.sessions, 2);
+  assert.equal(records[0]?.estimated1RM, 84.6);
 });
