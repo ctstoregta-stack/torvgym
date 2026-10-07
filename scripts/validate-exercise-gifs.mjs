@@ -56,14 +56,20 @@ function checkUrl(url, redirectCount = 0) {
         res.on("close", () => {
           const header = Buffer.concat(chunks).toString("ascii");
           const okStatus = status >= 200 && status < 300;
-          const okType = contentType.startsWith("image/gif");
-          const okMagic = header.startsWith("GIF87a") || header.startsWith("GIF89a");
+          const isGif = contentType.startsWith("image/gif");
+          const isPng = contentType.startsWith("image/png");
+          const okType = isGif || isPng;
+          const okMagic = isGif
+            ? header.startsWith("GIF87a") || header.startsWith("GIF89a")
+            : isPng
+              ? header.startsWith("\x89PNG\r\n\x1a\n")
+              : false;
           resolve({
             url,
             ok: okStatus && okType && okMagic,
             status,
             ...(okType ? {} : { reason: "invalid-content-type", contentType }),
-            ...(okMagic ? {} : { magic: header.slice(0, 6) }),
+            ...(okMagic ? {} : { magic: header.slice(0, 8) }),\n            ...(isGif ? {} : isPng ? { warning: "valid-image-but-not-animated-gif" } : {}),
           });
         });
       },
@@ -89,7 +95,7 @@ for (let i = 0; i < uniqueUrls.length; i += concurrency) {
 
 const failures = results.filter((result) => !result.ok);
 console.log(`Exercícios auditados: ${urls.length}; URLs únicas: ${uniqueUrls.length}; falhas: ${failures.length}`);
-console.log("Validação inclui HTTPS, redirecionamentos, Content-Type e assinatura GIF (GIF87a/GIF89a).");
+console.log("Validação inclui HTTPS, redirecionamentos, Content-Type e assinatura GIF/PNG; mídias PNG válidas são reportadas como não animadas.");
 
 for (const failure of failures) console.log(JSON.stringify(failure));
 
