@@ -10,6 +10,7 @@ import {
   buildPersonalRecords,
   exerciseProgressionFromHistory,
   buildWeeklyGoalInsights,
+  workoutExerciseAdvancedRecommendationFor,
 } from "@/store/gym-analytics";
 import { useGym } from "@/store/gym-store";
 
@@ -73,6 +74,21 @@ function ProgressPage() {
         )
         .slice(0, 6),
     [exerciseIndex],
+  );
+  const actionableProgressions = useMemo(
+    () =>
+      [...exerciseIndex.keys()]
+        .map((exerciseId) => ({
+          exerciseId,
+          recommendation: workoutExerciseAdvancedRecommendationFor(completed, activeRoutine?.workouts.find((workout) => workout.exerciseIds.includes(exerciseId))?.id ?? "", exerciseId),
+        }))
+        .filter((item) => item.recommendation)
+        .sort((a, b) => {
+          const priority = { recover: 4, "increase-load": 3, "add-reps": 2, maintain: 1 } as const;
+          return priority[b.recommendation!.action] - priority[a.recommendation!.action];
+        })
+        .slice(0, 5),
+    [activeRoutine, completed, exerciseIndex],
   );
 
   if (!ready) return <AppShell title="Progresso"><div className="h-40 animate-pulse rounded-xl bg-card" /></AppShell>;
@@ -288,6 +304,41 @@ function ProgressPage() {
               <span className="shrink-0 text-sm font-bold tabular-nums">{record.maxWeight.toLocaleString("pt-BR")} kg</span>
             </Link>
           ))}
+        </div>
+      </Card>
+
+      <Card className="mt-4">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="text-sm font-semibold">Próximas ações</p>
+            <p className="text-xs text-muted-foreground">Sugestões baseadas na tendência recente de desempenho.</p>
+          </div>
+          <Tag>{actionableProgressions.length} sugestões</Tag>
+        </div>
+        <div className="mt-3 space-y-2">
+          {actionableProgressions.map(({ exerciseId, recommendation }) => {
+            if (!recommendation) return null;
+            const actionLabel =
+              recommendation.action === "increase-load" ? "Aumentar carga" :
+              recommendation.action === "add-reps" ? "Adicionar reps" :
+              recommendation.action === "recover" ? "Priorizar recuperação" : "Manter";
+            const trendLabel =
+              recommendation.trend === "improving" ? "↗ evolução" :
+              recommendation.trend === "declining" ? "↘ queda" : "→ estável";
+            return (
+              <Link key={exerciseId} to="/exercicio/$exerciseId" params={{ exerciseId }} className="rounded-xl bg-elevated p-3 block">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 truncate text-sm font-semibold">{getExercise(exerciseId)?.name ?? exerciseId}</span>
+                  <Tag>{actionLabel}</Tag>
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">{trendLabel} · confiança {recommendation.confidence === "high" ? "alta" : recommendation.confidence === "medium" ? "média" : "baixa"}</p>
+                <p className="mt-1 text-xs">{recommendation.reason}</p>
+                {recommendation.targetWeight != null && recommendation.targetReps != null && (
+                  <p className="mt-1 text-[11px] font-semibold text-primary">Meta: {recommendation.targetWeight.toLocaleString("pt-BR")} kg × {recommendation.targetReps} reps</p>
+                )}
+              </Link>
+            );
+          })}
         </div>
       </Card>
 
