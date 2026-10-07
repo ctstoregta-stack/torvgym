@@ -69,7 +69,8 @@ function checkUrl(url, redirectCount = 0) {
             ok: okStatus && okType && okMagic,
             status,
             ...(okType ? {} : { reason: "invalid-content-type", contentType }),
-            ...(okMagic ? {} : { magic: header.slice(0, 8) }),\n            ...(isGif ? {} : isPng ? { warning: "valid-image-but-not-animated-gif" } : {}),
+            ...(okMagic ? {} : { magic: header.slice(0, 8) }),
+            ...(isGif ? {} : isPng ? { warning: "valid-image-but-not-animated-gif" } : {}),
           });
         });
       },
