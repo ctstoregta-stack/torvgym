@@ -84,7 +84,8 @@ const results = [];
 for (const url of uniqueUrls) results.push(await checkUrl(url));
 
 const failures = results.filter((result) => !result.ok);
-console.log(`Exercícios auditados: ${urls.length}; URLs únicas: ${uniqueUrls.length}; falhas: ${failures.length}`);\nconsole.log("Validação inclui HTTPS, redirecionamentos, Content-Type e assinatura GIF (GIF87a/GIF89a).");
+console.log(`Exercícios auditados: ${urls.length}; URLs únicas: ${uniqueUrls.length}; falhas: ${failures.length}`);
+console.log("Validação inclui HTTPS, redirecionamentos, Content-Type e assinatura GIF (GIF87a/GIF89a).");
 
 for (const failure of failures) console.log(JSON.stringify(failure));
 
