@@ -28,6 +28,22 @@ function ReportsPage() {
 
   const periods = useMemo(() => buildPeriodAnalytics(sessions, "week").slice(-12), [sessions]);
   const workouts = useMemo(() => [...buildWorkoutAnalyticsIndex(sessions).values()].sort((a,b) => b.totalVolume-a.totalVolume), [sessions]);
+  const previousMetrics = useMemo(() => {
+    if (!range) return null;
+    const currentStart = Date.now() - range * 86400000;
+    const previousStart = currentStart - range * 86400000;
+    const previous = state.sessions.filter((s) => {
+      if (!s.finishedAt) return false;
+      const time = new Date(s.finishedAt).getTime();
+      return time >= previousStart && time < currentStart;
+    });
+    return {
+      sessions: previous.length,
+      volume: previous.reduce((n, s) => n + sessionVolume(s), 0),
+      sets: previous.reduce((n, s) => n + sessionSetCount(s), 0),
+    };
+  }, [range, state.sessions]);
+
   const metrics = useMemo(() => {
     const volume = sessions.reduce((n,s) => n + sessionVolume(s), 0);
     const sets = sessions.reduce((n,s) => n + sessionSetCount(s), 0);
@@ -66,7 +82,17 @@ function ReportsPage() {
         <button key={value} type="button" onClick={() => setRange(value)} className={`min-h-10 shrink-0 rounded-full px-3 text-xs font-semibold ${range===value ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}>{label}</button>
       )}
     </div>
-    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">    {previousMetrics && (
+      <Card className="mt-3">
+        <p className="text-sm font-semibold">Comparação com período anterior</p>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          <Comparison label="Treinos" current={sessions.length} previous={previousMetrics.sessions} />
+          <Comparison label="Volume" current={metrics.volume} previous={previousMetrics.volume} />
+          <Comparison label="Séries" current={metrics.sets} previous={previousMetrics.sets} />
+        </div>
+      </Card>
+    )}
+
       <Metric label="Treinos" value={String(sessions.length)} /><Metric label="Volume" value={`${Math.round(metrics.volume).toLocaleString("pt-BR")} kg`} />
       <Metric label="Séries" value={String(metrics.sets)} /><Metric label="PRs" value={String(metrics.prs)} />
     </div>
@@ -90,4 +116,18 @@ function topExercises(sessions: ReturnType<typeof useGym>["state"]["sessions"], 
   const map=new Map<string,{id:string;name:string;sessions:number;sets:number}>();
   for (const s of sessions) for (const e of s.entries) { const x=map.get(e.exerciseId) ?? {id:e.exerciseId,name:getExercise(e.exerciseId)?.name ?? e.exerciseId,sessions:0,sets:0}; x.sessions++; x.sets+=e.sets.length; map.set(e.exerciseId,x); }
   return [...map.values()].sort((a,b)=>b.sessions-a.sessions || b.sets-a.sets).slice(0,8);
+}
+
+
+function Comparison({ label, current, previous }: { label: string; current: number; previous: number }) {
+  const change = previous > 0 ? Math.round(((current - previous) / previous) * 100) : current > 0 ? 100 : 0;
+  return (
+    <div className="rounded-xl bg-elevated p-3">
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-bold tabular-nums">{Math.round(current).toLocaleString("pt-BR")}</p>
+      <p className={`text-[10px] font-semibold ${change > 0 ? "text-success" : change < 0 ? "text-danger" : "text-muted-foreground"}`}>
+        {change > 0 ? "+" : ""}{change}% vs. anterior
+      </p>
+    </div>
+  );
 }
