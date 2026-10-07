@@ -81,7 +81,11 @@ function checkUrl(url, redirectCount = 0) {
 }
 
 const results = [];
-for (const url of uniqueUrls) results.push(await checkUrl(url));
+const concurrency = 6;
+for (let i = 0; i < uniqueUrls.length; i += concurrency) {
+  const batch = uniqueUrls.slice(i, i + concurrency);
+  results.push(...await Promise.all(batch.map((url) => checkUrl(url))));
+}
 
 const failures = results.filter((result) => !result.ok);
 console.log(`Exercícios auditados: ${urls.length}; URLs únicas: ${uniqueUrls.length}; falhas: ${failures.length}`);
