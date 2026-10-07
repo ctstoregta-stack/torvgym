@@ -40,6 +40,7 @@ function ProgressPage() {
   const dashboard = useMemo(() => buildDashboardAnalytics(completed), [completed]);
   const goalInsights = useMemo(() => buildWeeklyGoalInsights(completed, state.goals), [completed, state.goals]);
   const weekly = useMemo(() => buildPeriodAnalytics(completed, "week").slice(-8), [completed]);
+  const weeklyTrend = useMemo(() => buildPeriodAnalytics(completed, "week").slice(-12), [completed]);
   const monthly = useMemo(() => buildPeriodAnalytics(completed, "month").slice(-6), [completed]);
   const exerciseIndex = useMemo(() => buildExerciseAnalyticsIndex(completed), [completed]);
   const personalRecords = useMemo(() => buildPersonalRecords(completed).slice(0, 6), [completed]);
@@ -316,6 +317,17 @@ function ProgressPage() {
   );
 }
 
+
+
+function DashboardIndicator({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <div className="rounded-xl bg-elevated p-3">
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className="mt-1 truncate text-lg font-bold tabular-nums">{value}</p>
+      <p className="mt-1 text-[10px] text-muted-foreground">{detail}</p>
+    </div>
+  );
+}
 
 function GoalRow({
   label,
