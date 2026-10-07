@@ -522,3 +522,58 @@ export function workoutExerciseProgressionFor(
     workoutExerciseHistoryFor(sessions, workoutId, exerciseId),
   );
 }
+
+
+export type PersonalRecord = {
+  exerciseId: string;
+  maxWeight: number;
+  estimated1RM: number;
+  maxVolume: number;
+  latestDate: string;
+  sessions: number;
+};
+
+export function buildPersonalRecords(sessions: Session[]): PersonalRecord[] {
+  const records = new Map<string, PersonalRecord>();
+  const completed = sessions.filter((session) => session.finishedAt);
+
+  for (const session of completed) {
+    for (const entry of session.entries) {
+      const sets = entry.sets.filter(
+        (set) => set.completed && (set.weight ?? 0) > 0 && (set.reps ?? 0) > 0,
+      );
+      if (!sets.length) continue;
+
+      const current = records.get(entry.exerciseId) ?? {
+        exerciseId: entry.exerciseId,
+        maxWeight: 0,
+        estimated1RM: 0,
+        maxVolume: 0,
+        latestDate: session.finishedAt ?? session.startedAt,
+        sessions: 0,
+      };
+
+      current.maxWeight = Math.max(current.maxWeight, ...sets.map((set) => set.weight ?? 0));
+      current.estimated1RM = Math.max(current.estimated1RM, ...sets.map(estimateSet1RM));
+      current.maxVolume = Math.max(
+        current.maxVolume,
+        sets.reduce((sum, set) => sum + setVolume(set), 0),
+      );
+      current.sessions += 1;
+
+      if (
+        new Date(session.finishedAt ?? session.startedAt).getTime() >
+        new Date(current.latestDate).getTime()
+      ) {
+        current.latestDate = session.finishedAt ?? session.startedAt;
+      }
+
+      records.set(entry.exerciseId, current);
+    }
+  }
+
+  return [...records.values()].sort((a, b) => {
+    if (b.maxWeight !== a.maxWeight) return b.maxWeight - a.maxWeight;
+    return b.estimated1RM - a.estimated1RM;
+  });
+}
