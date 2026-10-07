@@ -68,7 +68,7 @@ test("finalização sem nenhuma série concluída não cria histórico", () => {
   const session = createWorkoutSession(routine, workout, "s1", "2026-10-05T10:00:00.000Z");
   assert.equal(finishWorkoutSession(session, "2026-10-05T11:00:00.000Z"), null);
 });
-import { buildPersonalRecords, workoutExerciseProgressionFor, workoutExerciseRecommendationFor } from "../src/store/gym-analytics.ts";
+import { buildDashboardAnalytics, buildPersonalRecords, workoutExerciseProgressionFor, workoutExerciseRecommendationFor } from "../src/store/gym-analytics.ts";
 
 test("progressão usa o histórico do mesmo treino, sem misturar outro treino", () => {
   const sessions = [
@@ -147,4 +147,20 @@ test("recomendação de progressão calcula uma meta pequena e específica", () 
   assert.equal(recommendation?.action, "increase-load");
   assert.equal(recommendation?.targetWeight, 61.5);
   assert.equal(recommendation?.targetReps, 10);
+});
+
+
+test("dashboard calcula métricas de consistência e volume de 30 dias", () => {
+  const sessions = [
+    {
+      id: "s1", routineId: "r1", workoutId: "w1", workoutName: "Treino A",
+      startedAt: "2026-10-06T10:00:00.000Z", finishedAt: "2026-10-06T11:00:00.000Z",
+      entries: [{ exerciseId: "supino", sets: [{ weight: 50, reps: 10, completed: true }] }],
+    },
+  ];
+  const dashboard = buildDashboardAnalytics(sessions);
+  assert.equal(dashboard.sessionsLast30Days, 1);
+  assert.equal(dashboard.volumeLast30Days, 500);
+  assert.equal(dashboard.activeWeeksLast8, 1);
+  assert.equal(dashboard.averageSessionsPerWeek, 0.3);
 });
