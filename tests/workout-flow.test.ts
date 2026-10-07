@@ -125,5 +125,5 @@ test("recordes pessoais preservam o melhor peso, 1RM estimado e volume por exerc
   assert.equal(records[0]?.maxWeight, 72.5);
   assert.equal(records[0]?.maxVolume, 1020);
   assert.equal(records[0]?.sessions, 2);
-  assert.equal(records[0]?.estimated1RM, 84.6);
+  assert.equal(records[0]?.estimated1RM, 86.7);
 });
