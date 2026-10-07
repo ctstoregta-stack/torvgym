@@ -93,10 +93,16 @@ function ProgressPage() {
         <Metric label="Séries" value={dashboard.totalSets.toLocaleString("pt-BR")} />
         <Metric label="PRs" value={dashboard.totalPRs.toLocaleString("pt-BR")} />
         <Metric label="Volume 7d" value={`${Math.round(dashboard.volumeLast7Days).toLocaleString("pt-BR")} kg`} />
+        <Metric label="Volume 30d" value={`${Math.round(dashboard.volumeLast30Days).toLocaleString("pt-BR")} kg`} />
       </div>
 
       <Card className="mt-4">
         <p className="text-sm font-semibold">Ritmo atual</p>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="rounded-xl bg-elevated p-3"><p className="text-[11px] text-muted-foreground">Média semanal</p><p className="mt-1 text-xl font-bold tabular-nums">{dashboard.averageSessionsPerWeek.toLocaleString("pt-BR")}</p><p className="text-[11px] text-muted-foreground">treinos/semana</p></div>
+          <div className="rounded-xl bg-elevated p-3"><p className="text-[11px] text-muted-foreground">Semanas ativas</p><p className="mt-1 text-xl font-bold tabular-nums">{dashboard.activeWeeksLast8}/8</p><p className="text-[11px] text-muted-foreground">últimas 8 semanas</p></div>
+          <div className="rounded-xl bg-elevated p-3"><p className="text-[11px] text-muted-foreground">Volume 30d</p><p className="mt-1 text-xl font-bold tabular-nums">{Math.round(dashboard.volumeLast30Days).toLocaleString("pt-BR")} kg</p><p className="text-[11px] text-muted-foreground">{dashboard.sessionsLast30Days} treinos</p></div>
+        </div>
         <div className="mt-3 grid grid-cols-2 gap-3">
           <div className="rounded-xl bg-elevated p-3">
             <p className="text-[11px] text-muted-foreground">Últimos 7 dias</p>
