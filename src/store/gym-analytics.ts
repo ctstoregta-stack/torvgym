@@ -354,6 +354,10 @@ export type DashboardAnalytics = {
   averageDurationSeconds: number;
   sessionsLast7Days: number;
   volumeLast7Days: number;
+  sessionsLast30Days: number;
+  volumeLast30Days: number;
+  averageSessionsPerWeek: number;
+  activeWeeksLast8: number;
   bestSessionVolume: number;
   streakDays: number;
   latestPR: {
@@ -398,6 +402,23 @@ export function buildDashboardAnalytics(sessions: Session[]): DashboardAnalytics
   );
   const sessionsLast7Days = recentSessions.length;
   const volumeLast7Days = recentSessions.reduce((sum, session) => sum + sessionVolume(session), 0);
+  const recent30Cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const recent30Sessions = completed.filter(
+    (session) => new Date(session.finishedAt ?? session.startedAt).getTime() >= recent30Cutoff,
+  );
+  const sessionsLast30Days = recent30Sessions.length;
+  const volumeLast30Days = recent30Sessions.reduce((sum, session) => sum + sessionVolume(session), 0);
+  const averageSessionsPerWeek = Math.round((sessionsLast30Days / 4) * 10) / 10;
+  const activeWeeksLast8 = new Set(
+    completed
+      .filter((session) => new Date(session.finishedAt ?? session.startedAt).getTime() >= Date.now() - 56 * 24 * 60 * 60 * 1000)
+      .map((session) => {
+        const date = new Date(session.finishedAt ?? session.startedAt);
+        const mondayOffset = (date.getDay() + 6) % 7;
+        const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate() - mondayOffset);
+        return monday.toISOString().slice(0, 10);
+      }),
+  ).size;
   const bestSessionVolume = completed.reduce((best, session) => Math.max(best, sessionVolume(session)), 0);
 
   const dayKeys = new Set(
@@ -463,6 +484,10 @@ export function buildDashboardAnalytics(sessions: Session[]): DashboardAnalytics
       : 0,
     sessionsLast7Days,
     volumeLast7Days,
+    sessionsLast30Days,
+    volumeLast30Days,
+    averageSessionsPerWeek,
+    activeWeeksLast8,
     bestSessionVolume,
     streakDays,
     latestPR,
