@@ -256,6 +256,9 @@ function ExecutePage() {
   const progression = current
     ? workoutExerciseProgressionFor(state.sessions, session.workoutId, current.exerciseId)
     : null;
+  const progressionPlan = current
+    ? workoutExerciseRecommendationFor(state.sessions, session.workoutId, current.exerciseId)
+    : null;
   const currentSetIndex = current ? current.sets.findIndex((set) => !set.completed) : -1;
   const nextSetIndex = currentSetIndex >= 0 ? currentSetIndex : current ? current.sets.length : 0;
   const hasNextSet = !!current && nextSetIndex < current.sets.length;
@@ -372,6 +375,16 @@ function ExecutePage() {
                    progression.recommendation === "recover" ? "Priorizar recuperação" : "Manter e consolidar"}
                 </span>
               </div>
+              {progressionPlan && (
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Próxima meta:{" "}
+                  <strong className="text-foreground">
+                    {progressionPlan.targetWeight != null ? progressionPlan.targetWeight + " kg" : "carga atual"}
+                    {progressionPlan.targetReps != null ? " × " + progressionPlan.targetReps + " reps" : ""}
+                  </strong>
+                  {" · "}{progressionPlan.reason}
+                </p>
+              )}
             </div>
           )}
           <div className="space-y-2 p-3">
