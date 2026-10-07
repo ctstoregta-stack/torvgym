@@ -53,12 +53,14 @@ export function exerciseHistoryFor(sessions: Session[], exerciseId: string) {
 export type ExerciseProgression = {
   latest: {
     date: string;
+    sets: SetLog[];
     volume: number;
     maxWeight: number;
     estimated1RM: number;
   };
   previous: {
     date: string;
+    sets: SetLog[];
     volume: number;
     maxWeight: number;
     estimated1RM: number;
