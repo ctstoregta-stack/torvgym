@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button, Card, EmptyState, Tag } from "@/components/ui-kit";
 import { buildGamificationSummary } from "@/store/gym-gamification";
@@ -20,6 +20,12 @@ function AchievementsPage() {
   const [weeklySessionsTarget, setWeeklySessionsTarget] = useState(state.goals.weeklySessionsTarget);
   const [weeklyVolumeTarget, setWeeklyVolumeTarget] = useState(state.goals.weeklyVolumeTarget);
   const [streakTarget, setStreakTarget] = useState(state.goals.streakTarget);
+  useEffect(() => {
+    if (!ready) return;
+    setWeeklySessionsTarget(state.goals.weeklySessionsTarget);
+    setWeeklyVolumeTarget(state.goals.weeklyVolumeTarget);
+    setStreakTarget(state.goals.streakTarget);
+  }, [ready, state.goals]);
   const recentSessions = useMemo(
     () => state.sessions.filter((session) => session.finishedAt && new Date(session.finishedAt).getTime() >= Date.now() - 7 * 86400000),
     [state.sessions],
