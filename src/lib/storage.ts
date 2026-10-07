@@ -152,16 +152,16 @@ function normalizeState(input: unknown): AppState | null {
   const goals = isRecord(rawGoals)
     ? {
         weeklySessionsTarget:
-          typeof rawGoals.weeklySessionsTarget === "number"
-            ? Math.min(14, Math.max(1, Math.round(rawGoals.weeklySessionsTarget)))
+          typeof rawGoals['weeklySessionsTarget'] === "number"
+            ? Math.min(14, Math.max(1, Math.round(rawGoals['weeklySessionsTarget'])))
             : emptyState.goals.weeklySessionsTarget,
         weeklyVolumeTarget:
-          typeof rawGoals.weeklyVolumeTarget === "number"
-            ? Math.min(1000000, Math.max(0, Math.round(rawGoals.weeklyVolumeTarget)))
+          typeof rawGoals['weeklyVolumeTarget'] === "number"
+            ? Math.min(1000000, Math.max(0, Math.round(rawGoals['weeklyVolumeTarget'])))
             : emptyState.goals.weeklyVolumeTarget,
         streakTarget:
-          typeof rawGoals.streakTarget === "number"
-            ? Math.min(365, Math.max(1, Math.round(rawGoals.streakTarget)))
+          typeof rawGoals['streakTarget'] === "number"
+            ? Math.min(365, Math.max(1, Math.round(rawGoals['streakTarget'])))
             : emptyState.goals.streakTarget,
       }
     : emptyState.goals;
