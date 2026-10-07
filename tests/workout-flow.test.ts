@@ -201,7 +201,7 @@ test("orientação de metas sinaliza atraso quando o ritmo fica abaixo do espera
 
 
 test("progressão avançada detecta evolução consistente e aumenta a carga", () => {
-  const sessions = [3, 2, 1].map((day, index) => ({
+  const sessions = [1, 2, 3].map((day, index) => ({
     id: "trend-" + index, routineId: "r1", workoutId: "w1", workoutName: "Treino A",
     startedAt: "2026-10-" + String(day + 1).padStart(2, "0") + "T10:00:00.000Z",
     finishedAt: "2026-10-" + String(day + 1).padStart(2, "0") + "T11:00:00.000Z",
@@ -214,7 +214,7 @@ test("progressão avançada detecta evolução consistente e aumenta a carga", (
 });
 
 test("progressão avançada detecta queda consistente e recomenda recuperação", () => {
-  const sessions = [3, 2, 1].map((day, index) => ({
+  const sessions = [1, 2, 3].map((day, index) => ({
     id: "decline-" + index, routineId: "r1", workoutId: "w1", workoutName: "Treino A",
     startedAt: "2026-10-" + String(day + 1).padStart(2, "0") + "T10:00:00.000Z",
     finishedAt: "2026-10-" + String(day + 1).padStart(2, "0") + "T11:00:00.000Z",
