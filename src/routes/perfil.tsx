@@ -43,6 +43,27 @@ function ProfilePage() {
           </div>
         </Card>
 
+        <Card className="p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold">Esta semana</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {dashboard.sessionsLast7Days} treinos · {Math.round(dashboard.volumeLast7Days).toLocaleString("pt-BR")} kg
+              </p>
+            </div>
+            <Link to="/progresso" className="text-xs font-semibold text-primary">Ver progresso</Link>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-elevated">
+            <div
+              className="h-full rounded-full bg-primary"
+              style={{ width: Math.min(100, state.goals.weeklySessionsTarget > 0 ? (dashboard.sessionsLast7Days / state.goals.weeklySessionsTarget) * 100 : 0) + "%" }}
+            />
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Meta: {state.goals.weeklySessionsTarget} treinos nesta semana
+          </p>
+        </Card>
+
         <div className="grid gap-3 sm:grid-cols-2">
           <ProfileLink
             to="/historico"
