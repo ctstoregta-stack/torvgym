@@ -163,6 +163,9 @@ test("dashboard calcula métricas de consistência e volume de 30 dias", () => {
   assert.equal(dashboard.volumeLast30Days, 500);
   assert.equal(dashboard.activeWeeksLast8, 1);
   assert.equal(dashboard.averageSessionsPerWeek, 0.3);
+  assert.equal(dashboard.bestSessionVolume, 500);
+  assert.equal(dashboard.topExercises[0]?.exerciseId, "supino");
+  assert.equal(dashboard.topExercises[0]?.volume, 500);
 });
 
 import { buildWeeklyGoalInsights } from "../src/store/gym-analytics.ts";
