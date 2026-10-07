@@ -9,6 +9,7 @@ import {
   buildPeriodAnalytics,
   buildPersonalRecords,
   exerciseProgressionFromHistory,
+  buildWeeklyGoalInsights,
 } from "@/store/gym-analytics";
 import { useGym } from "@/store/gym-store";
 
@@ -37,6 +38,7 @@ function ProgressPage() {
     [state.sessions],
   );
   const dashboard = useMemo(() => buildDashboardAnalytics(completed), [completed]);
+  const goalInsights = useMemo(() => buildWeeklyGoalInsights(completed, state.goals), [completed, state.goals]);
   const weekly = useMemo(() => buildPeriodAnalytics(completed, "week").slice(-8), [completed]);
   const monthly = useMemo(() => buildPeriodAnalytics(completed, "month").slice(-6), [completed]);
   const exerciseIndex = useMemo(() => buildExerciseAnalyticsIndex(completed), [completed]);
@@ -96,6 +98,54 @@ function ProgressPage() {
         <Metric label="Volume 7d" value={`${Math.round(dashboard.volumeLast7Days).toLocaleString("pt-BR")} kg`} />
         <Metric label="Volume 30d" value={`${Math.round(dashboard.volumeLast30Days).toLocaleString("pt-BR")} kg`} />
       </div>
+
+      <Card className="mt-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold">Orientação das metas</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {goalInsights.overallStatus === "complete"
+                ? "Metas atingidas para o período."
+                : goalInsights.overallStatus === "ahead"
+                  ? "Você está à frente do ritmo esperado."
+                  : goalInsights.overallStatus === "behind"
+                    ? "O ritmo está abaixo do esperado; veja o que falta."
+                    : "Você está no ritmo esperado para esta semana."}
+            </p>
+          </div>
+          <Tag>
+            {goalInsights.overallStatus === "complete"
+              ? "Concluído"
+              : goalInsights.overallStatus === "ahead"
+                ? "Adiantado"
+                : goalInsights.overallStatus === "behind"
+                  ? "Atrasado"
+                  : "No ritmo"}
+          </Tag>
+        </div>
+        <div className="mt-4 space-y-3">
+          <GoalRow label="Treinos" insight={goalInsights.sessions} unit="treino" />
+          <GoalRow label="Volume" insight={goalInsights.volume} unit="kg" />
+          <GoalRow label="Sequência" insight={goalInsights.streak} unit="dia" />
+        </div>
+        <div className="mt-4 rounded-xl bg-elevated p-3">
+          <p className="text-[11px] text-muted-foreground">Próxima ação</p>
+          <p className="mt-1 text-sm font-semibold">
+            {goalInsights.overallStatus === "complete"
+              ? "Mantenha a consistência e consolide o resultado."
+              : goalInsights.sessions.remaining > 0
+                ? "Faça mais " + goalInsights.sessions.remaining + " treino" + (goalInsights.sessions.remaining === 1 ? "" : "s") + " para atingir a meta semanal."
+                : goalInsights.volume.remaining > 0
+                  ? "Acumule mais " + Math.round(goalInsights.volume.remaining).toLocaleString("pt-BR") + " kg de volume nesta semana."
+                  : "Mantenha a sequência por mais " + goalInsights.streak.remaining + " dia" + (goalInsights.streak.remaining === 1 ? "" : "s") + "."}
+          </p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {goalInsights.daysRemaining > 0
+              ? goalInsights.daysRemaining + " dia" + (goalInsights.daysRemaining === 1 ? "" : "s") + " restante" + (goalInsights.daysRemaining === 1 ? "" : "s") + " na semana."
+              : "Último dia da semana."}
+          </p>
+        </div>
+      </Card>
 
       <Card className="mt-4">
         <p className="text-sm font-semibold">Ritmo atual</p>
@@ -263,6 +313,33 @@ function ProgressPage() {
         </div>
       </Card>
     </AppShell>
+  );
+}
+
+
+function GoalRow({
+  label,
+  insight,
+  unit,
+}: {
+  label: string;
+  insight: { current: number; target: number; remaining: number; progressPercent: number; status: string };
+  unit: string;
+}) {
+  const statusLabel = insight.status === "complete" ? "Concluído" : insight.status === "ahead" ? "Adiantado" : insight.status === "behind" ? "Atrasado" : "No ritmo";
+  const current = unit === "kg" ? Math.round(insight.current).toLocaleString("pt-BR") : insight.current.toLocaleString("pt-BR");
+  const target = unit === "kg" ? Math.round(insight.target).toLocaleString("pt-BR") : insight.target.toLocaleString("pt-BR");
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span className="font-semibold">{label}</span>
+        <span className="text-muted-foreground">{current}/{target} {unit} · {statusLabel}</span>
+      </div>
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-elevated">
+        <div className="h-full rounded-full bg-primary" style={{ width: Math.min(100, Math.max(0, insight.progressPercent)) + "%" }} />
+      </div>
+      {insight.remaining > 0 && <p className="mt-1 text-[11px] text-muted-foreground">Faltam {unit === "kg" ? Math.round(insight.remaining).toLocaleString("pt-BR") : insight.remaining} {unit}.</p>}
+    </div>
   );
 }
 
