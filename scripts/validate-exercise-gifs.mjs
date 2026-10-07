@@ -54,15 +54,18 @@ function checkUrl(url, redirectCount = 0) {
           res.destroy();
         });
         res.on("close", () => {
-          const header = Buffer.concat(chunks).toString("ascii");
+          const headerBytes = Buffer.concat(chunks);
+          const header = headerBytes.toString("ascii");
           const okStatus = status >= 200 && status < 300;
           const isGif = contentType.startsWith("image/gif");
           const isPng = contentType.startsWith("image/png");
           const okType = isGif || isPng;
+          const gifMagic = headerBytes.subarray(0, 6).toString("ascii");
+          const pngMagic = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
           const okMagic = isGif
-            ? header.startsWith("GIF87a") || header.startsWith("GIF89a")
+            ? gifMagic === "GIF87a" || gifMagic === "GIF89a"
             : isPng
-              ? header.startsWith("\x89PNG\r\n\x1a\n")
+              ? headerBytes.subarray(0, 8).equals(pngMagic)
               : false;
           resolve({
             url,
