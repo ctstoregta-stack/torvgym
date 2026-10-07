@@ -60,12 +60,19 @@ export type Session = {
   restRunning?: boolean;
 };
 
+export type TrainingGoals = {
+  weeklySessionsTarget: number;
+  weeklyVolumeTarget: number;
+  streakTarget: number;
+};
+
 export type AppState = {
   routines: Routine[];
   activeRoutineId: string | null;
   customExercises: Exercise[];
   sessions: Session[];
   activeSession: Session | null;
+  goals: TrainingGoals;
 };
 
 export const WEEKDAYS = [
