@@ -8,7 +8,7 @@ import { RestTimer, formatClock, type RestState } from "@/components/RestTimer";
 import { Button, EmptyState, PRBadge } from "@/components/ui-kit";
 import { useGym } from "@/store/gym-store";
 import type { Session, Workout } from "@/lib/types";
-import { workoutExerciseProgressionFor } from "@/store/gym-analytics";
+import { workoutExerciseProgressionFor, workoutExerciseRecommendationFor } from "@/store/gym-analytics";
 import { startNativeWorkoutNotification, stopNativeWorkoutNotification, updateNativeWorkoutNotification } from "@/lib/native-workout";
 
 const DEFAULT_REST = 60;
