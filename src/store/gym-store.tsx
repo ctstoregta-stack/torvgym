@@ -22,6 +22,7 @@ import type {
   Routine,
   Session,
   SetLog,
+  TrainingGoals,
   Workout,
 } from "@/lib/types";
 
@@ -99,6 +100,8 @@ type Ctx = {
   addCustomExercise: (ex: Omit<Exercise, "custom">) => void;
   updateCustomExercise: (id: string, patch: Partial<Omit<Exercise, "id" | "custom">>) => boolean;
   deleteCustomExercise: (id: string) => "deleted" | "in-use" | "not-found";
+  // goals
+  updateGoals: (patch: Partial<TrainingGoals>) => void;
   // sessions
   startSession: (workoutId: string) => string | null;
   updateSet: (
@@ -343,6 +346,17 @@ export function GymProvider({ children }: { children: ReactNode }) {
         };
       }),
     setActiveRoutine: (id) => setState((s) => ({ ...s, activeRoutineId: id })),
+    updateGoals: (patch) =>
+      setState((s) => ({
+        ...s,
+        goals: {
+          ...s.goals,
+          ...patch,
+          weeklySessionsTarget: Math.min(14, Math.max(1, Math.round(patch.weeklySessionsTarget ?? s.goals.weeklySessionsTarget))),
+          weeklyVolumeTarget: Math.min(1000000, Math.max(0, Math.round(patch.weeklyVolumeTarget ?? s.goals.weeklyVolumeTarget))),
+          streakTarget: Math.min(365, Math.max(1, Math.round(patch.streakTarget ?? s.goals.streakTarget))),
+        },
+      })),
 
     createWorkout: (routineId, name) => {
       const id = uid("wk");
