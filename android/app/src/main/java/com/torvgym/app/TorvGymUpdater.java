@@ -346,8 +346,8 @@ final class TorvGymUpdater {
                     : installed.signingInfo.getSigningCertificateHistory();
             android.content.pm.Signature[] downloadedSigners =
                 downloaded.signingInfo.hasMultipleSigners()
-                    ? downloaded.signingInfo.apkContentsSigners
-                    : downloaded.signingInfo.signingCertificateHistory;
+                    ? downloaded.signingInfo.getApkContentsSigners()
+                    : downloaded.signingInfo.getSigningCertificateHistory();
             if (installedSigners == null || downloadedSigners == null
                 || installedSigners.length == 0 || downloadedSigners.length == 0) return false;
 
