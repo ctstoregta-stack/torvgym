@@ -459,54 +459,50 @@ export function GymProvider({ children }: { children: ReactNode }) {
       }),
 
     updateCustomExercise: (id, patch) => {
-      let changed = false;
-      setState((s) => {
-        const current = s.customExercises.find((exercise) => exercise.id === id);
-        if (!current) return s;
-        const candidate = { ...current, ...patch, id, custom: true } as Exercise;
-        if (validateExercise(candidate, { allowOptionalCustomFields: true }).length > 0) return s;
-        const duplicateName = [...EXERCISE_DB, ...s.customExercises]
-          .filter((exercise) => exercise.id !== id)
-          .some(
-            (exercise) =>
-              exercise.name.trim().toLocaleLowerCase("pt-BR") ===
-              candidate.name.trim().toLocaleLowerCase("pt-BR"),
-          );
-        if (duplicateName) return s;
-        changed = true;
-        return { ...s, customExercises: s.customExercises.map((exercise) =>
+      const current = state.customExercises.find((exercise) => exercise.id === id);
+      if (!current) return false;
+      const candidate = { ...current, ...patch, id, custom: true } as Exercise;
+      if (validateExercise(candidate, { allowOptionalCustomFields: true }).length > 0) return false;
+      const duplicateName = [...EXERCISE_DB, ...state.customExercises]
+        .filter((exercise) => exercise.id !== id)
+        .some(
+          (exercise) =>
+            exercise.name.trim().toLocaleLowerCase("pt-BR") ===
+            candidate.name.trim().toLocaleLowerCase("pt-BR"),
+        );
+      if (duplicateName) return false;
+      setState((s) => ({
+        ...s,
+        customExercises: s.customExercises.map((exercise) =>
           exercise.id === id ? candidate : exercise,
-        ) };
-      });
-      return changed;
+        ),
+      }));
+      return true;
     },
     deleteCustomExercise: (id) => {
-      let result: "deleted" | "in-use" | "not-found" = "not-found";
-      setState((s) => {
-        if (!s.customExercises.some((exercise) => exercise.id === id)) return s;
-        const usedByWorkout = s.routines.some((routine) =>
-          routine.workouts.some((workout) => workout.exerciseIds.includes(id)),
-        );
-        const usedByHistory = s.sessions.some((session) =>
-          session.entries.some((entry) => entry.exerciseId === id),
-        );
-        if (usedByWorkout || usedByHistory) {
-          result = "in-use";
-          return s;
-        }
-        result = "deleted";
-        return { ...s, customExercises: s.customExercises.filter((exercise) => exercise.id !== id) };
-      });
-      return result;
+      if (!state.customExercises.some((exercise) => exercise.id === id)) return "not-found";
+      const usedByWorkout = state.routines.some((routine) =>
+        routine.workouts.some((workout) => workout.exerciseIds.includes(id)),
+      );
+      const usedByHistory = state.sessions.some((session) =>
+        session.entries.some((entry) => entry.exerciseId === id),
+      );
+      if (usedByWorkout || usedByHistory) return "in-use";
+      setState((s) => ({
+        ...s,
+        customExercises: s.customExercises.filter((exercise) => exercise.id !== id),
+      }));
+      return "deleted";
     },
 
     startSession: (workoutId) => {
+      if (state.activeSession) return null;
       const found = findWorkout(workoutId);
       if (!found) return null;
       const { routine, workout } = found;
       const id = uid("ses");
       const session = createWorkoutSession(routine, workout, id, new Date().toISOString());
-      setState((s) => ({ ...s, activeSession: session }));
+      setState((s) => (s.activeSession ? s : { ...s, activeSession: session }));
       return id;
     },
     updateSet: (exerciseId, index, patch) =>
