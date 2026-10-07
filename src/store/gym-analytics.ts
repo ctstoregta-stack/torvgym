@@ -664,3 +664,89 @@ export function workoutExerciseRecommendationFor(
       };
   }
 }
+
+
+export type GoalStatus = "ahead" | "on-track" | "behind" | "complete";
+
+export type GoalInsight = {
+  current: number;
+  target: number;
+  remaining: number;
+  progressPercent: number;
+  status: GoalStatus;
+};
+
+export type WeeklyGoalInsights = {
+  sessions: GoalInsight;
+  volume: GoalInsight;
+  streak: GoalInsight;
+  overallStatus: GoalStatus;
+  daysElapsed: number;
+  daysRemaining: number;
+};
+
+function startOfWeek(date: Date) {
+  const result = new Date(date);
+  result.setHours(0, 0, 0, 0);
+  const mondayOffset = (result.getDay() + 6) % 7;
+  result.setDate(result.getDate() - mondayOffset);
+  return result;
+}
+
+function goalInsight(current: number, target: number, expectedProgress: number): GoalInsight {
+  const safeTarget = Math.max(target, 1);
+  const progressPercent = Math.round((current / safeTarget) * 100);
+  const remaining = Math.max(0, safeTarget - current);
+  const status: GoalStatus = current >= safeTarget
+    ? "complete"
+    : progressPercent >= Math.round(expectedProgress * 100) + 15
+      ? "ahead"
+      : progressPercent < Math.max(0, Math.round(expectedProgress * 100) - 15)
+        ? "behind"
+        : "on-track";
+  return { current, target: safeTarget, remaining, progressPercent, status };
+}
+
+export function buildWeeklyGoalInsights(
+  sessions: Session[],
+  goals: import("@/lib/types").TrainingGoals,
+  now = new Date(),
+): WeeklyGoalInsights {
+  const weekStart = startOfWeek(now);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 7);
+  const completed = sessions.filter((session) => {
+    if (!session.finishedAt) return false;
+    const finished = new Date(session.finishedAt);
+    return finished >= weekStart && finished < weekEnd;
+  });
+  const weekSessions = completed.length;
+  const weekVolume = completed.reduce((sum, session) => sum + sessionVolume(session), 0);
+  const dashboard = buildDashboardAnalytics(sessions);
+  const dayOfWeek = now.getDay();
+  const daysElapsed = Math.min(7, Math.max(1, dayOfWeek === 0 ? 7 : dayOfWeek));
+  const expectedProgress = daysElapsed / 7;
+  const daysRemaining = Math.max(0, 7 - daysElapsed);
+  const sessionsInsight = goalInsight(weekSessions, goals.weeklySessionsTarget, expectedProgress);
+  const volumeInsight = goalInsight(weekVolume, goals.weeklyVolumeTarget, expectedProgress);
+  const streakInsight = goalInsight(dashboard.streakDays, goals.streakTarget, expectedProgress);
+
+  const allComplete = [sessionsInsight, volumeInsight, streakInsight].every((item) => item.status === "complete");
+  const anyBehind = [sessionsInsight, volumeInsight, streakInsight].some((item) => item.status === "behind");
+  const overallStatus: GoalStatus = allComplete
+    ? "complete"
+    : anyBehind
+      ? "behind"
+      : [sessionsInsight, volumeInsight, streakInsight].every((item) => item.status === "ahead")
+        ? "ahead"
+        : "on-track";
+
+  return {
+    sessions: sessionsInsight,
+    volume: volumeInsight,
+    streak: streakInsight,
+    overallStatus,
+    daysElapsed,
+    daysRemaining,
+  };
+}
