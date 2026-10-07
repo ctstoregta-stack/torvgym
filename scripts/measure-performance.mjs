@@ -20,6 +20,10 @@ async function walk(dir) {
   return files;
 }
 
+const MAX_JS_BYTES = Number(process.env.TORVGYM_MAX_JS_BYTES ?? 12 * 1024 * 1024);
+const MAX_LARGEST_JS_BYTES = Number(process.env.TORVGYM_MAX_LARGEST_JS_BYTES ?? 2 * 1024 * 1024);
+const MAX_APK_BYTES = Number(process.env.TORVGYM_MAX_APK_BYTES ?? 30 * 1024 * 1024);
+
 const buildCandidates = [".output/public", "dist/client", "dist"];
 let buildDir = null;
 for (const candidate of buildCandidates) {
@@ -68,7 +72,7 @@ const sessionCreateMs = performance.now() - started;
 console.log("=== TorvGym performance baseline ===");
 console.log(`Web JS total: ${jsBytes} bytes (${(jsBytes / 1024 / 1024).toFixed(2)} MiB)`);
 console.log(`Maior chunk JS: ${largestJs} bytes (${(largestJs / 1024).toFixed(1)} KiB)`);
-console.log(`Arquivos JS: ${jsFiles.length}`);
+console.log(`Arquivos JS: ${jsFiles.length}`);\nif (jsBytes > MAX_JS_BYTES) throw new Error(`Regressão: JS total excede ${(MAX_JS_BYTES / 1024 / 1024).toFixed(1)} MiB.`);\nif (largestJs > MAX_LARGEST_JS_BYTES) throw new Error(`Regressão: maior chunk JS excede ${(MAX_LARGEST_JS_BYTES / 1024).toFixed(1)} MiB.`);
 console.log(`GIFs: ${gifUrls.length} referências / ${uniqueGifUrls.size} URLs únicas`);
 console.log(
   `createWorkoutSession: ${(sessionCreateMs / iterations).toFixed(4)} ms/op (n=${iterations})`,
@@ -77,5 +81,5 @@ console.log(
 const apk = path.join(root, "android/app/build/outputs/apk/debug/app-debug.apk");
 if (await exists(apk)) {
   const apkBytes = (await stat(apk)).size;
-  console.log(`APK debug: ${apkBytes} bytes (${(apkBytes / 1024 / 1024).toFixed(2)} MiB)`);
+  console.log(`APK debug: ${apkBytes} bytes (${(apkBytes / 1024 / 1024).toFixed(2)} MiB)`);\n  if (apkBytes > MAX_APK_BYTES) throw new Error(`Regressão: APK debug excede ${(MAX_APK_BYTES / 1024 / 1024).toFixed(1)} MiB.`);
 }
