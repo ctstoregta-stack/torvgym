@@ -145,6 +145,7 @@ const GymContext = createContext<Ctx | null>(null);
 export function GymProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(emptyState);
   const [ready, setReady] = useState(false);
+  const sessionStartLockRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -496,13 +497,25 @@ export function GymProvider({ children }: { children: ReactNode }) {
     },
 
     startSession: (workoutId) => {
-      if (state.activeSession) return null;
+      if (state.activeSession || sessionStartLockRef.current) return null;
       const found = findWorkout(workoutId);
       if (!found) return null;
+
+      sessionStartLockRef.current = true;
       const { routine, workout } = found;
       const id = uid("ses");
       const session = createWorkoutSession(routine, workout, id, new Date().toISOString());
-      setState((s) => (s.activeSession ? s : { ...s, activeSession: session }));
+
+      setState((s) => {
+        if (s.activeSession) {
+          sessionStartLockRef.current = false;
+          return s;
+        }
+        queueMicrotask(() => {
+          sessionStartLockRef.current = false;
+        });
+        return { ...s, activeSession: session };
+      });
       return id;
     },
     updateSet: (exerciseId, index, patch) =>
