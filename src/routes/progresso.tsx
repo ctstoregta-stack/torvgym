@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
+import type { Session } from "@/lib/types";
 import { AppShell } from "@/components/AppShell";
 import { Button, Card, EmptyState, Tag } from "@/components/ui-kit";
 import {
@@ -275,7 +276,7 @@ function Metric({ label, value }: { label: string; value: string }) {
 }
 
 
-function WorkoutCalendar({ sessions }: { sessions: ReturnType<typeof buildDashboardAnalytics> extends never ? never : import("@/lib/types").Session[] }) {
+function WorkoutCalendar({ sessions }: { sessions: Session[] }) {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
