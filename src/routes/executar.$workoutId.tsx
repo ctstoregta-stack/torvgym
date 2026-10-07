@@ -385,6 +385,14 @@ function ExecutePage() {
                   {" · "}{progressionPlan.reason}
                 </p>
               )}
+              {progressionPlan && (
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Tendência: <strong className="text-foreground">
+                    {progressionPlan.trend === "improving" ? "evoluindo" : progressionPlan.trend === "declining" ? "em queda" : "estável"}
+                  </strong>
+                  {" · confiança "}{progressionPlan.confidence === "high" ? "alta" : progressionPlan.confidence === "medium" ? "média" : "baixa"}
+                </p>
+              )}
             </div>
           )}
           <div className="space-y-2 p-3">
