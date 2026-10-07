@@ -1,6 +1,10 @@
 name: Generate Capacitor Android
 
 on:
+concurrency:
+  group: torvgym-android-main
+  cancel-in-progress: true
+
   push:
     branches:
       - main
