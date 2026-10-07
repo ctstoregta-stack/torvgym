@@ -164,3 +164,37 @@ test("dashboard calcula métricas de consistência e volume de 30 dias", () => {
   assert.equal(dashboard.activeWeeksLast8, 1);
   assert.equal(dashboard.averageSessionsPerWeek, 0.3);
 });
+
+import { buildWeeklyGoalInsights } from "../src/store/gym-analytics.ts";
+
+test("orientação de metas interpreta ritmo semanal e calcula o que falta", () => {
+  const goals = { weeklySessionsTarget: 4, weeklyVolumeTarget: 1000, streakTarget: 3 };
+  const sessions = [
+    {
+      id: "s1", routineId: "r1", workoutId: "w1", workoutName: "Treino A",
+      startedAt: "2026-10-05T10:00:00.000Z", finishedAt: "2026-10-05T11:00:00.000Z",
+      entries: [{ exerciseId: "supino", sets: [{ weight: 100, reps: 5, completed: true }] }],
+    },
+    {
+      id: "s2", routineId: "r1", workoutId: "w1", workoutName: "Treino A",
+      startedAt: "2026-10-06T10:00:00.000Z", finishedAt: "2026-10-06T11:00:00.000Z",
+      entries: [{ exerciseId: "supino", sets: [{ weight: 100, reps: 5, completed: true }] }],
+    },
+  ];
+  const insights = buildWeeklyGoalInsights(sessions, goals, new Date("2026-10-07T12:00:00.000Z"));
+  assert.equal(insights.sessions.current, 2);
+  assert.equal(insights.sessions.remaining, 2);
+  assert.equal(insights.sessions.progressPercent, 50);
+  assert.equal(insights.volume.current, 1000);
+  assert.equal(insights.volume.remaining, 0);
+  assert.equal(insights.volume.status, "complete");
+});
+
+test("orientação de metas sinaliza atraso quando o ritmo fica abaixo do esperado", () => {
+  const goals = { weeklySessionsTarget: 5, weeklyVolumeTarget: 5000, streakTarget: 7 };
+  const insights = buildWeeklyGoalInsights([], goals, new Date("2026-10-07T12:00:00.000Z"));
+  assert.equal(insights.overallStatus, "behind");
+  assert.equal(insights.sessions.remaining, 5);
+  assert.equal(insights.volume.remaining, 5000);
+  assert.equal(insights.daysRemaining, 4);
+});
