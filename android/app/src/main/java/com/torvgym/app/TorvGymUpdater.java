@@ -10,6 +10,9 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
@@ -37,6 +40,7 @@ final class TorvGymUpdater {
     private static final String PREF_LAST_DISMISSED = "last_dismissed_tag";
     private static final String PREF_PENDING_DOWNLOAD_ID = "pending_download_id";
     private static final String PREF_PENDING_SHA256 = "pending_sha256";
+    private static final String PREF_PENDING_VERSION_CODE = "pending_version_code";
     private static final String PREF_LAST_CHECK_MS = "last_check_ms";
     private static final long CHECK_INTERVAL_MS = 30L * 60L * 1000L;
     private static final Pattern VERSION_TAG = Pattern.compile("^v1\\.0\\.(\\d+)$");
@@ -59,6 +63,7 @@ final class TorvGymUpdater {
     private String pendingAssetUrl;
     private String pendingTag;
     private String pendingSha256;
+    private int pendingVersionCode = -1;
     private boolean receiverRegistered;
 
     TorvGymUpdater(@NonNull BridgeActivity activity) {
@@ -66,6 +71,7 @@ final class TorvGymUpdater {
         this.preferences = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         this.pendingDownloadId = preferences.getLong(PREF_PENDING_DOWNLOAD_ID, -1L);
         this.pendingSha256 = preferences.getString(PREF_PENDING_SHA256, null);
+        this.pendingVersionCode = preferences.getInt(PREF_PENDING_VERSION_CODE, -1);
     }
 
     void checkForUpdate() {
@@ -162,6 +168,7 @@ final class TorvGymUpdater {
         pendingAssetUrl = release.assetUrl;
         pendingTag = release.tag;
         pendingSha256 = release.sha256;
+        pendingVersionCode = release.versionCode;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             && !activity.getPackageManager().canRequestPackageInstalls()) {
@@ -222,6 +229,7 @@ final class TorvGymUpdater {
         preferences.edit()
             .putLong(PREF_PENDING_DOWNLOAD_ID, pendingDownloadId)
             .putString(PREF_PENDING_SHA256, pendingSha256)
+            .putInt(PREF_PENDING_VERSION_CODE, pendingVersionCode)
             .apply();
         pendingAssetUrl = null;
         pendingTag = null;
@@ -243,7 +251,9 @@ final class TorvGymUpdater {
             if (status == DownloadManager.STATUS_SUCCESSFUL) {
                 long completedId = pendingDownloadId;
                 Uri uri = downloadManager.getUriForDownloadedFile(completedId);
-                if (uri == null || pendingSha256 == null || !verifySha256(uri, pendingSha256)) {
+                if (uri == null || pendingSha256 == null || pendingVersionCode <= 0
+                    || !verifySha256(uri, pendingSha256)
+                    || !verifyApkIdentity(uri, pendingVersionCode)) {
                     downloadManager.remove(completedId);
                     clearPendingDownload();
                     activity.runOnUiThread(() ->
@@ -267,7 +277,7 @@ final class TorvGymUpdater {
 
     private void clearPendingDownload() {
         pendingDownloadId = -1L;
-        preferences.edit().remove(PREF_PENDING_DOWNLOAD_ID).remove(PREF_PENDING_SHA256).apply();
+        preferences.edit().remove(PREF_PENDING_DOWNLOAD_ID).remove(PREF_PENDING_SHA256).remove(PREF_PENDING_VERSION_CODE).apply();
     }
 
 
@@ -289,6 +299,83 @@ final class TorvGymUpdater {
             Log.w(TAG, "Não foi possível validar o SHA-256 do APK baixado", e);
             return false;
         }
+    }
+
+    private boolean verifyApkIdentity(Uri uri, int expectedVersionCode) {
+        java.io.File tempApk = null;
+        try (InputStream stream = activity.getContentResolver().openInputStream(uri)) {
+            if (stream == null) return false;
+
+            tempApk = java.io.File.createTempFile("torvgym-update-", ".apk", activity.getCacheDir());
+            try (java.io.FileOutputStream output = new java.io.FileOutputStream(tempApk)) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = stream.read(buffer)) != -1) output.write(buffer, 0, read);
+            }
+
+            PackageManager packageManager = activity.getPackageManager();
+            PackageInfo downloaded = packageManager.getPackageArchiveInfo(
+                tempApk.getAbsolutePath(),
+                PackageManager.GET_SIGNING_CERTIFICATES
+            );
+            if (downloaded == null || !activity.getPackageName().equals(downloaded.packageName)) return false;
+
+            long downloadedVersionCode = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+                ? downloaded.getLongVersionCode()
+                : downloaded.versionCode;
+            if (downloadedVersionCode != expectedVersionCode) return false;
+
+            PackageInfo installed = packageManager.getPackageInfo(
+                activity.getPackageName(),
+                PackageManager.GET_SIGNING_CERTIFICATES
+            );
+
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+                if (installed.signatures == null || downloaded.signatures == null
+                    || installed.signatures.length == 0 || downloaded.signatures.length == 0) return false;
+                String installedFingerprint = certificateFingerprint(installed.signatures[0]);
+                for (android.content.pm.Signature signer : downloaded.signatures) {
+                    if (installedFingerprint.equals(certificateFingerprint(signer))) return true;
+                }
+                return false;
+            }
+
+            if (installed.signingInfo == null || downloaded.signingInfo == null) return false;
+            android.content.pm.Signature[] installedSigners =
+                installed.signingInfo.hasMultipleSigners()
+                    ? installed.signingInfo.apkContentsSigners
+                    : installed.signingInfo.signingCertificateHistory;
+            android.content.pm.Signature[] downloadedSigners =
+                downloaded.signingInfo.hasMultipleSigners()
+                    ? downloaded.signingInfo.apkContentsSigners
+                    : downloaded.signingInfo.signingCertificateHistory;
+            if (installedSigners == null || downloadedSigners == null
+                || installedSigners.length == 0 || downloadedSigners.length == 0) return false;
+
+            String installedFingerprint = certificateFingerprint(installedSigners[0]);
+            for (android.content.pm.Signature signer : downloadedSigners) {
+                if (installedFingerprint.equals(certificateFingerprint(signer))) return true;
+            }
+            return false;
+        } catch (Exception e) {
+            Log.w(TAG, "Não foi possível validar identidade e assinatura do APK", e);
+            return false;
+        } finally {
+            if (tempApk != null) {
+                //noinspection ResultOfMethodCallIgnored
+                tempApk.delete();
+            }
+        }
+    }
+
+    private String certificateFingerprint(android.content.pm.Signature signature) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] bytes = digest.digest(signature.toByteArray());
+        StringBuilder result = new StringBuilder(bytes.length * 2);
+        for (byte value : bytes) {
+            result.append(String.format(java.util.Locale.ROOT, "%02x", value));
+        }
+        return result.toString();
     }
 
     @SuppressWarnings("deprecation")
