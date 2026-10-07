@@ -611,7 +611,102 @@ export type ProgressionRecommendation = {
   targetWeight: number | null;
   targetReps: number | null;
   reason: string;
+  trend: "improving" | "stable" | "declining";
+  confidence: "high" | "medium" | "low";
 };
+
+function classifyProgressionTrend(values: number[]) {
+  if (values.length < 2) return { trend: "stable" as const, confidence: "low" as const };
+  const changes = values.slice(1).map((value, index) => {
+    const prior = values[index] ?? 0;
+    return prior > 0 ? (value - prior) / prior : 0;
+  });
+  const improving = changes.filter((change) => change >= 0.02).length;
+  const declining = changes.filter((change) => change <= -0.05).length;
+  if (declining >= 2) return { trend: "declining" as const, confidence: values.length >= 3 ? "high" as const : "medium" as const };
+  if (improving >= 2) return { trend: "improving" as const, confidence: values.length >= 3 ? "high" as const : "medium" as const };
+  return { trend: "stable" as const, confidence: values.length >= 3 ? "medium" as const : "low" as const };
+}
+
+export function workoutExerciseAdvancedRecommendationFor(
+  sessions: Session[],
+  workoutId: string,
+  exerciseId: string,
+): ProgressionRecommendation | null {
+  const history = workoutExerciseHistoryFor(sessions, workoutId, exerciseId).slice(0, 4);
+  const progression = exerciseProgressionFromHistory(history);
+  if (!progression) return null;
+
+  const latestSet = progression.latest.sets
+    .filter((set) => set.weight != null && set.reps != null)
+    .sort((a, b) => (b.reps ?? 0) - (a.reps ?? 0))[0];
+  const latestWeight = latestSet?.weight ?? progression.latest.maxWeight;
+  const latestReps = latestSet?.reps ?? null;
+  const trend = classifyProgressionTrend(
+    history.map((item) => item.estimated1RM).reverse(),
+  );
+
+  const recentDeclines = history.length >= 3
+    ? history.slice(0, 3).every((item, index, items) =>
+        index === items.length - 1 || item.estimated1RM <= (items[index + 1]?.estimated1RM ?? item.estimated1RM),
+      )
+    : false;
+  const recentImprovement = history.length >= 3
+    ? history.slice(0, 3).every((item, index, items) =>
+        index === items.length - 1 || item.estimated1RM >= (items[index + 1]?.estimated1RM ?? item.estimated1RM),
+      )
+    : false;
+
+  if (recentDeclines && trend.trend === "declining") {
+    return {
+      action: "recover",
+      targetWeight: latestWeight > 0 ? roundLoad(latestWeight * 0.9) : null,
+      targetReps: latestReps,
+      reason: "As últimas sessões mostram queda consistente de desempenho. Reduza a carga temporariamente e priorize recuperação.",
+      ...trend,
+    };
+  }
+
+  if (recentImprovement && trend.trend === "improving") {
+    return {
+      action: "increase-load",
+      targetWeight: latestWeight > 0 ? roundLoad(latestWeight * 1.025) : null,
+      targetReps: latestReps,
+      reason: "Há evolução consistente nas últimas sessões. Teste uma pequena progressão de carga mantendo a execução.",
+      ...trend,
+    };
+  }
+
+  if (progression.recommendation === "increase-load") {
+    return {
+      action: "increase-load",
+      targetWeight: latestWeight > 0 ? roundLoad(latestWeight * 1.025) : null,
+      targetReps: latestReps,
+      reason: "O 1RM estimado melhorou e não há sinal suficiente de queda. Faça uma progressão pequena.",
+      ...trend,
+    };
+  }
+
+  if (progression.recommendation === "recover") {
+    return {
+      action: "recover",
+      targetWeight: latestWeight > 0 ? roundLoad(latestWeight * 0.9) : null,
+      targetReps: latestReps,
+      reason: "O desempenho caiu de forma relevante. Reduza a carga e priorize recuperação.",
+      ...trend,
+    };
+  }
+
+  return {
+    action: "add-reps",
+    targetWeight: latestWeight || null,
+    targetReps: latestReps != null ? latestReps + 1 : null,
+    reason: trend.trend === "stable"
+      ? "O desempenho está estável. Mantenha a carga e busque uma repetição extra para sair da estagnação."
+      : "A evolução ainda não é consistente o bastante para aumentar a carga. Consolide a execução e tente mais uma repetição.",
+    ...trend,
+  };
+}
 
 function roundLoad(value: number) {
   return Math.round(value * 2) / 2;
@@ -622,47 +717,7 @@ export function workoutExerciseRecommendationFor(
   workoutId: string,
   exerciseId: string,
 ): ProgressionRecommendation | null {
-  const history = workoutExerciseHistoryFor(sessions, workoutId, exerciseId);
-  const progression = exerciseProgressionFromHistory(history);
-  if (!progression) return null;
-
-  const latestSet = progression.latest.sets
-    .filter((set) => set.weight != null && set.reps != null)
-    .sort((a, b) => (b.reps ?? 0) - (a.reps ?? 0))[0];
-
-  const latestWeight = latestSet?.weight ?? progression.latest.maxWeight;
-  const latestReps = latestSet?.reps ?? null;
-
-  switch (progression.recommendation) {
-    case "increase-load":
-      return {
-        action: "increase-load",
-        targetWeight: latestWeight > 0 ? roundLoad(latestWeight * 1.025) : null,
-        targetReps: latestReps,
-        reason: "Seu 1RM estimado evoluiu o suficiente para testar uma pequena progressão de carga.",
-      };
-    case "add-reps":
-      return {
-        action: "add-reps",
-        targetWeight: latestWeight || null,
-        targetReps: latestReps != null ? latestReps + 1 : null,
-        reason: "Mantenha a carga atual e tente ganhar uma repetição com boa execução.",
-      };
-    case "recover":
-      return {
-        action: "recover",
-        targetWeight: latestWeight > 0 ? roundLoad(latestWeight * 0.9) : null,
-        targetReps: latestReps,
-        reason: "O desempenho caiu de forma relevante; reduza a carga e priorize recuperação.",
-      };
-    default:
-      return {
-        action: "maintain",
-        targetWeight: latestWeight || null,
-        targetReps: latestReps,
-        reason: "Consolide a carga atual antes de buscar nova progressão.",
-      };
-  }
+  return workoutExerciseAdvancedRecommendationFor(sessions, workoutId, exerciseId);
 }
 
 
