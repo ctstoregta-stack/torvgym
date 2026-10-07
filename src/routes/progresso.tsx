@@ -6,6 +6,7 @@ import {
   buildDashboardAnalytics,
   buildExerciseAnalyticsIndex,
   buildPeriodAnalytics,
+  buildPersonalRecords,
   exerciseProgressionFromHistory,
 } from "@/store/gym-analytics";
 import { useGym } from "@/store/gym-store";
@@ -38,6 +39,7 @@ function ProgressPage() {
   const weekly = useMemo(() => buildPeriodAnalytics(completed, "week").slice(-8), [completed]);
   const monthly = useMemo(() => buildPeriodAnalytics(completed, "month").slice(-6), [completed]);
   const exerciseIndex = useMemo(() => buildExerciseAnalyticsIndex(completed), [completed]);
+  const personalRecords = useMemo(() => buildPersonalRecords(completed).slice(0, 6), [completed]);
   const nextWorkout = useMemo(() => {
     if (state.activeSession) {
       return { workout: activeRoutine?.workouts.find((item) => item.id === state.activeSession?.workoutId) ?? null, label: "Treino em andamento" };
@@ -187,6 +189,34 @@ function ProgressPage() {
             <Link key={item.exerciseId} to="/exercicio/$exerciseId" params={{ exerciseId: item.exerciseId }} className="flex items-center justify-between gap-3 rounded-xl bg-elevated p-3">
               <span className="min-w-0 truncate text-sm font-semibold">{getExercise(item.exerciseId)?.name ?? item.exerciseId}</span>
               <span className="shrink-0 text-xs font-bold tabular-nums">{Math.round(item.volume).toLocaleString("pt-BR")} kg</span>
+            </Link>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="mt-4">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="text-sm font-semibold">Recordes pessoais</p>
+            <p className="text-xs text-muted-foreground">Seus melhores resultados por exercício.</p>
+          </div>
+          <Tag>{personalRecords.length} recorde{personalRecords.length === 1 ? "" : "s"}</Tag>
+        </div>
+        <div className="mt-3 space-y-2">
+          {personalRecords.map((record) => (
+            <Link
+              key={record.exerciseId}
+              to="/exercicio/$exerciseId"
+              params={{ exerciseId: record.exerciseId }}
+              className="flex items-center justify-between gap-3 rounded-xl bg-elevated p-3"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">{getExercise(record.exerciseId)?.name ?? record.exerciseId}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  1RM est. {record.estimated1RM.toLocaleString("pt-BR")} kg · volume máx. {Math.round(record.maxVolume).toLocaleString("pt-BR")} kg
+                </p>
+              </div>
+              <span className="shrink-0 text-sm font-bold tabular-nums">{record.maxWeight.toLocaleString("pt-BR")} kg</span>
             </Link>
           ))}
         </div>
