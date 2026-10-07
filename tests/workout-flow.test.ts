@@ -198,3 +198,30 @@ test("orientação de metas sinaliza atraso quando o ritmo fica abaixo do espera
   assert.equal(insights.volume.remaining, 5000);
   assert.equal(insights.daysRemaining, 4);
 });
+
+
+test("progressão avançada detecta evolução consistente e aumenta a carga", () => {
+  const sessions = [3, 2, 1].map((day, index) => ({
+    id: "trend-" + index, routineId: "r1", workoutId: "w1", workoutName: "Treino A",
+    startedAt: "2026-10-" + String(day + 1).padStart(2, "0") + "T10:00:00.000Z",
+    finishedAt: "2026-10-" + String(day + 1).padStart(2, "0") + "T11:00:00.000Z",
+    entries: [{ exerciseId: "supino", sets: [{ weight: 50 + index * 5, reps: 10, completed: true }] }],
+  }));
+  const recommendation = workoutExerciseRecommendationFor(sessions, "w1", "supino");
+  assert.equal(recommendation?.action, "increase-load");
+  assert.equal(recommendation?.trend, "improving");
+  assert.equal(recommendation?.confidence, "high");
+});
+
+test("progressão avançada detecta queda consistente e recomenda recuperação", () => {
+  const sessions = [3, 2, 1].map((day, index) => ({
+    id: "decline-" + index, routineId: "r1", workoutId: "w1", workoutName: "Treino A",
+    startedAt: "2026-10-" + String(day + 1).padStart(2, "0") + "T10:00:00.000Z",
+    finishedAt: "2026-10-" + String(day + 1).padStart(2, "0") + "T11:00:00.000Z",
+    entries: [{ exerciseId: "supino", sets: [{ weight: 70 - index * 10, reps: 10, completed: true }] }],
+  }));
+  const recommendation = workoutExerciseRecommendationFor(sessions, "w1", "supino");
+  assert.equal(recommendation?.action, "recover");
+  assert.equal(recommendation?.trend, "declining");
+  assert.equal(recommendation?.confidence, "high");
+});
