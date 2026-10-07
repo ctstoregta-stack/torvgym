@@ -155,6 +155,17 @@ function ProgressPage() {
       </Card>
 
       <Card className="mt-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold">Calendário de treinos</p>
+            <p className="text-xs text-muted-foreground">Veja rapidamente os dias em que você treinou.</p>
+          </div>
+          <Tag>{completed.filter((session) => new Date(session.finishedAt ?? session.startedAt).getMonth() === new Date().getMonth() && new Date(session.finishedAt ?? session.startedAt).getFullYear() === new Date().getFullYear()).length} neste mês</Tag>
+        </div>
+        <WorkoutCalendar sessions={completed} />
+      </Card>
+
+      <Card className="mt-4">
         <p className="text-sm font-semibold">Semanas recentes</p>
         <div className="mt-3 space-y-2">
           {weekly.map((item) => (
@@ -260,5 +271,42 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="text-[11px] text-muted-foreground">{label}</p>
       <p className="mt-1 text-xl font-bold tabular-nums">{value}</p>
     </Card>
+  );
+}
+
+
+function WorkoutCalendar({ sessions }: { sessions: ReturnType<typeof buildDashboardAnalytics> extends never ? never : import("@/lib/types").Session[] }) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const leading = (firstDay.getDay() + 6) % 7;
+  const trainedDays = new Set(
+    sessions
+      .filter((session) => session.finishedAt)
+      .map((session) => {
+        const date = new Date(session.finishedAt ?? session.startedAt);
+        return date.getFullYear() === year && date.getMonth() === month ? date.getDate() : null;
+      })
+      .filter((day): day is number => day != null),
+  );
+  const cells = Array.from({ length: leading + daysInMonth }, (_, index) =>
+    index < leading ? null : index - leading + 1,
+  );
+
+  return (
+    <div className="mt-4">
+      <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-semibold text-muted-foreground">
+        {["S", "T", "Q", "Q", "S", "S", "D"].map((day, index) => <span key={index}>{day}</span>)}
+      </div>
+      <div className="mt-2 grid grid-cols-7 gap-1">
+        {cells.map((day, index) => (
+          <div key={index} className={day == null ? "h-9" : "flex h-9 items-center justify-center rounded-lg bg-elevated text-xs font-semibold"}>
+            {day != null && <span className={trainedDays.has(day) ? "flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground" : "text-muted-foreground"}>{day}</span>}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
