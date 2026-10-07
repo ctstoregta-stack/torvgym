@@ -15,6 +15,11 @@ export const emptyState: AppState = {
   customExercises: [],
   sessions: [],
   activeSession: null,
+  goals: {
+    weeklySessionsTarget: 4,
+    weeklyVolumeTarget: 10000,
+    streakTarget: 7,
+  },
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -128,7 +133,14 @@ function normalizeSession(input: unknown): Session | null {
 
 function normalizeState(input: unknown): AppState | null {
   if (!isRecord(input)) return null;
-  const { routines: rawRoutines, customExercises: rawCustom, sessions: rawSessions, activeSession: rawActive, activeRoutineId: rawActiveRoutine } = input;
+  const {
+    routines: rawRoutines,
+    customExercises: rawCustom,
+    sessions: rawSessions,
+    activeSession: rawActive,
+    activeRoutineId: rawActiveRoutine,
+    goals: rawGoals,
+  } = input;
   const routines = Array.isArray(rawRoutines) ? rawRoutines.map(normalizeRoutine).filter((routine): routine is Routine => routine !== null) : [];
   const customExercises = Array.isArray(rawCustom) ? rawCustom.map(normalizeExercise).filter((exercise): exercise is Exercise => exercise !== null) : [];
   const sessions = Array.isArray(rawSessions) ? rawSessions.map(normalizeSession).filter((session): session is Session => session !== null) : [];
@@ -137,7 +149,24 @@ function normalizeState(input: unknown): AppState | null {
     ? rawActiveRoutine
     : routines[0]?.id ?? null;
 
-  return { routines, activeRoutineId, customExercises, sessions, activeSession };
+  const goals = isRecord(rawGoals)
+    ? {
+        weeklySessionsTarget:
+          typeof rawGoals.weeklySessionsTarget === "number"
+            ? Math.min(14, Math.max(1, Math.round(rawGoals.weeklySessionsTarget)))
+            : emptyState.goals.weeklySessionsTarget,
+        weeklyVolumeTarget:
+          typeof rawGoals.weeklyVolumeTarget === "number"
+            ? Math.min(1000000, Math.max(0, Math.round(rawGoals.weeklyVolumeTarget)))
+            : emptyState.goals.weeklyVolumeTarget,
+        streakTarget:
+          typeof rawGoals.streakTarget === "number"
+            ? Math.min(365, Math.max(1, Math.round(rawGoals.streakTarget)))
+            : emptyState.goals.streakTarget,
+      }
+    : emptyState.goals;
+
+  return { routines, activeRoutineId, customExercises, sessions, activeSession, goals };
 }
 
 function migrate(raw: unknown, version: number): AppState | null {
