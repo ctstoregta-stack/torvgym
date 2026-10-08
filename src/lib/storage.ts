@@ -244,29 +244,43 @@ function isEncryptedValue(raw: string | null): boolean {
   } catch { return false; }
 }
 
-export async function saveState(state: AppState): Promise<boolean> {
-  if (typeof window === "undefined") return false;
-  let encrypted: string;
-  try { encrypted = await encryptLocal(JSON.stringify(state)); } catch { return false; }
-  let primarySaved = false;
-  try {
-    window.localStorage.setItem(KEY, encrypted);
-    window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION));
-    primarySaved = true;
-  } catch {
-    // A gravação principal pode falhar sem impedir os snapshots de recuperação.
-  }
-  try {
-    window.localStorage.setItem(RECOVERY_KEY, encrypted);
-  } catch {
-    // O snapshot de recuperação é best-effort.
-  }
-  try {
-    window.localStorage.setItem(AUTO_BACKUP_KEY, encrypted);
-  } catch {
-    // O backup automático é best-effort.
-  }
-  return primarySaved;
+let saveQueue: Promise<void> = Promise.resolve();
+
+export function saveState(state: AppState): Promise<boolean> {
+  const write = saveQueue.then(async () => {
+    if (typeof window === "undefined") return false;
+
+    let encrypted: string;
+    try {
+      encrypted = await encryptLocal(JSON.stringify(state));
+    } catch {
+      return false;
+    }
+
+    let primarySaved = false;
+    try {
+      window.localStorage.setItem(KEY, encrypted);
+      window.localStorage.setItem(VERSION_KEY, String(CURRENT_VERSION));
+      primarySaved = true;
+    } catch {
+      // A gravação principal pode falhar sem impedir os snapshots de recuperação.
+    }
+    try {
+      window.localStorage.setItem(RECOVERY_KEY, encrypted);
+    } catch {
+      // O snapshot de recuperação é best-effort.
+    }
+    try {
+      window.localStorage.setItem(AUTO_BACKUP_KEY, encrypted);
+    } catch {
+      // O backup automático é best-effort.
+    }
+    return primarySaved;
+  });
+
+  // Mantém a fila viva mesmo quando uma gravação falha.
+  saveQueue = write.then(() => undefined, () => undefined);
+  return write;
 }
 export function createBackup(state: AppState): string {
   return JSON.stringify(
