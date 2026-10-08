@@ -333,13 +333,14 @@ export function GymProvider({ children }: { children: ReactNode }) {
       })),
     deleteRoutine: (id) =>
       setState((s) => {
+        // Nunca encerra silenciosamente um treino em andamento por uma ação
+        // administrativa feita na tela de rotinas.
+        if (s.activeSession?.routineId === id) return s;
+
         const routines = s.routines.filter((r) => r.id !== id);
         return {
           ...s,
           routines,
-          // evita sessão ativa órfã apontando para uma rotina excluída
-          activeSession:
-            s.activeSession?.routineId === id ? null : s.activeSession,
           activeRoutineId:
             s.activeRoutineId === id
               ? (routines[0]?.id ?? null)
@@ -402,16 +403,20 @@ export function GymProvider({ children }: { children: ReactNode }) {
     updateWorkout: (workoutId, patch) =>
       mapWorkout(workoutId, (w) => ({ ...w, ...patch })),
     deleteWorkout: (workoutId) =>
-      setState((s) => ({
-        ...s,
-        routines: s.routines.map((r) => ({
-          ...r,
-          workouts: r.workouts.filter((w) => w.id !== workoutId),
-        })),
-        // evita sessão ativa órfã apontando para um treino excluído
-        activeSession:
-          s.activeSession?.workoutId === workoutId ? null : s.activeSession,
-      })),
+      setState((s) => {
+        // O treino que sustenta a sessão ativa não pode ser removido enquanto
+        // o usuário estiver treinando; a sessão deve ser finalizada/descartada
+        // explicitamente primeiro.
+        if (s.activeSession?.workoutId === workoutId) return s;
+
+        return {
+          ...s,
+          routines: s.routines.map((r) => ({
+            ...r,
+            workouts: r.workouts.filter((w) => w.id !== workoutId),
+          })),
+        };
+      }),
     toggleWorkoutDay: (workoutId, day) =>
       mapWorkout(workoutId, (w) => ({
         ...w,
