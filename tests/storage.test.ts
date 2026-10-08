@@ -84,6 +84,25 @@ test("loadState retorna null quando todas as cópias estão inválidas", async (
   assert.equal(await loadState(), null);
 });
 
+test("gravações concorrentes preservam a ordem das chamadas", async () => {
+  const first = {
+    ...emptyState,
+    routines: [{ id: "r-first", name: "Primeiro", createdAt: "2026-01-01T00:00:00.000Z", workouts: [] }],
+    activeRoutineId: "r-first",
+  };
+  const second = {
+    ...emptyState,
+    routines: [{ id: "r-second", name: "Segundo", createdAt: "2026-01-01T00:00:00.000Z", workouts: [] }],
+    activeRoutineId: "r-second",
+  };
+
+  const firstWrite = saveState(first);
+  const secondWrite = saveState(second);
+  assert.equal(await firstWrite, true);
+  assert.equal(await secondWrite, true);
+  assert.deepEqual(await loadState(), second);
+});
+
 test("saveState e loadState preservam os dados (ida e volta)", async () => {
   const state = {
     ...emptyState,
