@@ -13,6 +13,7 @@ export const emptyState: AppState = {
   routines: [],
   activeRoutineId: null,
   customExercises: [],
+  favoriteExerciseIds: [],
   sessions: [],
   activeSession: null,
   goals: {
@@ -136,6 +137,7 @@ function normalizeState(input: unknown): AppState | null {
   const {
     routines: rawRoutines,
     customExercises: rawCustom,
+    favoriteExerciseIds: rawFavoriteExerciseIds,
     sessions: rawSessions,
     activeSession: rawActive,
     activeRoutineId: rawActiveRoutine,
@@ -143,6 +145,9 @@ function normalizeState(input: unknown): AppState | null {
   } = input;
   const routines = Array.isArray(rawRoutines) ? rawRoutines.map(normalizeRoutine).filter((routine): routine is Routine => routine !== null) : [];
   const customExercises = Array.isArray(rawCustom) ? rawCustom.map(normalizeExercise).filter((exercise): exercise is Exercise => exercise !== null) : [];
+  const favoriteExerciseIds = Array.isArray(rawFavoriteExerciseIds)
+    ? [...new Set(rawFavoriteExerciseIds.filter((id): id is string => typeof id === "string" && id.trim().length > 0))]
+    : [];
   const sessions = Array.isArray(rawSessions) ? rawSessions.map(normalizeSession).filter((session): session is Session => session !== null) : [];
   const activeSession = rawActive ? normalizeSession(rawActive) : null;
   const activeRoutineId = typeof rawActiveRoutine === "string" && routines.some((routine) => routine.id === rawActiveRoutine)
@@ -166,7 +171,7 @@ function normalizeState(input: unknown): AppState | null {
       }
     : emptyState.goals;
 
-  return { routines, activeRoutineId, customExercises, sessions, activeSession, goals };
+  return { routines, activeRoutineId, customExercises, favoriteExerciseIds, sessions, activeSession, goals };
 }
 
 function migrate(raw: unknown, version: number): AppState | null {
