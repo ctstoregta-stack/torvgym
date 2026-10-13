@@ -8,6 +8,7 @@ export function getExerciseMediaSources(url: string): string[] {
 
   try {
     const parsed = new URL(url);
+    if (parsed.protocol !== "https:") return [];
     const host = parsed.hostname.toLowerCase();
     const isFitnessProgramer =
       parsed.protocol === "https:" &&
