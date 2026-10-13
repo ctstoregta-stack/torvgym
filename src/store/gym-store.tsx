@@ -131,7 +131,7 @@ type Ctx = {
   // analytics
   prFor: (exerciseId: string) => number | null;
   lastSetsFor: (exerciseId: string) => SetLog[] | null;
-  lastSetsForWorkout: (workoutId: string, exerciseId: string) => SetLog[] | null;
+  lastSetsForWorkout: (workoutId: string, exerciseId: string, routineId?: string) => SetLog[] | null;
   historyFor: (
     exerciseId: string,
   ) => {
@@ -280,12 +280,12 @@ export function GymProvider({ children }: { children: ReactNode }) {
   );
 
   const lastSetsForWorkout = useCallback(
-    (workoutId: string, exerciseId: string) => {
+    (workoutId: string, exerciseId: string, routineId?: string) => {
       // A referência anterior precisa ser a sessão mais recente, não a primeira
       // encontrada no histórico. O histórico é cronológico (mais antigo → mais novo).
       for (let i = finishedSessions.length - 1; i >= 0; i -= 1) {
         const session = finishedSessions[i];
-        if (!session || session.workoutId !== workoutId) continue;
+        if (!session || session.workoutId !== workoutId || (routineId !== undefined && session.routineId !== routineId)) continue;
         const entry = session.entries.find((item) => item.exerciseId === exerciseId);
         const sets = entry?.sets.filter((set) => set.completed) ?? [];
         if (sets.length) return sets;
