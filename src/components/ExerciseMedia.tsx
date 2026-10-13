@@ -1,5 +1,7 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { Exercise } from "@/lib/types";
+import { getExerciseMediaSources } from "@/lib/exercise-media-sources";
+
 
 type Props = {
   exercise: Exercise;
@@ -87,19 +89,11 @@ export const ExerciseMedia = memo(function ExerciseMedia({
     return () => observer.disconnect();
   }, [exercise.gif_url, loading]);
 
-  const sourceUrl = useMemo(() => {
-    if (!exercise.gif_url) return "";
-    if (sourceAttempt === 0) return exercise.gif_url;
-    if (sourceAttempt === 1) return proxiedGifUrl(exercise.gif_url);
-
-    try {
-      const parsed = new URL(exercise.gif_url);
-      const pathAndQuery = `${parsed.hostname}${parsed.pathname}${parsed.search}`;
-      return `https://images.weserv.nl/?url=${encodeURIComponent(pathAndQuery)}&output=gif&w=480&h=480&fit=inside`;
-    } catch {
-      return exercise.gif_url;
-    }
-  }, [exercise.gif_url, sourceAttempt]);
+  const sourceUrls = useMemo(
+    () => getExerciseMediaSources(exercise.gif_url),
+    [exercise.gif_url],
+  );
+  const sourceUrl = sourceUrls[Math.min(sourceAttempt, sourceUrls.length - 1)] ?? exercise.gif_url;
 
   const showFallback = failed || !exercise.gif_url || !online;
 
