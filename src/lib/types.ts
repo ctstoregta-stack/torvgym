@@ -70,6 +70,7 @@ export type AppState = {
   routines: Routine[];
   activeRoutineId: string | null;
   customExercises: Exercise[];
+  favoriteExerciseIds: string[];
   sessions: Session[];
   activeSession: Session | null;
   goals: TrainingGoals;
