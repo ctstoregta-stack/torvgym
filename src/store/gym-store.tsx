@@ -77,6 +77,7 @@ type Ctx = {
   ready: boolean;
   state: AppState;
   exercises: Exercise[];
+  toggleFavoriteExercise: (exerciseId: string) => void;
   getExercise: (id: string) => Exercise | undefined;
   activeRoutine: Routine | null;
   findWorkout: (workoutId: string) =>
@@ -310,6 +311,12 @@ export function GymProvider({ children }: { children: ReactNode }) {
     ready,
     state,
     exercises,
+    toggleFavoriteExercise: (exerciseId) => setState((s) => ({
+      ...s,
+      favoriteExerciseIds: s.favoriteExerciseIds.includes(exerciseId)
+        ? s.favoriteExerciseIds.filter((id) => id !== exerciseId)
+        : [...s.favoriteExerciseIds, exerciseId],
+    })),
     getExercise,
     activeRoutine,
     findWorkout,
