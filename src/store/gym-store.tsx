@@ -336,20 +336,16 @@ export function GymProvider({ children }: { children: ReactNode }) {
       return id;
     },
     duplicateRoutine: (routineId) => {
-      let duplicatedId: string | null = null;
-      setState((s) => {
-        const source = s.routines.find((routine) => routine.id === routineId);
-        if (!source) return s;
-        const id = uid("rot");
-        duplicatedId = id;
-        const duplicate = duplicateRoutineTemplate(source, id, () => uid("wk"));
-        return {
-          ...s,
-          activeRoutineId: id,
-          routines: [...s.routines, duplicate],
-        };
-      });
-      return duplicatedId;
+      const source = state.routines.find((routine) => routine.id === routineId);
+      if (!source) return null;
+      const id = uid("rot");
+      const duplicate = duplicateRoutineTemplate(source, id, () => uid("wk"));
+      setState((s) => ({
+        ...s,
+        activeRoutineId: id,
+        routines: [...s.routines, duplicate],
+      }));
+      return id;
     },
     renameRoutine:
       setState((s) => ({
