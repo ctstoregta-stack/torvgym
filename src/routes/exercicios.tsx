@@ -113,7 +113,7 @@ function ExercisesPage() {
           Favoritos
         </button>
         <button
-          aria-pressed={scope === "custom"
+          aria-pressed={scope === "custom"}
           onClick={() => { setScope("custom"); setCategory(null); setEquipment(null); }}
           className={`min-h-10 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${scope === "custom" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
         >
