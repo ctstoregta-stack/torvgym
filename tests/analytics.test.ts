@@ -187,3 +187,28 @@ test("dashboard consolida métricas gerais e destaca exercícios por volume", ()
   assert.equal(dashboard.topExercises[0]?.exerciseId, "supino");
   assert.equal(dashboard.topExercises[0]?.volume, 1310);
 });
+
+
+test("progressão por treino também respeita a rotina quando ids de treino coincidem", () => {
+  const sessions = [
+    {
+      id: "s-r1-new", routineId: "r1", workoutId: "w-shared", workoutName: "Treino A",
+      startedAt: "2026-10-10T10:00:00.000Z", finishedAt: "2026-10-10T11:00:00.000Z",
+      entries: [{ exerciseId: "supino", sets: [{ weight: 70, reps: 8, completed: true }] }],
+    },
+    {
+      id: "s-r1-old", routineId: "r1", workoutId: "w-shared", workoutName: "Treino A",
+      startedAt: "2026-10-03T10:00:00.000Z", finishedAt: "2026-10-03T11:00:00.000Z",
+      entries: [{ exerciseId: "supino", sets: [{ weight: 65, reps: 8, completed: true }] }],
+    },
+    {
+      id: "s-r2", routineId: "r2", workoutId: "w-shared", workoutName: "Treino A",
+      startedAt: "2026-10-11T10:00:00.000Z", finishedAt: "2026-10-11T11:00:00.000Z",
+      entries: [{ exerciseId: "supino", sets: [{ weight: 120, reps: 3, completed: true }] }],
+    },
+  ];
+  const history = workoutExerciseHistoryFor(sessions, "w-shared", "supino", "r1");
+  assert.equal(history.length, 2);
+  assert.equal(history[0]?.maxWeight, 70);
+  assert.equal(history[1]?.maxWeight, 65);
+});
