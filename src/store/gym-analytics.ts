@@ -221,13 +221,19 @@ export function sessionVolume(session: Session) {
   return session.entries.reduce(
     (total, entry) =>
       total +
-      entry.sets.reduce((sum, set) => sum + setVolume(set), 0),
+      entry.sets.reduce(
+        (sum, set) => sum + (set.completed ? setVolume(set) : 0),
+        0,
+      ),
     0,
   );
 }
 
 export function sessionSetCount(session: Session) {
-  return session.entries.reduce((total, entry) => total + entry.sets.length, 0);
+  return session.entries.reduce(
+    (total, entry) => total + entry.sets.filter((set) => set.completed).length,
+    0,
+  );
 }
 
 export function sessionDurationSeconds(session: Session) {

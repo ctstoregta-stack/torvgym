@@ -269,3 +269,31 @@ test("dashboard preenche períodos semanais e mensais sem treino com zeros", () 
   assert.deepEqual(months.map((item) => item.sessions), [0, 0, 2]);
   assert.equal(months[1]?.volume, 0);
 });
+
+
+test("métricas ignoram séries não concluídas mesmo quando carga e repetições foram preenchidas", () => {
+  const sessions = [{
+    id: "s-pending-set",
+    routineId: "r1",
+    workoutId: "w1",
+    workoutName: "Treino A",
+    startedAt: "2026-10-12T10:00:00.000Z",
+    finishedAt: "2026-10-12T11:00:00.000Z",
+    entries: [{
+      exerciseId: "supino",
+      sets: [
+        { weight: 60, reps: 10, completed: true },
+        { weight: 100, reps: 8, completed: false },
+      ],
+    }],
+  }];
+
+  assert.equal(buildWorkoutAnalyticsIndex(sessions).get("r1::w1")?.totalVolume, 600);
+  assert.equal(buildWorkoutAnalyticsIndex(sessions).get("r1::w1")?.totalSets, 1);
+  assert.equal(buildPeriodAnalytics(sessions, "week").reduce((sum, period) => sum + period.volume, 0), 600);
+  assert.equal(buildPeriodAnalytics(sessions, "week").reduce((sum, period) => sum + period.sets, 0), 1);
+
+  const dashboard = buildDashboardAnalytics(sessions);
+  assert.equal(dashboard.totalVolume, 600);
+  assert.equal(dashboard.totalSets, 1);
+});
