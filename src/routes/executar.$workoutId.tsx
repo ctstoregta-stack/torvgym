@@ -250,14 +250,14 @@ function ExecutePage() {
 
   const ex = current ? getExercise(current.exerciseId) : undefined;
   const previous = current
-    ? lastSetsForWorkout(session.workoutId, current.exerciseId) ?? lastSetsFor(current.exerciseId)
+    ? lastSetsForWorkout(session.workoutId, current.exerciseId, session.routineId) ?? null
     : null;
   const storedPR = current ? prFor(current.exerciseId) : null;
   const progression = current
-    ? workoutExerciseProgressionFor(state.sessions, session.workoutId, current.exerciseId)
+    ? workoutExerciseProgressionFor(state.sessions, session.workoutId, current.exerciseId, session.routineId)
     : null;
   const progressionPlan = current
-    ? workoutExerciseRecommendationFor(state.sessions, session.workoutId, current.exerciseId)
+    ? workoutExerciseRecommendationFor(state.sessions, session.workoutId, current.exerciseId, session.routineId)
     : null;
   const currentSetIndex = current ? current.sets.findIndex((set) => !set.completed) : -1;
   const nextSetIndex = currentSetIndex >= 0 ? currentSetIndex : current ? current.sets.length : 0;
@@ -272,7 +272,7 @@ function ExecutePage() {
   const nextLabelPrefix = hasNextSet ? "Próxima série" : "Próximo exercício";
   const finish = () => {
     const previous = state.sessions
-      .filter((item) => item.workoutId === workoutId && item.finishedAt)
+      .filter((item) => item.workoutId === workoutId && item.routineId === session.routineId && item.finishedAt)
       .sort((a, b) => new Date(b.finishedAt!).getTime() - new Date(a.finishedAt!).getTime())[0];
     void stopNativeWorkoutNotification();
     const saved = finishSession();
