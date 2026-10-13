@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildDashboardAnalytics, buildExerciseAnalyticsIndex, buildPeriodAnalytics, buildWorkoutAnalyticsIndex, estimateSet1RM, setVolume, exerciseProgressionFor } from "../src/store/gym-analytics.ts";
+import { buildDashboardAnalytics, buildExerciseAnalyticsIndex, buildPeriodAnalytics, buildWorkoutAnalyticsIndex, estimateSet1RM, setVolume, exerciseProgressionFor, workoutExerciseHistoryFor } from "../src/store/gym-analytics.ts";
 
 test("calcula volume e 1RM estimado de uma série", () => {
   const set = { weight: 60, reps: 10, completed: true };
