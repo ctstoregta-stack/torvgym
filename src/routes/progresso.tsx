@@ -80,7 +80,7 @@ function ProgressPage() {
       [...exerciseIndex.keys()]
         .map((exerciseId) => ({
           exerciseId,
-          recommendation: workoutExerciseAdvancedRecommendationFor(completed, activeRoutine?.workouts.find((workout) => workout.exerciseIds.includes(exerciseId))?.id ?? "", exerciseId),
+          recommendation: workoutExerciseAdvancedRecommendationFor(completed, activeRoutine?.workouts.find((workout) => workout.exerciseIds.includes(exerciseId))?.id ?? "", exerciseId, activeRoutine?.id),
         }))
         .filter((item) => item.recommendation)
         .sort((a, b) => {
