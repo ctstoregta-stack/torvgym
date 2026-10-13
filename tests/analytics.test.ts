@@ -107,7 +107,7 @@ test("analytics por treino calcula duração, volume, séries e evolução", () 
     },
   ];
   const analytics = buildWorkoutAnalyticsIndex(sessions);
-  const workout = analytics.get("w1");
+  const workout = analytics.get("r1::w1");
   assert.equal(workout?.sessions.length, 2);
   assert.equal(workout?.latestVolume, 1100);
   assert.equal(workout?.previousVolume, 600);
@@ -211,4 +211,28 @@ test("progressão por treino também respeita a rotina quando ids de treino coin
   assert.equal(history.length, 2);
   assert.equal(history[0]?.maxWeight, 70);
   assert.equal(history[1]?.maxWeight, 65);
+});
+
+
+test("analytics por treino não mistura rotinas com IDs de treino coincidentes", () => {
+  const sessions = [
+    {
+      id: "same-r1", routineId: "r1", workoutId: "shared", workoutName: "Treino A",
+      startedAt: "2026-10-10T10:00:00.000Z", finishedAt: "2026-10-10T11:00:00.000Z",
+      entries: [{ exerciseId: "supino", sets: [{ weight: 60, reps: 10, completed: true }] }],
+    },
+    {
+      id: "same-r2", routineId: "r2", workoutId: "shared", workoutName: "Treino A",
+      startedAt: "2026-10-11T10:00:00.000Z", finishedAt: "2026-10-11T11:00:00.000Z",
+      entries: [{ exerciseId: "supino", sets: [{ weight: 120, reps: 3, completed: true }] }],
+    },
+  ];
+  const analytics = buildWorkoutAnalyticsIndex(sessions);
+  assert.equal(analytics.size, 2);
+  assert.equal(analytics.get("r1::shared")?.routineId, "r1");
+  assert.equal(analytics.get("r1::shared")?.totalVolume, 600);
+  assert.equal(analytics.get("r1::shared")?.sessions.length, 1);
+  assert.equal(analytics.get("r2::shared")?.routineId, "r2");
+  assert.equal(analytics.get("r2::shared")?.totalVolume, 360);
+  assert.equal(analytics.get("r2::shared")?.sessions.length, 1);
 });
