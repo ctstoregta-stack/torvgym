@@ -40,8 +40,8 @@ test("gera tendência e sugestão conservadora de progressão", () => {
       routineId: "r1",
       workoutId: "w1",
       workoutName: "Treino A",
-      startedAt: "2026-10-03T10:00:00.000Z",
-      finishedAt: "2026-10-03T11:00:00.000Z",
+      startedAt: new Date(Date.now() - 2 * 86400000 - 3600000).toISOString(),
+      finishedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
       entries: [{
         exerciseId: "supino",
         sets: [
@@ -55,8 +55,8 @@ test("gera tendência e sugestão conservadora de progressão", () => {
       routineId: "r1",
       workoutId: "w1",
       workoutName: "Treino A",
-      startedAt: "2026-10-01T10:00:00.000Z",
-      finishedAt: "2026-10-01T11:00:00.000Z",
+      startedAt: new Date(Date.now() - 4 * 86400000 - 3600000).toISOString(),
+      finishedAt: new Date(Date.now() - 4 * 86400000).toISOString(),
       entries: [{
         exerciseId: "supino",
         sets: [
