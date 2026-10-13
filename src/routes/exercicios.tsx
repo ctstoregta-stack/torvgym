@@ -87,6 +87,7 @@ function ExercisesPage() {
   return (
     <AppShell title="Exercícios">
       <Input
+        aria-label="Buscar exercícios por nome ou equipamento"
         placeholder="Buscar exercício"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -96,7 +97,7 @@ function ExercisesPage() {
         <button
           aria-pressed={scope === "all" && category === null}
           onClick={() => { setScope("all"); setCategory(null); setEquipment(null); }}
-          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+          className={`min-h-10 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
             category === null ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"
           }`}
         >
@@ -105,7 +106,7 @@ function ExercisesPage() {
         <button
           aria-pressed={scope === "custom"}
           onClick={() => { setScope("custom"); setCategory(null); setEquipment(null); }}
-          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${scope === "custom" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
+          className={`min-h-10 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${scope === "custom" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
         >
           Personalizados
         </button>
@@ -114,7 +115,7 @@ function ExercisesPage() {
             key={item}
             aria-pressed={equipment === item}
             onClick={() => { setScope("all"); setCategory(null); setEquipment(equipment === item ? null : item); }}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${equipment === item ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
+            className={`min-h-10 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${equipment === item ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
           >
             {item}
           </button>
@@ -124,7 +125,7 @@ function ExercisesPage() {
             key={c}
             aria-pressed={scope === "all" && category === c}
             onClick={() => { setScope("all"); setCategory(c); setEquipment(null); }}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+            className={`min-h-10 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
               category === c ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"
             }`}
           >
