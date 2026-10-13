@@ -36,7 +36,7 @@ export const ExerciseMedia = memo(function ExerciseMedia({
   const [visible, setVisible] = useState(loading === "eager");
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const [useProxy, setUseProxy] = useState(false);
+  const [sourceAttempt, setSourceAttempt] = useState(0);
   // Começa otimista para manter SSR/hidratação estáveis; o efeito sincroniza o estado real.
   const [online, setOnline] = useState(true);
 
@@ -45,7 +45,7 @@ export const ExerciseMedia = memo(function ExerciseMedia({
       setOnline(true);
       setFailed(false);
       setLoaded(false);
-      setUseProxy(false);
+      setSourceAttempt(0);
     };
     const handleOffline = () => setOnline(false);
     window.addEventListener("online", handleOnline);
@@ -59,7 +59,7 @@ export const ExerciseMedia = memo(function ExerciseMedia({
   useEffect(() => {
     setFailed(false);
     setLoaded(false);
-    setUseProxy(false);
+    setSourceAttempt(0);
     if (loading === "eager") {
       setVisible(true);
       return;
@@ -89,8 +89,17 @@ export const ExerciseMedia = memo(function ExerciseMedia({
 
   const sourceUrl = useMemo(() => {
     if (!exercise.gif_url) return "";
-    return useProxy ? proxiedGifUrl(exercise.gif_url) : exercise.gif_url;
-  }, [exercise.gif_url, useProxy]);
+    if (sourceAttempt === 0) return exercise.gif_url;
+    if (sourceAttempt === 1) return proxiedGifUrl(exercise.gif_url);
+
+    try {
+      const parsed = new URL(exercise.gif_url);
+      const pathAndQuery = `${parsed.hostname}${parsed.pathname}${parsed.search}`;
+      return `https://images.weserv.nl/?url=${encodeURIComponent(pathAndQuery)}&output=gif&w=480&h=480&fit=inside`;
+    } catch {
+      return exercise.gif_url;
+    }
+  }, [exercise.gif_url, sourceAttempt]);
 
   const showFallback = failed || !exercise.gif_url || !online;
 
@@ -106,11 +115,11 @@ export const ExerciseMedia = memo(function ExerciseMedia({
           loading={loading}
           decoding="async"
           fetchPriority={loading === "eager" ? "high" : "low"}
-          referrerPolicy="no-referrer"
+          referrerPolicy="strict-origin-when-cross-origin"
           onError={() => {
-            if (!useProxy) {
-              setUseProxy(true);
-              setLoaded(false);
+            setLoaded(false);
+            if (sourceAttempt < 2) {
+              setSourceAttempt((attempt) => attempt + 1);
             } else {
               setFailed(true);
             }
@@ -143,7 +152,7 @@ export const ExerciseMedia = memo(function ExerciseMedia({
                 event.stopPropagation();
                 setFailed(false);
                 setLoaded(false);
-                setUseProxy(false);
+                setSourceAttempt(0);
               }}
               className="min-h-9 rounded-full bg-primary/15 px-3 text-[11px] font-semibold text-primary tap active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
             >
