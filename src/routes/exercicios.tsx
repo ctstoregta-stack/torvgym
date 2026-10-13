@@ -98,7 +98,7 @@ function ExercisesPage() {
       <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
         <button
           aria-pressed={scope === "all" && category === null}
-          onClick={() => { setScope("all"); setCategory(null); setEquipment(null); }}
+          onClick={() => { setScope("all"); setCategory(null); setEquipment(null); setFavoritesOnly(false); }}
           className={`min-h-10 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
             category === null ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"
           }`}
@@ -205,7 +205,9 @@ function ExercisesPage() {
         )}
         {filtered.length === 0 && (
           <p className="py-10 text-center text-sm text-muted-foreground">
-            Nenhum exercício encontrado.
+            {favoritesOnly && state.favoriteExerciseIds.length === 0
+              ? "Você ainda não favoritou exercícios. Toque na estrela de um exercício para salvá-lo aqui."
+              : "Nenhum exercício encontrado."}
           </p>
         )}
       </div>
