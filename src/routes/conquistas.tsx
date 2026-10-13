@@ -26,17 +26,23 @@ function AchievementsPage() {
     setWeeklyVolumeTarget(state.goals.weeklyVolumeTarget);
     setStreakTarget(state.goals.streakTarget);
   }, [ready, state.goals]);
-  const recentSessions = useMemo(
-    () => state.sessions.filter((session) => session.finishedAt && new Date(session.finishedAt).getTime() >= Date.now() - 7 * 86400000),
-    [state.sessions],
-  );
+  const recentSessions = useMemo(() => {
+    const now = new Date();
+    const mondayOffset = (now.getDay() + 6) % 7;
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - mondayOffset);
+    const nextWeekStart = new Date(weekStart);
+    nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+    return state.sessions.filter((session) => {
+      if (!session.finishedAt) return false;
+      const finishedAt = new Date(session.finishedAt);
+      return finishedAt >= weekStart && finishedAt < nextWeekStart;
+    });
+  }, [state.sessions]);
   const weeklyVolume = recentSessions.reduce((sum, session) => sum + sessionVolume(session), 0);
   const saveGoals = () => {
     updateGoals({ weeklySessionsTarget, weeklyVolumeTarget, streakTarget });
   };
   if (!ready) return <AppShell title="Conquistas"><div className="h-40 animate-pulse rounded-xl bg-card" /></AppShell>;
-  if (!summary.totalSessions) return <AppShell title="Conquistas" back={{to:"/"}}><EmptyState title="Sua primeira conquista está perto" description="Conclua seu primeiro treino para começar a acumular XP." action={<Link to="/"><Button>Começar treino</Button></Link>} /></AppShell>;
-
   return <AppShell title="Conquistas" back={{to:"/"}}>
     <Card>
       <div className="flex items-end justify-between gap-3"><div><p className="text-xs text-muted-foreground">Nível</p><p className="text-3xl font-bold">{summary.level}</p></div><div className="text-right"><p className="text-xs text-muted-foreground">XP</p><p className="text-lg font-bold tabular-nums">{summary.xp.toLocaleString("pt-BR")}</p></div></div>
@@ -64,13 +70,20 @@ function AchievementsPage() {
     </Card>
 
     <Card className="mt-4"><p className="text-sm font-semibold">Conquistas</p><div className="mt-3 space-y-2">
-      {summary.achievements.map(a => <div key={a.id} className={`rounded-xl p-3 ${a.unlocked ? "bg-primary/10 border border-primary/20" : "bg-elevated"}`}><div className="flex items-center justify-between gap-2"><div><p className="text-sm font-semibold">{a.title}</p><p className="text-xs text-muted-foreground">{a.description}</p></div><Tag>{a.unlocked ? "Concluída" : `${a.progress}/${a.target}`}</Tag></div></div>)}
+      {!summary.totalSessions ? (
+        <EmptyState title="Sua primeira conquista está perto" description="Conclua seu primeiro treino para começar a acumular XP." action={<Link to="/"><Button>Começar treino</Button></Link>} />
+      ) : summary.achievements.map(a => <div key={a.id} className={`rounded-xl p-3 ${a.unlocked ? "bg-primary/10 border border-primary/20" : "bg-elevated"}`}><div className="flex items-center justify-between gap-2"><div><p className="text-sm font-semibold">{a.title}</p><p className="text-xs text-muted-foreground">{a.description}</p></div><Tag>{a.unlocked ? "Concluída" : `${a.progress}/${a.target}`}</Tag></div></div>)}
     </div></Card>
   </AppShell>;
 }
 
 function GoalInput({ label, value, onChange, min, max, step = 1 }: { label: string; value: number; onChange: (value: number) => void; min: number; max: number; step?: number }) {
-  return <label className="block text-xs font-semibold text-muted-foreground">{label}<input type="number" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} className="mt-1 h-10 w-full rounded-lg border border-border bg-elevated px-3 text-sm font-normal text-foreground" /></label>;
+  return <label className="block text-xs font-semibold text-muted-foreground">{label}<input type="number" min={min} max={max} step={step} value={value} onChange={(event) => {
+    const parsed = Number(event.target.value);
+    if (!Number.isFinite(parsed)) return;
+    const stepped = step > 1 ? Math.round(parsed / step) * step : Math.round(parsed);
+    onChange(Math.min(max, Math.max(min, stepped)));
+  }} className="mt-1 h-10 w-full rounded-lg border border-border bg-elevated px-3 text-sm font-normal text-foreground" /></label>;
 }
 
 function GoalProgress({ label, current, target }: { label: string; current: number; target: number }) {
