@@ -236,3 +236,36 @@ test("analytics por treino não mistura rotinas com IDs de treino coincidentes",
   assert.equal(analytics.get("r2::shared")?.totalVolume, 360);
   assert.equal(analytics.get("r2::shared")?.sessions.length, 1);
 });
+
+
+test("dashboard preenche períodos semanais e mensais sem treino com zeros", () => {
+  const sessions = [
+    {
+      id: "s-oct-1", routineId: "r1", workoutId: "w1", workoutName: "Treino A",
+      startedAt: "2026-10-01T10:00:00.000Z", finishedAt: "2026-10-01T11:00:00.000Z",
+      entries: [{ exerciseId: "supino", sets: [{ weight: 60, reps: 5, completed: true }] }],
+    },
+    {
+      id: "s-oct-8", routineId: "r1", workoutId: "w1", workoutName: "Treino A",
+      startedAt: "2026-10-08T10:00:00.000Z", finishedAt: "2026-10-08T11:00:00.000Z",
+      entries: [{ exerciseId: "supino", sets: [{ weight: 70, reps: 5, completed: true }] }],
+    },
+  ];
+
+  const weeks = buildPeriodAnalytics(sessions, "week", {
+    count: 4,
+    referenceDate: new Date("2026-10-13T12:00:00"),
+  });
+  assert.deepEqual(weeks.map((item) => item.key), ["2026-09-21", "2026-09-28", "2026-10-05", "2026-10-12"]);
+  assert.deepEqual(weeks.map((item) => item.sessions), [0, 1, 1, 0]);
+  assert.equal(weeks[0]?.volume, 0);
+  assert.equal(weeks[3]?.sets, 0);
+
+  const months = buildPeriodAnalytics(sessions, "month", {
+    count: 3,
+    referenceDate: new Date("2026-10-13T12:00:00"),
+  });
+  assert.deepEqual(months.map((item) => item.key), ["2026-08", "2026-09", "2026-10"]);
+  assert.deepEqual(months.map((item) => item.sessions), [0, 0, 2]);
+  assert.equal(months[1]?.volume, 0);
+});

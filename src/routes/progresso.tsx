@@ -5,12 +5,12 @@ import { AppShell } from "@/components/AppShell";
 import { Button, Card, EmptyState, Tag } from "@/components/ui-kit";
 import {
   buildDashboardAnalytics,
-  buildExerciseAnalyticsIndex,
   buildPeriodAnalytics,
   buildPersonalRecords,
   exerciseProgressionFromHistory,
   buildWeeklyGoalInsights,
   workoutExerciseAdvancedRecommendationFor,
+  workoutExerciseHistoryFor,
 } from "@/store/gym-analytics";
 import { useGym } from "@/store/gym-store";
 
@@ -40,10 +40,25 @@ function ProgressPage() {
   );
   const dashboard = useMemo(() => buildDashboardAnalytics(completed), [completed]);
   const goalInsights = useMemo(() => buildWeeklyGoalInsights(completed, state.goals), [completed, state.goals]);
-  const weekly = useMemo(() => buildPeriodAnalytics(completed, "week").slice(-8), [completed]);
-  const weeklyTrend = useMemo(() => buildPeriodAnalytics(completed, "week").slice(-12), [completed]);
-  const monthly = useMemo(() => buildPeriodAnalytics(completed, "month").slice(-6), [completed]);
-  const exerciseIndex = useMemo(() => buildExerciseAnalyticsIndex(completed), [completed]);
+  const weeklyTrend = useMemo(
+    () => buildPeriodAnalytics(completed, "week", { count: 12 }),
+    [completed],
+  );
+  const monthly = useMemo(
+    () => buildPeriodAnalytics(completed, "month", { count: 6 }),
+    [completed],
+  );
+  const routineExerciseWorkouts = useMemo(() => {
+    const workoutsByExercise = new Map<string, string>();
+    for (const workout of activeRoutine?.workouts ?? []) {
+      for (const exerciseId of workout.exerciseIds) {
+        if (!workoutsByExercise.has(exerciseId)) {
+          workoutsByExercise.set(exerciseId, workout.id);
+        }
+      }
+    }
+    return workoutsByExercise;
+  }, [activeRoutine]);
   const personalRecords = useMemo(() => buildPersonalRecords(completed).slice(0, 6), [completed]);
   const nextWorkout = useMemo(() => {
     if (state.activeSession) {
@@ -61,10 +76,12 @@ function ProgressPage() {
 
   const progressions = useMemo(
     () =>
-      [...exerciseIndex.entries()]
-        .map(([exerciseId, data]) => ({
+      [...routineExerciseWorkouts.entries()]
+        .map(([exerciseId, workoutId]) => ({
           exerciseId,
-          progression: exerciseProgressionFromHistory(data.history),
+          progression: exerciseProgressionFromHistory(
+            workoutExerciseHistoryFor(completed, workoutId, exerciseId, activeRoutine?.id),
+          ),
         }))
         .filter((item) => item.progression)
         .sort(
@@ -73,14 +90,19 @@ function ProgressPage() {
             Math.abs(a.progression?.estimated1RMChangePercent ?? 0),
         )
         .slice(0, 6),
-    [exerciseIndex],
+    [activeRoutine?.id, completed, routineExerciseWorkouts],
   );
   const actionableProgressions = useMemo(
     () =>
-      [...exerciseIndex.keys()]
-        .map((exerciseId) => ({
+      [...routineExerciseWorkouts.entries()]
+        .map(([exerciseId, workoutId]) => ({
           exerciseId,
-          recommendation: workoutExerciseAdvancedRecommendationFor(completed, activeRoutine?.workouts.find((workout) => workout.exerciseIds.includes(exerciseId))?.id ?? "", exerciseId, activeRoutine?.id),
+          recommendation: workoutExerciseAdvancedRecommendationFor(
+            completed,
+            workoutId,
+            exerciseId,
+            activeRoutine?.id,
+          ),
         }))
         .filter((item) => item.recommendation)
         .sort((a, b) => {
@@ -88,7 +110,7 @@ function ProgressPage() {
           return priority[b.recommendation!.action] - priority[a.recommendation!.action];
         })
         .slice(0, 5),
-    [activeRoutine, completed, exerciseIndex],
+    [activeRoutine?.id, completed, routineExerciseWorkouts],
   );
 
   if (!ready) return <AppShell title="Progresso"><div className="h-40 animate-pulse rounded-xl bg-card" /></AppShell>;
@@ -240,7 +262,7 @@ function ProgressPage() {
             <div key={item.key} className="grid grid-cols-[48px_1fr_auto] items-center gap-2">
               <span className="text-[11px] text-muted-foreground">{item.label}</span>
               <div className="h-2 overflow-hidden rounded-full bg-elevated">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, Math.max(6, (item.volume / Math.max(...weeklyTrend.map((w) => w.volume), 1)) * 100))}%` }} />
+                <div className="h-full rounded-full bg-primary" style={{ width: item.volume > 0 ? `${Math.min(100, Math.max(6, (item.volume / Math.max(...weeklyTrend.map((w) => w.volume), 1)) * 100))}%` : "0%" }} />
               </div>
               <span className="text-[11px] font-semibold tabular-nums">{item.sessions}x · {Math.round(item.volume)} kg</span>
             </div>

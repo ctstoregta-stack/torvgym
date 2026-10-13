@@ -302,9 +302,17 @@ export function buildWorkoutAnalyticsIndex(sessions: Session[]) {
   return index;
 }
 
+export type PeriodAnalyticsOptions = {
+  /** Number of consecutive calendar periods to include, including the current one. */
+  count?: number;
+  /** Injectable reference date keeps rolling-period calculations deterministic in tests. */
+  referenceDate?: Date;
+};
+
 export function buildPeriodAnalytics(
   sessions: Session[],
   period: "week" | "month",
+  options: PeriodAnalyticsOptions = {},
 ) {
   const groups = new Map<string, PeriodAnalytics>();
 
@@ -346,7 +354,63 @@ export function buildPeriodAnalytics(
     groups.set(key, current);
   }
 
-  return [...groups.values()].sort((a, b) => a.key.localeCompare(b.key));
+  const aggregated = [...groups.values()].sort((a, b) => a.key.localeCompare(b.key));
+  const requestedCount = options.count;
+  if (requestedCount == null || !Number.isFinite(requestedCount) || requestedCount < 1) {
+    return aggregated;
+  }
+
+  const count = Math.floor(requestedCount);
+  if (count < 1) return aggregated;
+  const referenceDate = options.referenceDate ?? new Date();
+  const periods: PeriodAnalytics[] = [];
+
+  if (period === "week") {
+    const currentMondayOffset = (referenceDate.getDay() + 6) % 7;
+    const currentMonday = new Date(
+      referenceDate.getFullYear(),
+      referenceDate.getMonth(),
+      referenceDate.getDate() - currentMondayOffset,
+    );
+
+    for (let offset = count - 1; offset >= 0; offset -= 1) {
+      const start = new Date(
+        currentMonday.getFullYear(),
+        currentMonday.getMonth(),
+        currentMonday.getDate() - offset * 7,
+      );
+      const key = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
+      periods.push(
+        groups.get(key) ?? {
+          key,
+          label: start.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+          sessions: 0,
+          volume: 0,
+          sets: 0,
+        },
+      );
+    }
+  } else {
+    for (let offset = count - 1; offset >= 0; offset -= 1) {
+      const date = new Date(
+        referenceDate.getFullYear(),
+        referenceDate.getMonth() - offset,
+        1,
+      );
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      periods.push(
+        groups.get(key) ?? {
+          key,
+          label: date.toLocaleDateString("pt-BR", { month: "short", year: "numeric" }),
+          sessions: 0,
+          volume: 0,
+          sets: 0,
+        },
+      );
+    }
+  }
+
+  return periods;
 }
 
 export type DashboardAnalytics = {
@@ -411,7 +475,7 @@ export function buildDashboardAnalytics(sessions: Session[]): DashboardAnalytics
   );
   const sessionsLast30Days = recent30Sessions.length;
   const volumeLast30Days = recent30Sessions.reduce((sum, session) => sum + sessionVolume(session), 0);
-  const averageSessionsPerWeek = Math.round((sessionsLast30Days / 4) * 10) / 10;
+  const averageSessionsPerWeek = Math.round((sessionsLast30Days / (30 / 7)) * 10) / 10;
   const activeWeeksLast8 = new Set(
     completed
       .filter((session) => new Date(session.finishedAt ?? session.startedAt).getTime() >= Date.now() - 56 * 24 * 60 * 60 * 1000)
@@ -419,7 +483,7 @@ export function buildDashboardAnalytics(sessions: Session[]): DashboardAnalytics
         const date = new Date(session.finishedAt ?? session.startedAt);
         const mondayOffset = (date.getDay() + 6) % 7;
         const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate() - mondayOffset);
-        return monday.toISOString().slice(0, 10);
+        return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, "0")}-${String(monday.getDate()).padStart(2, "0")}`;
       }),
   ).size;
   const bestSessionVolume = completed.reduce((best, session) => Math.max(best, sessionVolume(session)), 0);
