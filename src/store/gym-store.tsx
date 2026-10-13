@@ -347,7 +347,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
       }));
       return id;
     },
-    renameRoutine:
+    renameRoutine: (id, name) =>
       setState((s) => ({
         ...s,
         routines: s.routines.map((r) => (r.id === id ? { ...r, name } : r)),
