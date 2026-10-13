@@ -236,11 +236,11 @@ function ProgressPage() {
       <Card className="mt-4">
         <p className="text-sm font-semibold">Semanas recentes</p>
         <div className="mt-3 space-y-2">
-          {weekly.map((item) => (
+          {weeklyTrend.map((item) => (
             <div key={item.key} className="grid grid-cols-[48px_1fr_auto] items-center gap-2">
               <span className="text-[11px] text-muted-foreground">{item.label}</span>
               <div className="h-2 overflow-hidden rounded-full bg-elevated">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, Math.max(6, (item.volume / Math.max(...weekly.map((w) => w.volume), 1)) * 100))}%` }} />
+                <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, Math.max(6, (item.volume / Math.max(...weeklyTrend.map((w) => w.volume), 1)) * 100))}%` }} />
               </div>
               <span className="text-[11px] font-semibold tabular-nums">{item.sessions}x · {Math.round(item.volume)} kg</span>
             </div>
