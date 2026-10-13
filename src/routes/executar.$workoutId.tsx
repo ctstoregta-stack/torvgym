@@ -582,7 +582,7 @@ function ExecutePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {rest && <div className="h-24" />}
+      {rest && <div aria-hidden="true" className="h-44 sm:h-32" />}
 
       <RestTimer
         rest={rest}
