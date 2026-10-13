@@ -722,8 +722,9 @@ export function workoutExerciseRecommendationFor(
   sessions: Session[],
   workoutId: string,
   exerciseId: string,
+  routineId?: string,
 ): ProgressionRecommendation | null {
-  return workoutExerciseAdvancedRecommendationFor(sessions, workoutId, exerciseId);
+  return workoutExerciseAdvancedRecommendationFor(sessions, workoutId, exerciseId, routineId);
 }
 
 
