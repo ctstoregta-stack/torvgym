@@ -25,11 +25,12 @@ export const Route = createFileRoute("/exercicios")({
 });
 
 function ExercisesPage() {
-  const { ready, exercises, addCustomExercise, updateCustomExercise, deleteCustomExercise, prFor } = useGym();
+  const { ready, state, exercises, toggleFavoriteExercise, addCustomExercise, updateCustomExercise, deleteCustomExercise, prFor } = useGym();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [equipment, setEquipment] = useState<string | null>(null);
   const [scope, setScope] = useState<"all" | "custom">("all");
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [visibleLimit, setVisibleLimit] = useState(24);
@@ -62,6 +63,7 @@ function ExercisesPage() {
         .filter(
           (e) =>
             (scope === "all" || e.custom === true) &&
+            (!favoritesOnly || state.favoriteExerciseIds.includes(e.id)) &&
             (!category || e.category === category) &&
             (!equipment || e.equipment === equipment) &&
             `${e.name} ${e.equipment}`.toLocaleLowerCase("pt-BR").includes(query.toLocaleLowerCase("pt-BR")),
@@ -69,10 +71,10 @@ function ExercisesPage() {
         .sort((a, b) =>
           a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }),
         ),
-    [exercises, query, category, equipment, scope],
+    [exercises, query, category, equipment, scope, favoritesOnly, state.favoriteExerciseIds],
   );
 
-  useEffect(() => { setVisibleLimit(24); }, [query, category, equipment, scope]);
+  useEffect(() => { setVisibleLimit(24); }, [query, category, equipment, scope, favoritesOnly]);
 
   const visibleExercises = filtered.slice(0, visibleLimit);
 
@@ -104,7 +106,14 @@ function ExercisesPage() {
           Todos
         </button>
         <button
-          aria-pressed={scope === "custom"}
+          aria-pressed={favoritesOnly}
+          onClick={() => setFavoritesOnly((current) => !current)}
+          className={`min-h-10 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${favoritesOnly ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
+        >
+          Favoritos
+        </button>
+        <button
+          aria-pressed={scope === "custom"
           onClick={() => { setScope("custom"); setCategory(null); setEquipment(null); }}
           className={`min-h-10 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${scope === "custom" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
         >
@@ -149,6 +158,20 @@ function ExercisesPage() {
                   <p className="text-xs text-muted-foreground">{ex.category} · {ex.equipment}</p>
                   {pr != null && <p className="mt-0.5 text-xs font-semibold text-gold">PR {pr} kg</p>}
                 </div>
+                <button
+                  type="button"
+                  aria-label={state.favoriteExerciseIds.includes(ex.id) ? `Remover ${ex.name} dos favoritos` : `Adicionar ${ex.name} aos favoritos`}
+                  aria-pressed={state.favoriteExerciseIds.includes(ex.id)}
+                  title={state.favoriteExerciseIds.includes(ex.id) ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                  className={`min-h-10 min-w-10 shrink-0 rounded-full text-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${state.favoriteExerciseIds.includes(ex.id) ? "text-gold" : "text-muted-foreground"}`}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    toggleFavoriteExercise(ex.id);
+                  }}
+                >
+                  {state.favoriteExerciseIds.includes(ex.id) ? "★" : "☆"}
+                </button>
                 {ex.custom && (
                   <div className="flex shrink-0 flex-col gap-1">
                     <button type="button" className="text-[11px] font-semibold text-primary" onClick={(event) => {
