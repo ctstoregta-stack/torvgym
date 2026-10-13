@@ -533,9 +533,13 @@ export function workoutExerciseHistoryFor(
   sessions: Session[],
   workoutId: string,
   exerciseId: string,
+  routineId?: string,
 ) {
   return exerciseHistoryFor(
-    sessions.filter((session) => session.workoutId === workoutId),
+    sessions.filter((session) =>
+      session.workoutId === workoutId &&
+      (routineId === undefined || session.routineId === routineId),
+    ),
     exerciseId,
   );
 }
@@ -544,9 +548,10 @@ export function workoutExerciseProgressionFor(
   sessions: Session[],
   workoutId: string,
   exerciseId: string,
+  routineId?: string,
 ) {
   return exerciseProgressionFromHistory(
-    workoutExerciseHistoryFor(sessions, workoutId, exerciseId),
+    workoutExerciseHistoryFor(sessions, workoutId, exerciseId, routineId),
   );
 }
 
@@ -632,8 +637,9 @@ export function workoutExerciseAdvancedRecommendationFor(
   sessions: Session[],
   workoutId: string,
   exerciseId: string,
+  routineId?: string,
 ): ProgressionRecommendation | null {
-  const history = workoutExerciseHistoryFor(sessions, workoutId, exerciseId).slice(0, 4);
+  const history = workoutExerciseHistoryFor(sessions, workoutId, exerciseId, routineId).slice(0, 4);
   const progression = exerciseProgressionFromHistory(history);
   if (!progression) return null;
 
