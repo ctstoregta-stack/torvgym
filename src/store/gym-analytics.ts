@@ -190,6 +190,7 @@ export function buildExerciseAnalyticsIndex(sessions: Session[]) {
   return index;
 }
 export type WorkoutAnalytics = {
+  routineId: string;
   workoutId: string;
   workoutName: string;
   sessions: {
@@ -255,7 +256,9 @@ export function buildWorkoutAnalyticsIndex(sessions: Session[]) {
     );
 
   for (const session of sortedSessions) {
-    const current = index.get(session.workoutId) ?? {
+    const key = `${session.routineId}::${session.workoutId}`;
+    const current = index.get(key) ?? {
+      routineId: session.routineId,
       workoutId: session.workoutId,
       workoutName: session.workoutName,
       sessions: [],
@@ -280,7 +283,7 @@ export function buildWorkoutAnalyticsIndex(sessions: Session[]) {
     current.totalVolume += volume;
     current.totalSets += sets;
 
-    index.set(session.workoutId, current);
+    index.set(key, current);
   }
 
   for (const value of index.values()) {
