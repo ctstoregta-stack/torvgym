@@ -364,36 +364,43 @@ function ExecutePage() {
 
 
           {progression && (
-            <div className="border-b border-border bg-card px-3 py-2.5">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Orientação para este treino</p>
-              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                <span className="font-semibold">Última vez: {progression.latest.maxWeight || "—"} kg</span>
-                {progression.previous && <span className="text-muted-foreground">· anterior {progression.previous.maxWeight || "—"} kg</span>}
-                <span className="text-primary">
-                  {progression.recommendation === "increase-load" ? "Aumentar carga" :
-                   progression.recommendation === "add-reps" ? "Tentar mais repetições" :
-                   progression.recommendation === "recover" ? "Priorizar recuperação" : "Manter e consolidar"}
+            <details className="border-b border-border bg-card px-3 py-2.5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
+                <span className="min-w-0">
+                  <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Orientação para este treino</span>
+                  <span className="mt-1 block text-xs">
+                    <strong>Última vez: {progression.latest.maxWeight || "—"} kg</strong>
+                    <span className="text-primary"> · {progression.recommendation === "increase-load" ? "Aumentar carga" :
+                      progression.recommendation === "add-reps" ? "Tentar mais repetições" :
+                      progression.recommendation === "recover" ? "Priorizar recuperação" : "Manter e consolidar"}</span>
+                  </span>
                 </span>
+                <span aria-hidden="true" className="shrink-0 text-sm text-muted-foreground">⌄</span>
+              </summary>
+              <div className="mt-2 space-y-1.5 border-t border-border/70 pt-2">
+                {progression.previous && (
+                  <p className="text-[11px] text-muted-foreground">Sessão anterior: <strong className="text-foreground">{progression.previous.maxWeight || "—"} kg</strong></p>
+                )}
+                {progressionPlan && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Próxima meta:{" "}
+                    <strong className="text-foreground">
+                      {progressionPlan.targetWeight != null ? progressionPlan.targetWeight + " kg" : "carga atual"}
+                      {progressionPlan.targetReps != null ? " × " + progressionPlan.targetReps + " reps" : ""}
+                    </strong>
+                    {" · "}{progressionPlan.reason}
+                  </p>
+                )}
+                {progressionPlan && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Tendência: <strong className="text-foreground">
+                      {progressionPlan.trend === "improving" ? "evoluindo" : progressionPlan.trend === "declining" ? "em queda" : "estável"}
+                    </strong>
+                    {" · confiança "}{progressionPlan.confidence === "high" ? "alta" : progressionPlan.confidence === "medium" ? "média" : "baixa"}
+                  </p>
+                )}
               </div>
-              {progressionPlan && (
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Próxima meta:{" "}
-                  <strong className="text-foreground">
-                    {progressionPlan.targetWeight != null ? progressionPlan.targetWeight + " kg" : "carga atual"}
-                    {progressionPlan.targetReps != null ? " × " + progressionPlan.targetReps + " reps" : ""}
-                  </strong>
-                  {" · "}{progressionPlan.reason}
-                </p>
-              )}
-              {progressionPlan && (
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Tendência: <strong className="text-foreground">
-                    {progressionPlan.trend === "improving" ? "evoluindo" : progressionPlan.trend === "declining" ? "em queda" : "estável"}
-                  </strong>
-                  {" · confiança "}{progressionPlan.confidence === "high" ? "alta" : progressionPlan.confidence === "medium" ? "média" : "baixa"}
-                </p>
-              )}
-            </div>
+            </details>
           )}
           <div className="space-y-2 p-3">
             {current.sets.map((set, i) => {
