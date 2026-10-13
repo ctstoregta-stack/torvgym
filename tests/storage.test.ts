@@ -219,6 +219,7 @@ test("uid gera ids com o prefixo pedido e sem repetição", async () => {
 test("createBackup e parseBackup fazem round-trip validado", async () => {
   const state = {
     ...emptyState,
+    favoriteExerciseIds: ["supino", "agachamento"],
     routines: [
       {
         id: "r-backup",
@@ -231,6 +232,7 @@ test("createBackup e parseBackup fazem round-trip validado", async () => {
   };
   const backup = createBackup(state);
   assert.deepEqual(parseBackup(backup), state);
+  assert.deepEqual(parseBackup(backup)?.favoriteExerciseIds, ["supino", "agachamento"]);
 });
 
 test("parseBackup rejeita formato desconhecido e JSON inválido", async () => {
