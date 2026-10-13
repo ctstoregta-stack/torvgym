@@ -12,6 +12,7 @@ import { EXERCISE_DB } from "@/data/exercises";
 import { createBackup, emptyState, loadState, parseBackup, saveState, storageSizeBytes, uid } from "@/lib/storage";
 import { buildExerciseAnalyticsIndex, sessionPRFor } from "@/store/gym-analytics";
 import { validateExercise } from "@/lib/exercise-validation";
+import { duplicateRoutineTemplate } from "@/lib/routine-templates";
 import { createEncryptedRecoveryPackage, createEncryptedSyncPackage, decryptEncryptedRecoveryPackage, decryptEncryptedSyncPackage } from "@/lib/cloud-sync";
 import { createProtectedBackup, decryptProtectedBackup } from "@/lib/protected-backup";
 import { createWorkoutSession, finishWorkoutSession, updateWorkoutSessionSet } from "@/store/gym-session";
@@ -85,6 +86,7 @@ type Ctx = {
     | null;
   // routines
   createRoutine: (name: string) => string;
+  duplicateRoutine: (routineId: string) => string | null;
   renameRoutine: (id: string, name: string) => void;
   deleteRoutine: (id: string) => void;
   setActiveRoutine: (id: string) => void;
@@ -333,7 +335,23 @@ export function GymProvider({ children }: { children: ReactNode }) {
       }));
       return id;
     },
-    renameRoutine: (id, name) =>
+    duplicateRoutine: (routineId) => {
+      let duplicatedId: string | null = null;
+      setState((s) => {
+        const source = s.routines.find((routine) => routine.id === routineId);
+        if (!source) return s;
+        const id = uid("rot");
+        duplicatedId = id;
+        const duplicate = duplicateRoutineTemplate(source, id, () => uid("wk"));
+        return {
+          ...s,
+          activeRoutineId: id,
+          routines: [...s.routines, duplicate],
+        };
+      });
+      return duplicatedId;
+    },
+    renameRoutine:
       setState((s) => ({
         ...s,
         routines: s.routines.map((r) => (r.id === id ? { ...r, name } : r)),
