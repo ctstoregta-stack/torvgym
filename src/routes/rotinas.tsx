@@ -39,6 +39,7 @@ function RoutinesPage() {
     activeRoutine,
     setActiveRoutine,
     createRoutine,
+    duplicateRoutine,
     renameRoutine,
     deleteRoutine,
     createWorkout,
@@ -268,6 +269,19 @@ function RoutinesPage() {
           </DialogHeader>
           {settingsRoutine && (
             <div className="grid gap-2 pt-2">
+              <Button
+                variant="outline"
+                className="justify-start"
+                onClick={() => {
+                  if (settingsRoutine) {
+                    const duplicatedId = duplicateRoutine(settingsRoutine);
+                    if (duplicatedId) setExpandedRoutines((current) => new Set([...current, duplicatedId]));
+                  }
+                  setSettingsRoutine(null);
+                }}
+              >
+                Duplicar rotina
+              </Button>
               <Button
                 variant="outline"
                 className="justify-start"
