@@ -131,7 +131,7 @@ function HistoryPage() {
                       }}
                       formatter={(value) => [`${Number(value).toLocaleString("pt-BR")} kg`, ""]}
                     />
-                    <Bar dataKey="volume" fill="var(--primary)" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+                    <Bar dataKey="volume" fill="var(--primary)" radius={[6, 6, 0, 0]} activeBar={false} isAnimationActive={false} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
