@@ -71,7 +71,7 @@ function weekKeyFromDay(day: string) {
 function weeklyStreaks(days: string[], now: Date) {
   const activeWeeks = new Set(days.map(weekKeyFromDay));
   const currentWeek = mondayKey(now);
-  let cursor = new Date(`${currentWeek}T12:00:00`);
+  const cursor = new Date(`${currentWeek}T12:00:00`);
   // A week without training yet does not break the streak until it has ended.
   if (!activeWeeks.has(currentWeek)) cursor.setDate(cursor.getDate() - 7);
   let current = 0;
