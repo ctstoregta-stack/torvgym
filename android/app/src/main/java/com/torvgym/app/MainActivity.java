@@ -2,6 +2,8 @@ package com.torvgym.app;
 
 import android.os.Bundle;
 
+import androidx.activity.OnBackPressedCallback;
+
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -12,21 +14,26 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(TorvGymWorkoutPlugin.class);
         registerPlugin(TorvGymSecureStoragePlugin.class);
         super.onCreate(savedInstanceState);
+
+        // Use AndroidX's dispatcher so Back is intercepted on modern Android
+        // versions, including gesture navigation and predictive Back.
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (getBridge() != null && getBridge().getWebView() != null) {
+                    getBridge().getWebView().evaluateJavascript(
+                        "window.dispatchEvent(new Event('torvgym:hardware-back'))",
+                        null
+                    );
+                } else {
+                    // Keep the native fallback only if the WebView is not ready.
+                    finish();
+                }
+            }
+        });
+
         updater = new TorvGymUpdater(this);
         updater.checkForUpdate();
-    }
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public void onBackPressed() {
-        if (getBridge() != null && getBridge().getWebView() != null) {
-            getBridge().getWebView().evaluateJavascript(
-                "window.dispatchEvent(new Event('torvgym:hardware-back'))",
-                null
-            );
-            return;
-        }
-        super.onBackPressed();
     }
 
     @Override
