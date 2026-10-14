@@ -2,11 +2,7 @@ import type { Exercise } from "./types";
 
 export type ExerciseDatabaseIssue = {
   code:
-    | "duplicate-id"
-    | "duplicate-name"
-    | "missing-field"
-    | "invalid-gif-url"
-    | "invalid-muscle-list";
+    "duplicate-id" | "duplicate-name" | "missing-field" | "invalid-gif-url" | "invalid-muscle-list";
   exerciseId?: string;
   message: string;
 };
@@ -43,10 +39,7 @@ export function validateExercise(
     }
   }
 
-  if (
-    typeof exercise.gif_url === "string" &&
-    exercise.gif_url.trim() !== ""
-  ) {
+  if (typeof exercise.gif_url === "string" && exercise.gif_url.trim() !== "") {
     try {
       const url = new URL(exercise.gif_url);
       if (url.protocol !== "https:") {
@@ -67,9 +60,7 @@ export function validateExercise(
 
   if (
     !Array.isArray(exercise.primary_muscles) ||
-    exercise.primary_muscles.some(
-      (muscle) => typeof muscle !== "string" || muscle.trim() === "",
-    )
+    exercise.primary_muscles.some((muscle) => typeof muscle !== "string" || muscle.trim() === "")
   ) {
     issues.push({
       code: "invalid-muscle-list",
@@ -80,9 +71,7 @@ export function validateExercise(
 
   if (
     !Array.isArray(exercise.secondary_muscles) ||
-    exercise.secondary_muscles.some(
-      (muscle) => typeof muscle !== "string" || muscle.trim() === "",
-    )
+    exercise.secondary_muscles.some((muscle) => typeof muscle !== "string" || muscle.trim() === "")
   ) {
     issues.push({
       code: "invalid-muscle-list",
@@ -94,9 +83,7 @@ export function validateExercise(
   return issues;
 }
 
-export function validateExerciseDatabase(
-  exercises: Exercise[],
-): ExerciseDatabaseIssue[] {
+export function validateExerciseDatabase(exercises: Exercise[]): ExerciseDatabaseIssue[] {
   const issues: ExerciseDatabaseIssue[] = [];
   const ids = new Map<string, Exercise>();
   const names = new Map<string, Exercise>();

@@ -85,7 +85,13 @@ function ExerciseDetail() {
 
   return (
     <AppShell title={ex.name} back={{ to: "/exercicios" }}>
-      <ExerciseMedia exercise={ex} className="mb-4 aspect-video w-full" rounded="rounded-2xl" fit="contain" loading="lazy" />
+      <ExerciseMedia
+        exercise={ex}
+        className="mb-4 aspect-video w-full"
+        rounded="rounded-2xl"
+        fit="contain"
+        loading="lazy"
+      />
 
       <h2 className="text-xl font-bold leading-tight">{ex.name}</h2>
       <div className="mt-2 flex flex-wrap gap-1.5">
@@ -134,9 +140,7 @@ function ExerciseDetail() {
               </ul>
             </Card>
             <Card>
-              <p className="text-sm font-semibold text-muted-foreground">
-                Músculos secundários
-              </p>
+              <p className="text-sm font-semibold text-muted-foreground">Músculos secundários</p>
               <ul className="mt-2 space-y-1.5">
                 {ex.secondary_muscles.length ? (
                   ex.secondary_muscles.map((m) => (
@@ -233,7 +237,10 @@ function ExerciseDetail() {
                   <p className="mb-3 text-sm font-semibold">Evolução da carga máxima</p>
                   <div className="flex h-32 items-end gap-1.5">
                     {chart.map((h, i) => (
-                      <div key={i} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1">
+                      <div
+                        key={i}
+                        className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
+                      >
                         <span className="text-[9px] text-muted-foreground tabular-nums">
                           {h.maxWeight}
                         </span>

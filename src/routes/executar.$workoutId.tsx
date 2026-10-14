@@ -2,14 +2,28 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ExerciseMedia } from "@/components/ExerciseMedia";
 import { RestTimer, formatClock, type RestState } from "@/components/RestTimer";
 import { Button, EmptyState, PRBadge } from "@/components/ui-kit";
 import { useGym } from "@/store/gym-store";
 import type { Session, Workout } from "@/lib/types";
-import { workoutExerciseProgressionFor, workoutExerciseRecommendationFor } from "@/store/gym-analytics";
-import { startNativeWorkoutNotification, stopNativeWorkoutNotification, updateNativeWorkoutNotification } from "@/lib/native-workout";
+import {
+  workoutExerciseProgressionFor,
+  workoutExerciseRecommendationFor,
+} from "@/store/gym-analytics";
+import {
+  startNativeWorkoutNotification,
+  stopNativeWorkoutNotification,
+  updateNativeWorkoutNotification,
+} from "@/lib/native-workout";
 
 const DEFAULT_REST = 60;
 
@@ -54,10 +68,7 @@ function buildSummary(
           ),
         )
       : 0,
-    sets: entries.reduce(
-      (acc, e) => acc + e.sets.filter((s) => s.completed).length,
-      0,
-    ),
+    sets: entries.reduce((acc, e) => acc + e.sets.filter((s) => s.completed).length, 0),
     volume: entries.reduce(
       (acc, e) =>
         acc +
@@ -68,7 +79,14 @@ function buildSummary(
     ),
     completedExercises: entries.filter((entry) => entry.sets.some((set) => set.completed)).length,
     previousVolume: previous
-      ? previous.entries.reduce((acc, entry) => acc + entry.sets.filter((set) => set.completed && set.weight != null && set.reps != null).reduce((a, set) => a + set.weight! * set.reps!, 0), 0)
+      ? previous.entries.reduce(
+          (acc, entry) =>
+            acc +
+            entry.sets
+              .filter((set) => set.completed && set.weight != null && set.reps != null)
+              .reduce((a, set) => a + set.weight! * set.reps!, 0),
+          0,
+        )
       : null,
     prs: entries.flatMap((e) =>
       e.sets
@@ -117,7 +135,9 @@ function ExecutePage() {
 
   function currentRestSeconds(workout: Workout | undefined, exerciseId: string | undefined) {
     if (!workout) return undefined;
-    return exerciseId ? workout.restSecondsByExercise?.[exerciseId] ?? workout.restSeconds : workout.restSeconds;
+    return exerciseId
+      ? (workout.restSecondsByExercise?.[exerciseId] ?? workout.restSeconds)
+      : workout.restSeconds;
   }
   const [index, setIndex] = useState(0);
   const [rest, setRest] = useState<RestState>(null);
@@ -142,7 +162,8 @@ function ExecutePage() {
   }, [index, rest?.remaining, rest?.running, state.activeSession, workoutId, getExercise]);
 
   useEffect(() => {
-    if (state.activeSession?.workoutId === workoutId) void startNativeWorkoutNotification(state.activeSession.workoutName);
+    if (state.activeSession?.workoutId === workoutId)
+      void startNativeWorkoutNotification(state.activeSession.workoutName);
   }, [state.activeSession?.id, state.activeSession?.workoutName, workoutId]);
 
   useEffect(() => {
@@ -150,56 +171,107 @@ function ExecutePage() {
     return () => clearInterval(t);
   }, []);
 
-  const handleRestChange = useCallback((next: RestState) => {
-    setRest((current) => {
-      if (next && current && next.remaining === 0 && current.remaining > 0) {
-        toast.success("Descanso concluído");
-      }
-      if (!next) {
-        updateSessionContext({ restStartedAt: null, restTotal: 0, restRemaining: 0, restRunning: false });
-        return null;
-      }
-      updateSessionContext({
-        restStartedAt: next.running && next.startedAt ? new Date(next.startedAt).toISOString() : null,
-        restTotal: next.total,
-        restRemaining: next.remaining,
-        restRunning: next.running,
+  const handleRestChange = useCallback(
+    (next: RestState) => {
+      setRest((current) => {
+        if (next && current && next.remaining === 0 && current.remaining > 0) {
+          toast.success("Descanso concluído");
+        }
+        if (!next) {
+          updateSessionContext({
+            restStartedAt: null,
+            restTotal: 0,
+            restRemaining: 0,
+            restRunning: false,
+          });
+          return null;
+        }
+        updateSessionContext({
+          restStartedAt:
+            next.running && next.startedAt ? new Date(next.startedAt).toISOString() : null,
+          restTotal: next.total,
+          restRemaining: next.remaining,
+          restRunning: next.running,
+        });
+        return next;
       });
-      return next;
-    });
-  }, [updateSessionContext]);
+    },
+    [updateSessionContext],
+  );
 
   const handleRestSkip = useCallback(() => {
     setRest(null);
-    updateSessionContext({ restStartedAt: null, restTotal: 0, restRemaining: 0, restRunning: false });
+    updateSessionContext({
+      restStartedAt: null,
+      restTotal: 0,
+      restRemaining: 0,
+      restRunning: false,
+    });
   }, [updateSessionContext]);
 
-  const startRest = useCallback((seconds?: number) => {
-    const resolvedSeconds = seconds ?? currentRestSeconds(workoutConfig, state.activeSession?.entries[index]?.exerciseId) ?? DEFAULT_REST;
-    const startedAt = new Date().toISOString();
-    const next = { total: resolvedSeconds, remaining: resolvedSeconds, running: true, startedAt: Date.now() } as RestState;
-    setRest(next);
-    updateSessionContext({ restStartedAt: startedAt, restTotal: resolvedSeconds, restRemaining: resolvedSeconds, restRunning: true });
-  }, [index, state.activeSession, workoutConfig, updateSessionContext]);
+  const startRest = useCallback(
+    (seconds?: number) => {
+      const resolvedSeconds =
+        seconds ??
+        currentRestSeconds(workoutConfig, state.activeSession?.entries[index]?.exerciseId) ??
+        DEFAULT_REST;
+      const startedAt = new Date().toISOString();
+      const next = {
+        total: resolvedSeconds,
+        remaining: resolvedSeconds,
+        running: true,
+        startedAt: Date.now(),
+      } as RestState;
+      setRest(next);
+      updateSessionContext({
+        restStartedAt: startedAt,
+        restTotal: resolvedSeconds,
+        restRemaining: resolvedSeconds,
+        restRunning: true,
+      });
+    },
+    [index, state.activeSession, workoutConfig, updateSessionContext],
+  );
 
-  const handleSetUpdate = useCallback((exerciseId: string, setIndex: number, completed: boolean) => {
-    updateSet(exerciseId, setIndex, { completed });
-    if (completed) toast.success("Série salva", { duration: 1000 });
-  }, [updateSet]);
+  const handleSetUpdate = useCallback(
+    (exerciseId: string, setIndex: number, completed: boolean) => {
+      updateSet(exerciseId, setIndex, { completed });
+      if (completed) toast.success("Série salva", { duration: 1000 });
+    },
+    [updateSet],
+  );
 
   const session = state.activeSession;
 
   useEffect(() => {
     if (!session || session.workoutId !== workoutId) return;
     const savedIndex = session.currentExerciseIndex;
-    if (savedIndex != null && savedIndex >= 0 && savedIndex < session.entries.length) setIndex(savedIndex);
+    if (savedIndex != null && savedIndex >= 0 && savedIndex < session.entries.length)
+      setIndex(savedIndex);
     else {
-      const firstPending = session.entries.findIndex((entry) => entry.sets.some((set) => !set.completed));
+      const firstPending = session.entries.findIndex((entry) =>
+        entry.sets.some((set) => !set.completed),
+      );
       setIndex(firstPending >= 0 ? firstPending : 0);
     }
     if (session.restTotal && session.restRemaining != null) {
-      const remaining = session.restRunning && session.restStartedAt ? Math.max(0, session.restTotal - Math.floor((Date.now() - new Date(session.restStartedAt).getTime()) / 1000)) : session.restRemaining;
-      setRest({ total: session.restTotal, remaining, running: !!session.restRunning && remaining > 0, startedAt: session.restRunning && session.restStartedAt ? new Date(session.restStartedAt).getTime() : null });
+      const remaining =
+        session.restRunning && session.restStartedAt
+          ? Math.max(
+              0,
+              session.restTotal -
+                Math.floor((Date.now() - new Date(session.restStartedAt).getTime()) / 1000),
+            )
+          : session.restRemaining;
+      setRest({
+        total: session.restTotal,
+        remaining,
+        running: !!session.restRunning && remaining > 0,
+        startedAt:
+          session.restRunning && session.restStartedAt
+            ? new Date(session.restStartedAt).getTime()
+            : null,
+      });
     }
   }, [session?.id, workoutId]);
 
@@ -234,10 +306,7 @@ function ExecutePage() {
   const entries = session.entries;
   const currentIndex = Math.min(index, Math.max(0, entries.length - 1));
   const current = entries[currentIndex];
-  const doneSets = entries.reduce(
-    (acc, e) => acc + e.sets.filter((s) => s.completed).length,
-    0,
-  );
+  const doneSets = entries.reduce((acc, e) => acc + e.sets.filter((s) => s.completed).length, 0);
   const totalSets = entries.reduce((acc, e) => acc + e.sets.length, 0);
   const volume = entries.reduce(
     (acc, e) =>
@@ -250,14 +319,24 @@ function ExecutePage() {
 
   const ex = current ? getExercise(current.exerciseId) : undefined;
   const previous = current
-    ? lastSetsForWorkout(session.workoutId, current.exerciseId, session.routineId) ?? null
+    ? (lastSetsForWorkout(session.workoutId, current.exerciseId, session.routineId) ?? null)
     : null;
   const storedPR = current ? prFor(current.exerciseId) : null;
   const progression = current
-    ? workoutExerciseProgressionFor(state.sessions, session.workoutId, current.exerciseId, session.routineId)
+    ? workoutExerciseProgressionFor(
+        state.sessions,
+        session.workoutId,
+        current.exerciseId,
+        session.routineId,
+      )
     : null;
   const progressionPlan = current
-    ? workoutExerciseRecommendationFor(state.sessions, session.workoutId, current.exerciseId, session.routineId)
+    ? workoutExerciseRecommendationFor(
+        state.sessions,
+        session.workoutId,
+        current.exerciseId,
+        session.routineId,
+      )
     : null;
   const currentSetIndex = current ? current.sets.findIndex((set) => !set.completed) : -1;
   const nextSetIndex = currentSetIndex >= 0 ? currentSetIndex : current ? current.sets.length : 0;
@@ -272,7 +351,10 @@ function ExecutePage() {
   const nextLabelPrefix = hasNextSet ? "Próxima série" : "Próximo exercício";
   const finish = () => {
     const previous = state.sessions
-      .filter((item) => item.workoutId === workoutId && item.routineId === session.routineId && item.finishedAt)
+      .filter(
+        (item) =>
+          item.workoutId === workoutId && item.routineId === session.routineId && item.finishedAt,
+      )
       .sort((a, b) => new Date(b.finishedAt!).getTime() - new Date(a.finishedAt!).getTime())[0];
     void stopNativeWorkoutNotification();
     const saved = finishSession();
@@ -282,10 +364,7 @@ function ExecutePage() {
   };
 
   return (
-    <AppShell
-      title={session.workoutName}
-      back={{ to: "/" }}
-    >
+    <AppShell title={session.workoutName} back={{ to: "/" }}>
       <div className="surface mb-3 grid grid-cols-3 divide-x divide-border p-3 text-center">
         <div>
           <p className="text-[11px] text-muted-foreground">Duração</p>
@@ -322,13 +401,12 @@ function ExecutePage() {
               <button
                 key={e.exerciseId}
                 aria-label={`Ir para exercício ${i + 1}`}
-                onClick={() => { setIndex(i); updateSessionContext({ currentExerciseIndex: i }); }}
+                onClick={() => {
+                  setIndex(i);
+                  updateSessionContext({ currentExerciseIndex: i });
+                }}
                 className={`h-1.5 flex-1 rounded-full tap ${
-                  i === currentIndex
-                    ? "bg-primary"
-                    : allDone
-                      ? "bg-success/70"
-                      : "bg-elevated"
+                  i === currentIndex ? "bg-primary" : allDone ? "bg-success/70" : "bg-elevated"
                 }`}
               />
             );
@@ -339,7 +417,9 @@ function ExecutePage() {
       {ex && current && (
         <div className="surface overflow-hidden">
           <div className="border-b border-border bg-primary/5 px-3 py-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Série atual</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">
+              Série atual
+            </p>
             <p className="mt-0.5 text-sm font-bold tabular-nums">
               {current.sets.findIndex((set) => !set.completed) >= 0
                 ? `Série ${current.sets.findIndex((set) => !set.completed) + 1} de ${current.sets.length}`
@@ -355,48 +435,77 @@ function ExecutePage() {
                 <p className="text-base font-bold leading-tight">{ex.name}</p>
               </Link>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {ex.equipment} ·{" "}
-                {storedPR != null ? `PR ${storedPR} kg` : "Sem PR registrado"}
+                {ex.equipment} · {storedPR != null ? `PR ${storedPR} kg` : "Sem PR registrado"}
               </p>
             </div>
           </div>
-
-
 
           {progression && (
             <details className="border-b border-border bg-card px-3 py-2.5">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
                 <span className="min-w-0">
-                  <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Orientação para este treino</span>
+                  <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Orientação para este treino
+                  </span>
                   <span className="mt-1 block text-xs">
                     <strong>Última vez: {progression.latest.maxWeight || "—"} kg</strong>
-                    <span className="text-primary"> · {progression.recommendation === "increase-load" ? "Aumentar carga" :
-                      progression.recommendation === "add-reps" ? "Tentar mais repetições" :
-                      progression.recommendation === "recover" ? "Priorizar recuperação" : "Manter e consolidar"}</span>
+                    <span className="text-primary">
+                      {" "}
+                      ·{" "}
+                      {progression.recommendation === "increase-load"
+                        ? "Aumentar carga"
+                        : progression.recommendation === "add-reps"
+                          ? "Tentar mais repetições"
+                          : progression.recommendation === "recover"
+                            ? "Priorizar recuperação"
+                            : "Manter e consolidar"}
+                    </span>
                   </span>
                 </span>
-                <span aria-hidden="true" className="shrink-0 text-sm text-muted-foreground">⌄</span>
+                <span aria-hidden="true" className="shrink-0 text-sm text-muted-foreground">
+                  ⌄
+                </span>
               </summary>
               <div className="mt-2 space-y-1.5 border-t border-border/70 pt-2">
                 {progression.previous && (
-                  <p className="text-[11px] text-muted-foreground">Sessão anterior: <strong className="text-foreground">{progression.previous.maxWeight || "—"} kg</strong></p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Sessão anterior:{" "}
+                    <strong className="text-foreground">
+                      {progression.previous.maxWeight || "—"} kg
+                    </strong>
+                  </p>
                 )}
                 {progressionPlan && (
                   <p className="text-[11px] text-muted-foreground">
                     Próxima meta:{" "}
                     <strong className="text-foreground">
-                      {progressionPlan.targetWeight != null ? progressionPlan.targetWeight + " kg" : "carga atual"}
-                      {progressionPlan.targetReps != null ? " × " + progressionPlan.targetReps + " reps" : ""}
+                      {progressionPlan.targetWeight != null
+                        ? progressionPlan.targetWeight + " kg"
+                        : "carga atual"}
+                      {progressionPlan.targetReps != null
+                        ? " × " + progressionPlan.targetReps + " reps"
+                        : ""}
                     </strong>
-                    {" · "}{progressionPlan.reason}
+                    {" · "}
+                    {progressionPlan.reason}
                   </p>
                 )}
                 {progressionPlan && (
                   <p className="text-[11px] text-muted-foreground">
-                    Tendência: <strong className="text-foreground">
-                      {progressionPlan.trend === "improving" ? "evoluindo" : progressionPlan.trend === "declining" ? "em queda" : "estável"}
+                    Tendência:{" "}
+                    <strong className="text-foreground">
+                      {progressionPlan.trend === "improving"
+                        ? "evoluindo"
+                        : progressionPlan.trend === "declining"
+                          ? "em queda"
+                          : "estável"}
                     </strong>
-                    {" · confiança "}{progressionPlan.confidence === "high" ? "alta" : progressionPlan.confidence === "medium" ? "média" : "baixa"}
+                    {" · confiança "}
+                    {progressionPlan.confidence === "high"
+                      ? "alta"
+                      : progressionPlan.confidence === "medium"
+                        ? "média"
+                        : "baixa"}
                   </p>
                 )}
               </div>
@@ -433,43 +542,78 @@ function ExecutePage() {
 
                   <div className="mt-2 grid grid-cols-[1fr_1fr_48px] gap-2">
                     <label className="min-w-0">
-                      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Carga · kg</span>
-                      <input type="number" inputMode="decimal" step="0.5"
+                      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        Carga · kg
+                      </span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        step="0.5"
                         aria-label={`Carga da série ${i + 1} (kg)`}
                         value={set.weight ?? ""}
                         placeholder="0"
-                        onChange={(e) => updateSet(current.exerciseId, i, { weight: e.target.value === "" ? null : Number(e.target.value) })}
+                        onChange={(e) =>
+                          updateSet(current.exerciseId, i, {
+                            weight: e.target.value === "" ? null : Number(e.target.value),
+                          })
+                        }
                         className="h-12 w-full rounded-xl border border-input bg-card px-2 text-center text-lg font-semibold tabular-nums outline-none transition-colors focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/40"
                       />
                     </label>
 
                     <label className="min-w-0">
-                      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Repetições</span>
-                      <input type="number" inputMode="numeric"
+                      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        Repetições
+                      </span>
+                      <input
+                        type="number"
+                        inputMode="numeric"
                         aria-label={`Repetições da série ${i + 1}`}
                         value={set.reps ?? ""}
                         placeholder="0"
-                        onChange={(e) => updateSet(current.exerciseId, i, { reps: e.target.value === "" ? null : Number(e.target.value) })}
+                        onChange={(e) =>
+                          updateSet(current.exerciseId, i, {
+                            reps: e.target.value === "" ? null : Number(e.target.value),
+                          })
+                        }
                         className="h-12 w-full rounded-xl border border-input bg-card px-2 text-center text-lg font-semibold tabular-nums outline-none transition-colors focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/40"
                       />
                     </label>
 
-                    <button aria-label={`Concluir série ${i + 1}`}
+                    <button
+                      aria-label={`Concluir série ${i + 1}`}
                       onClick={() => {
-                        if (set.completed) { updateSet(current.exerciseId, i, { completed: false, isPR: false }); return; }
+                        if (set.completed) {
+                          updateSet(current.exerciseId, i, { completed: false, isPR: false });
+                          return;
+                        }
                         const weight = set.weight;
                         const reps = set.reps;
-                        const sessionBest = Math.max(0, ...current.sets.filter((s) => s.completed && s.weight != null).map((s) => s.weight!));
+                        const sessionBest = Math.max(
+                          0,
+                          ...current.sets
+                            .filter((s) => s.completed && s.weight != null)
+                            .map((s) => s.weight!),
+                        );
                         const best = Math.max(storedPR ?? 0, sessionBest);
                         const isPR = weight != null && weight > best;
                         updateSet(current.exerciseId, i, { weight, reps, completed: true, isPR });
-                        if (isPR) toast.success(`🏆 Novo recorde! ${weight} kg em ${ex.name}`, { duration: 2200 });
+                        if (isPR)
+                          toast.success(`🏆 Novo recorde! ${weight} kg em ${ex.name}`, {
+                            duration: 2200,
+                          });
                         else toast.success(`Série ${i + 1} concluída`);
                         startRest();
                       }}
                       className={`mt-5 flex h-12 w-12 items-center justify-center rounded-xl tap active:scale-90 ${set.completed ? "bg-success text-background" : "bg-elevated text-muted-foreground"}`}
                     >
-                      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="3">
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-6 w-6"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                      >
                         <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </button>
@@ -477,30 +621,93 @@ function ExecutePage() {
 
                   {!set.completed && isActiveSet && (
                     <div className="mt-2 grid grid-cols-4 gap-1.5">
-                      <QuickAdjust label="-2,5" ariaLabel="Diminuir 2,5 kg" onClick={() => updateSet(current.exerciseId, i, { weight: Math.max(0, (set.weight ?? 0) - 2.5) })} />
-                      <QuickAdjust label="+2,5" ariaLabel="Aumentar 2,5 kg" onClick={() => updateSet(current.exerciseId, i, { weight: (set.weight ?? 0) + 2.5 })} />
-                      <QuickAdjust label="-1 rep" ariaLabel="Diminuir uma repetição" onClick={() => updateSet(current.exerciseId, i, { reps: Math.max(0, (set.reps ?? 0) - 1) })} />
-                      <QuickAdjust label="+1 rep" ariaLabel="Aumentar uma repetição" onClick={() => updateSet(current.exerciseId, i, { reps: (set.reps ?? 0) + 1 })} />
+                      <QuickAdjust
+                        label="-2,5"
+                        ariaLabel="Diminuir 2,5 kg"
+                        onClick={() =>
+                          updateSet(current.exerciseId, i, {
+                            weight: Math.max(0, (set.weight ?? 0) - 2.5),
+                          })
+                        }
+                      />
+                      <QuickAdjust
+                        label="+2,5"
+                        ariaLabel="Aumentar 2,5 kg"
+                        onClick={() =>
+                          updateSet(current.exerciseId, i, { weight: (set.weight ?? 0) + 2.5 })
+                        }
+                      />
+                      <QuickAdjust
+                        label="-1 rep"
+                        ariaLabel="Diminuir uma repetição"
+                        onClick={() =>
+                          updateSet(current.exerciseId, i, {
+                            reps: Math.max(0, (set.reps ?? 0) - 1),
+                          })
+                        }
+                      />
+                      <QuickAdjust
+                        label="+1 rep"
+                        ariaLabel="Aumentar uma repetição"
+                        onClick={() =>
+                          updateSet(current.exerciseId, i, { reps: (set.reps ?? 0) + 1 })
+                        }
+                      />
                     </div>
                   )}
 
                   {!set.completed && prev && (
-                    <button type="button" className="mt-2 min-h-9 w-full rounded-lg bg-primary/10 px-2 text-xs font-semibold text-primary tap active:scale-95"
-                      onClick={() => updateSet(current.exerciseId, i, { weight: prev.weight, reps: prev.reps })}
-                    >Usar anterior · {prevLabel}</button>
+                    <button
+                      type="button"
+                      className="mt-2 min-h-9 w-full rounded-lg bg-primary/10 px-2 text-xs font-semibold text-primary tap active:scale-95"
+                      onClick={() =>
+                        updateSet(current.exerciseId, i, { weight: prev.weight, reps: prev.reps })
+                      }
+                    >
+                      Usar anterior · {prevLabel}
+                    </button>
                   )}
 
                   <details className="mt-2">
                     <summary className="flex min-h-8 cursor-pointer list-none items-center justify-between rounded-lg px-1 text-[11px] font-semibold text-muted-foreground">
-                      <span>Mais opções</span><span>⌄</span>
+                      <span>Mais opções</span>
+                      <span>⌄</span>
                     </summary>
                     <div className="mt-1.5 grid grid-cols-[72px_minmax(0,1fr)_auto] gap-1.5">
-                      <select aria-label={`RPE da série ${i + 1}`} value={set.rpe ?? ""} onChange={(e) => updateSet(current.exerciseId, i, { rpe: e.target.value ? Number(e.target.value) : null })} className="h-9 rounded-lg border border-input bg-card px-1 text-xs font-semibold outline-none focus:border-primary">
+                      <select
+                        aria-label={`RPE da série ${i + 1}`}
+                        value={set.rpe ?? ""}
+                        onChange={(e) =>
+                          updateSet(current.exerciseId, i, {
+                            rpe: e.target.value ? Number(e.target.value) : null,
+                          })
+                        }
+                        className="h-9 rounded-lg border border-input bg-card px-1 text-xs font-semibold outline-none focus:border-primary"
+                      >
                         <option value="">RPE</option>
-                        {Array.from({ length: 10 }, (_, n) => n + 1).map((value) => <option key={value} value={value}>{value}</option>)}
+                        {Array.from({ length: 10 }, (_, n) => n + 1).map((value) => (
+                          <option key={value} value={value}>
+                            {value}
+                          </option>
+                        ))}
                       </select>
-                      <input type="text" maxLength={500} aria-label={`Observação da série ${i + 1}`} value={set.note ?? ""} placeholder="Observação..." onChange={(e) => updateSet(current.exerciseId, i, { note: e.target.value })} className="h-9 min-w-0 rounded-lg border border-input bg-card px-2 text-xs outline-none focus:border-primary" />
-                      <button type="button" aria-label={`Repetir série ${i + 1}`} onClick={() => duplicateSet(current.exerciseId, i)} className="h-9 rounded-lg bg-card px-2 text-xs font-semibold text-muted-foreground tap active:scale-95">+ repetir</button>
+                      <input
+                        type="text"
+                        maxLength={500}
+                        aria-label={`Observação da série ${i + 1}`}
+                        value={set.note ?? ""}
+                        placeholder="Observação..."
+                        onChange={(e) => updateSet(current.exerciseId, i, { note: e.target.value })}
+                        className="h-9 min-w-0 rounded-lg border border-input bg-card px-2 text-xs outline-none focus:border-primary"
+                      />
+                      <button
+                        type="button"
+                        aria-label={`Repetir série ${i + 1}`}
+                        onClick={() => duplicateSet(current.exerciseId, i)}
+                        className="h-9 rounded-lg bg-card px-2 text-xs font-semibold text-muted-foreground tap active:scale-95"
+                      >
+                        + repetir
+                      </button>
                     </div>
                   </details>
                 </div>
@@ -526,9 +733,7 @@ function ExecutePage() {
               <Button
                 variant="outline"
                 className="flex-1 py-2.5 text-xs"
-                onClick={() =>
-                  startRest()
-                }
+                onClick={() => startRest()}
               >
                 Descanso
               </Button>
@@ -547,11 +752,12 @@ function ExecutePage() {
         </Button>
       </div>
 
-
       <Dialog open={finishConfirm} onOpenChange={setFinishConfirm}>
         <DialogContent className="max-w-md rounded-2xl border-border bg-card">
           <DialogHeader className="text-left">
-            <DialogTitle>{doneSets < totalSets ? "Há séries pendentes" : "Finalizar treino?"}</DialogTitle>
+            <DialogTitle>
+              {doneSets < totalSets ? "Há séries pendentes" : "Finalizar treino?"}
+            </DialogTitle>
             <DialogDescription>
               {doneSets < totalSets
                 ? `Você concluiu ${doneSets} de ${totalSets} séries. Se finalizar agora, as séries pendentes não serão salvas no histórico.`
@@ -559,8 +765,22 @@ function ExecutePage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 pt-2">
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setFinishConfirm(false)}>Continuar treinando</Button>
-            <Button className="w-full sm:w-auto" onClick={() => { setFinishConfirm(false); finish(); }}>Finalizar treino</Button>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setFinishConfirm(false)}
+            >
+              Continuar treinando
+            </Button>
+            <Button
+              className="w-full sm:w-auto"
+              onClick={() => {
+                setFinishConfirm(false);
+                finish();
+              }}
+            >
+              Finalizar treino
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -570,11 +790,18 @@ function ExecutePage() {
           <DialogHeader className="text-left">
             <DialogTitle>Descartar treino?</DialogTitle>
             <DialogDescription>
-              As séries desta sessão não serão salvas no histórico. Esta ação não poderá ser desfeita.
+              As séries desta sessão não serão salvas no histórico. Esta ação não poderá ser
+              desfeita.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 pt-2">
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setDiscardConfirm(false)}>Continuar treinando</Button>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setDiscardConfirm(false)}
+            >
+              Continuar treinando
+            </Button>
             <Button
               variant="danger"
               className="w-full sm:w-auto"
@@ -601,15 +828,36 @@ function ExecutePage() {
 
       {/* Navegação entre exercícios */}
       <div className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-2xl gap-2 -translate-x-1/2 pb-1">
-        <Button variant="outline" className="flex-1 py-3.5" disabled={currentIndex === 0} onClick={() => { const nextIndex = currentIndex - 1; setIndex(nextIndex); updateSessionContext({ currentExerciseIndex: nextIndex }); }}>
+        <Button
+          variant="outline"
+          className="flex-1 py-3.5"
+          disabled={currentIndex === 0}
+          onClick={() => {
+            const nextIndex = currentIndex - 1;
+            setIndex(nextIndex);
+            updateSessionContext({ currentExerciseIndex: nextIndex });
+          }}
+        >
           ← Anterior
         </Button>
         {currentIndex < entries.length - 1 ? (
-          <Button variant="outline" className="flex-1 py-3.5" onClick={() => { const nextIndex = currentIndex + 1; setIndex(nextIndex); updateSessionContext({ currentExerciseIndex: nextIndex }); }}>
+          <Button
+            variant="outline"
+            className="flex-1 py-3.5"
+            onClick={() => {
+              const nextIndex = currentIndex + 1;
+              setIndex(nextIndex);
+              updateSessionContext({ currentExerciseIndex: nextIndex });
+            }}
+          >
             Próximo →
           </Button>
         ) : (
-          <Button className="flex-1 py-3.5" disabled={doneSets === 0} onClick={doneSets >= totalSets ? finish : () => setFinishConfirm(true)}>
+          <Button
+            className="flex-1 py-3.5"
+            disabled={doneSets === 0}
+            onClick={doneSets >= totalSets ? finish : () => setFinishConfirm(true)}
+          >
             Finalizar
           </Button>
         )}
@@ -618,9 +866,22 @@ function ExecutePage() {
   );
 }
 
-function QuickAdjust({ label, ariaLabel, onClick }: { label: string; ariaLabel: string; onClick: () => void }) {
+function QuickAdjust({
+  label,
+  ariaLabel,
+  onClick,
+}: {
+  label: string;
+  ariaLabel: string;
+  onClick: () => void;
+}) {
   return (
-    <button type="button" aria-label={ariaLabel} onClick={onClick} className="min-h-9 rounded-lg bg-card px-2 text-xs font-semibold tabular-nums text-muted-foreground tap active:scale-95">
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      onClick={onClick}
+      className="min-h-9 rounded-lg bg-card px-2 text-xs font-semibold tabular-nums text-muted-foreground tap active:scale-95"
+    >
       {label}
     </button>
   );
@@ -634,13 +895,36 @@ function SummaryScreen({ summary }: { summary: Summary }) {
         <p className="text-sm text-muted-foreground">{summary.workoutName}</p>
         <p className="mt-1 text-2xl font-bold">Treino concluído</p>
         <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <div><p className="text-[11px] text-muted-foreground">Duração</p><p className="text-lg font-bold tabular-nums">{formatClock(summary.durationSecs)}</p></div>
-          <div><p className="text-[11px] text-muted-foreground">Séries</p><p className="text-lg font-bold tabular-nums">{summary.sets}</p></div>
-          <div><p className="text-[11px] text-muted-foreground">Volume</p><p className="text-lg font-bold tabular-nums">{Math.round(summary.volume)} kg</p></div>
-          <div><p className="text-[11px] text-muted-foreground">Exercícios</p><p className="text-lg font-bold tabular-nums">{summary.completedExercises}</p></div>
+          <div>
+            <p className="text-[11px] text-muted-foreground">Duração</p>
+            <p className="text-lg font-bold tabular-nums">{formatClock(summary.durationSecs)}</p>
+          </div>
+          <div>
+            <p className="text-[11px] text-muted-foreground">Séries</p>
+            <p className="text-lg font-bold tabular-nums">{summary.sets}</p>
+          </div>
+          <div>
+            <p className="text-[11px] text-muted-foreground">Volume</p>
+            <p className="text-lg font-bold tabular-nums">{Math.round(summary.volume)} kg</p>
+          </div>
+          <div>
+            <p className="text-[11px] text-muted-foreground">Exercícios</p>
+            <p className="text-lg font-bold tabular-nums">{summary.completedExercises}</p>
+          </div>
         </div>
         {summary.previousVolume != null && (
-          <p className="mt-3 text-xs text-muted-foreground">Volume vs. treino anterior: <strong className={summary.volume >= summary.previousVolume ? "text-success" : "text-foreground"}>{summary.previousVolume > 0 ? `${summary.volume >= summary.previousVolume ? "+" : ""}${Math.round(((summary.volume - summary.previousVolume) / summary.previousVolume) * 100)}%` : "—"}</strong></p>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Volume vs. treino anterior:{" "}
+            <strong
+              className={
+                summary.volume >= summary.previousVolume ? "text-success" : "text-foreground"
+              }
+            >
+              {summary.previousVolume > 0
+                ? `${summary.volume >= summary.previousVolume ? "+" : ""}${Math.round(((summary.volume - summary.previousVolume) / summary.previousVolume) * 100)}%`
+                : "—"}
+            </strong>
+          </p>
         )}
       </div>
       {summary.prs.length > 0 && (
@@ -648,17 +932,26 @@ function SummaryScreen({ summary }: { summary: Summary }) {
           <p className="mb-2 text-sm font-semibold">Novos recordes</p>
           <ul className="space-y-2">
             {summary.prs.map((pr, i) => (
-              <li key={pr.name + "-" + i} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+              <li
+                key={pr.name + "-" + i}
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2"
+              >
                 <span className="truncate text-sm">{pr.name}</span>
-                <span className="flex shrink-0 items-center gap-2 text-sm font-bold text-gold tabular-nums">{pr.weight} kg <PRBadge small /></span>
+                <span className="flex shrink-0 items-center gap-2 text-sm font-bold text-gold tabular-nums">
+                  {pr.weight} kg <PRBadge small />
+                </span>
               </li>
             ))}
           </ul>
         </div>
       )}
       <div className="mt-6 grid grid-cols-2 gap-2">
-        <Button variant="outline" className="min-h-12 w-full" onClick={() => navigate({ to: "/" })}>← Voltar ao início</Button>
-        <Button className="min-h-12 w-full" onClick={() => navigate({ to: "/historico" })}>Ver histórico</Button>
+        <Button variant="outline" className="min-h-12 w-full" onClick={() => navigate({ to: "/" })}>
+          ← Voltar ao início
+        </Button>
+        <Button className="min-h-12 w-full" onClick={() => navigate({ to: "/historico" })}>
+          Ver histórico
+        </Button>
       </div>
     </AppShell>
   );

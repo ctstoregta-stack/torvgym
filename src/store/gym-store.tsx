@@ -9,14 +9,35 @@ import {
   type ReactNode,
 } from "react";
 import { EXERCISE_DB } from "@/data/exercises";
-import { createBackup, emptyState, loadState, parseBackup, saveState, storageSizeBytes, uid } from "@/lib/storage";
+import {
+  createBackup,
+  emptyState,
+  loadState,
+  parseBackup,
+  saveState,
+  storageSizeBytes,
+  uid,
+} from "@/lib/storage";
 import { buildExerciseAnalyticsIndex, sessionPRFor } from "@/store/gym-analytics";
 import { validateExercise } from "@/lib/exercise-validation";
 import { duplicateRoutineTemplate } from "@/lib/routine-templates";
-import { createEncryptedRecoveryPackage, createEncryptedSyncPackage, decryptEncryptedRecoveryPackage, decryptEncryptedSyncPackage } from "@/lib/cloud-sync";
+import {
+  createEncryptedRecoveryPackage,
+  createEncryptedSyncPackage,
+  decryptEncryptedRecoveryPackage,
+  decryptEncryptedSyncPackage,
+} from "@/lib/cloud-sync";
 import { createProtectedBackup, decryptProtectedBackup } from "@/lib/protected-backup";
-import { createWorkoutSession, finishWorkoutSession, lastCompletedSetsForWorkout, updateWorkoutSessionSet } from "@/store/gym-session";
-import { startNativeWorkoutNotification, stopNativeWorkoutNotification } from "@/lib/native-workout";
+import {
+  createWorkoutSession,
+  finishWorkoutSession,
+  lastCompletedSetsForWorkout,
+  updateWorkoutSessionSet,
+} from "@/store/gym-session";
+import {
+  startNativeWorkoutNotification,
+  stopNativeWorkoutNotification,
+} from "@/lib/native-workout";
 import type {
   AppState,
   Exercise,
@@ -29,11 +50,7 @@ import type {
 
 function seedState(): AppState {
   const routineId = uid("rot");
-  const mk = (
-    name: string,
-    days: number[],
-    exerciseIds: string[],
-  ): Workout => ({
+  const mk = (name: string, days: number[], exerciseIds: string[]): Workout => ({
     id: uid("wk"),
     name,
     days,
@@ -46,28 +63,40 @@ function seedState(): AppState {
     name: "Hipertrofia - Foco em Força",
     createdAt: new Date().toISOString(),
     workouts: [
-      mk("Treino A - Peito & Tríceps", [1, 4], [
-        "supino-inclinado-halteres",
-        "voador",
-        "crucifixo-polia-alta",
-        "triceps-polia-alta",
-        "triceps-frances",
-      ]),
-      mk("Treino B - Costas & Bíceps", [2, 5], [
-        "puxada-maquina",
-        "remada-baixa-pegada-fechada",
-        "remada-baixa-pegada-aberta",
-        "rosca-scott-barra-w",
-        "rosca-martelo",
-      ]),
-      mk("Treino C - Pernas & Ombros", [3, 6], [
-        "agachamento-barra",
-        "leg-press",
-        "cadeira-extensora",
-        "mesa-flexora",
-        "elevacao-lateral-halteres",
-        "desenvolvimento-ombro",
-      ]),
+      mk(
+        "Treino A - Peito & Tríceps",
+        [1, 4],
+        [
+          "supino-inclinado-halteres",
+          "voador",
+          "crucifixo-polia-alta",
+          "triceps-polia-alta",
+          "triceps-frances",
+        ],
+      ),
+      mk(
+        "Treino B - Costas & Bíceps",
+        [2, 5],
+        [
+          "puxada-maquina",
+          "remada-baixa-pegada-fechada",
+          "remada-baixa-pegada-aberta",
+          "rosca-scott-barra-w",
+          "rosca-martelo",
+        ],
+      ),
+      mk(
+        "Treino C - Pernas & Ombros",
+        [3, 6],
+        [
+          "agachamento-barra",
+          "leg-press",
+          "cadeira-extensora",
+          "mesa-flexora",
+          "elevacao-lateral-halteres",
+          "desenvolvimento-ombro",
+        ],
+      ),
     ],
   };
 
@@ -81,9 +110,7 @@ type Ctx = {
   toggleFavoriteExercise: (exerciseId: string) => void;
   getExercise: (id: string) => Exercise | undefined;
   activeRoutine: Routine | null;
-  findWorkout: (workoutId: string) =>
-    | { routine: Routine; workout: Workout }
-    | null;
+  findWorkout: (workoutId: string) => { routine: Routine; workout: Workout } | null;
   // routines
   createRoutine: (name: string) => string;
   duplicateRoutine: (routineId: string) => string | null;
@@ -107,34 +134,48 @@ type Ctx = {
   updateGoals: (patch: Partial<TrainingGoals>) => void;
   // sessions
   startSession: (workoutId: string) => string | null;
-  updateSet: (
-    exerciseId: string,
-    index: number,
-    patch: Partial<SetLog>,
-  ) => void;
+  updateSet: (exerciseId: string, index: number, patch: Partial<SetLog>) => void;
   addSet: (exerciseId: string) => void;
   duplicateSet: (exerciseId: string, index: number) => void;
   removeSet: (exerciseId: string) => void;
   finishSession: () => Session | null;
-  updateSessionContext: (patch: Partial<Pick<Session, "currentExerciseIndex" | "restStartedAt" | "restTotal" | "restRemaining" | "restRunning">>) => void;
+  updateSessionContext: (
+    patch: Partial<
+      Pick<
+        Session,
+        "currentExerciseIndex" | "restStartedAt" | "restTotal" | "restRemaining" | "restRunning"
+      >
+    >,
+  ) => void;
   discardSession: () => void;
   // data safety
   createBackup: () => string;
   importBackup: (raw: string) => Promise<"invalid" | "saved" | "memory-only">;
   createProtectedBackup: (password: string) => Promise<string>;
-  importProtectedBackup: (raw: string, password: string) => Promise<"invalid" | "saved" | "memory-only">;
+  importProtectedBackup: (
+    raw: string,
+    password: string,
+  ) => Promise<"invalid" | "saved" | "memory-only">;
   createEncryptedSyncPackage: (password: string) => Promise<string>;
   createRecoveryPackage: () => Promise<{ raw: string; code: string }>;
-  importRecoveryPackage: (raw: string, code: string) => Promise<"invalid" | "saved" | "memory-only">;
-  importEncryptedSyncPackage: (raw: string, password: string) => Promise<"invalid" | "saved" | "memory-only">;
+  importRecoveryPackage: (
+    raw: string,
+    code: string,
+  ) => Promise<"invalid" | "saved" | "memory-only">;
+  importEncryptedSyncPackage: (
+    raw: string,
+    password: string,
+  ) => Promise<"invalid" | "saved" | "memory-only">;
   storageSizeBytes: () => number;
   // analytics
   prFor: (exerciseId: string) => number | null;
   lastSetsFor: (exerciseId: string) => SetLog[] | null;
-  lastSetsForWorkout: (workoutId: string, exerciseId: string, routineId?: string) => SetLog[] | null;
-  historyFor: (
+  lastSetsForWorkout: (
+    workoutId: string,
     exerciseId: string,
-  ) => {
+    routineId?: string,
+  ) => SetLog[] | null;
+  historyFor: (exerciseId: string) => {
     date: string;
     sets: SetLog[];
     maxWeight: number;
@@ -157,7 +198,9 @@ export function GymProvider({ children }: { children: ReactNode }) {
       setState(loaded ?? seedState());
       setReady(true);
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -216,10 +259,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
     [exercises],
   );
 
-  const getExercise = useCallback(
-    (id: string) => exerciseById.get(id),
-    [exerciseById],
-  );
+  const getExercise = useCallback((id: string) => exerciseById.get(id), [exerciseById]);
 
   const activeRoutine = useMemo(
     () => state.routines.find((r) => r.id === state.activeRoutineId) ?? null,
@@ -295,20 +335,33 @@ export function GymProvider({ children }: { children: ReactNode }) {
     [getAnalyticsIndex],
   );
 
-  const updateSessionContext = useCallback((patch: Partial<Pick<Session, "currentExerciseIndex" | "restStartedAt" | "restTotal" | "restRemaining" | "restRunning">>) => {
-    setState((s) => s.activeSession ? { ...s, activeSession: { ...s.activeSession, ...patch } } : s);
-  }, []);
+  const updateSessionContext = useCallback(
+    (
+      patch: Partial<
+        Pick<
+          Session,
+          "currentExerciseIndex" | "restStartedAt" | "restTotal" | "restRemaining" | "restRunning"
+        >
+      >,
+    ) => {
+      setState((s) =>
+        s.activeSession ? { ...s, activeSession: { ...s.activeSession, ...patch } } : s,
+      );
+    },
+    [],
+  );
 
   const value: Ctx = {
     ready,
     state,
     exercises,
-    toggleFavoriteExercise: (exerciseId) => setState((s) => ({
-      ...s,
-      favoriteExerciseIds: s.favoriteExerciseIds.includes(exerciseId)
-        ? s.favoriteExerciseIds.filter((id) => id !== exerciseId)
-        : [...s.favoriteExerciseIds, exerciseId],
-    })),
+    toggleFavoriteExercise: (exerciseId) =>
+      setState((s) => ({
+        ...s,
+        favoriteExerciseIds: s.favoriteExerciseIds.includes(exerciseId)
+          ? s.favoriteExerciseIds.filter((id) => id !== exerciseId)
+          : [...s.favoriteExerciseIds, exerciseId],
+      })),
     getExercise,
     activeRoutine,
     findWorkout,
@@ -318,10 +371,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
       setState((s) => ({
         ...s,
         activeRoutineId: id,
-        routines: [
-          ...s.routines,
-          { id, name, createdAt: new Date().toISOString(), workouts: [] },
-        ],
+        routines: [...s.routines, { id, name, createdAt: new Date().toISOString(), workouts: [] }],
       }));
       return id;
     },
@@ -352,10 +402,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
         return {
           ...s,
           routines,
-          activeRoutineId:
-            s.activeRoutineId === id
-              ? (routines[0]?.id ?? null)
-              : s.activeRoutineId,
+          activeRoutineId: s.activeRoutineId === id ? (routines[0]?.id ?? null) : s.activeRoutineId,
         };
       }),
     setActiveRoutine: (id) => setState((s) => ({ ...s, activeRoutineId: id })),
@@ -365,10 +412,22 @@ export function GymProvider({ children }: { children: ReactNode }) {
         goals: {
           ...s.goals,
           ...patch,
-          weeklySessionsTarget: Math.min(14, Math.max(1, Math.round(patch.weeklySessionsTarget ?? s.goals.weeklySessionsTarget))),
-          weeklyVolumeTarget: Math.min(1000000, Math.max(0, Math.round(patch.weeklyVolumeTarget ?? s.goals.weeklyVolumeTarget))),
-          streakTarget: Math.min(365, Math.max(1, Math.round(patch.streakTarget ?? s.goals.streakTarget))),
-          weeklyStreakTarget: Math.min(52, Math.max(1, Math.round(patch.weeklyStreakTarget ?? s.goals.weeklyStreakTarget))),
+          weeklySessionsTarget: Math.min(
+            14,
+            Math.max(1, Math.round(patch.weeklySessionsTarget ?? s.goals.weeklySessionsTarget)),
+          ),
+          weeklyVolumeTarget: Math.min(
+            1000000,
+            Math.max(0, Math.round(patch.weeklyVolumeTarget ?? s.goals.weeklyVolumeTarget)),
+          ),
+          streakTarget: Math.min(
+            365,
+            Math.max(1, Math.round(patch.streakTarget ?? s.goals.streakTarget)),
+          ),
+          weeklyStreakTarget: Math.min(
+            52,
+            Math.max(1, Math.round(patch.weeklyStreakTarget ?? s.goals.weeklyStreakTarget)),
+          ),
         },
       })),
 
@@ -380,10 +439,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
           r.id === routineId
             ? {
                 ...r,
-                workouts: [
-                  ...r.workouts,
-                  { id, name, days: [], exerciseIds: [], targetSets: {} },
-                ],
+                workouts: [...r.workouts, { id, name, days: [], exerciseIds: [], targetSets: {} }],
               }
             : r,
         ),
@@ -412,8 +468,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
       }));
       return duplicatedId;
     },
-    updateWorkout: (workoutId, patch) =>
-      mapWorkout(workoutId, (w) => ({ ...w, ...patch })),
+    updateWorkout: (workoutId, patch) => mapWorkout(workoutId, (w) => ({ ...w, ...patch })),
     deleteWorkout: (workoutId) =>
       setState((s) => {
         // O treino que sustenta a sessão ativa não pode ser removido enquanto
@@ -432,9 +487,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
     toggleWorkoutDay: (workoutId, day) =>
       mapWorkout(workoutId, (w) => ({
         ...w,
-        days: w.days.includes(day)
-          ? w.days.filter((d) => d !== day)
-          : [...w.days, day].sort(),
+        days: w.days.includes(day) ? w.days.filter((d) => d !== day) : [...w.days, day].sort(),
       })),
     addExerciseToWorkout: (workoutId, exerciseId) =>
       mapWorkout(workoutId, (w) =>
@@ -463,10 +516,14 @@ export function GymProvider({ children }: { children: ReactNode }) {
         if (validateExercise(candidate, { allowOptionalCustomFields: true }).length > 0) return s;
 
         const duplicateId = [...EXERCISE_DB, ...s.customExercises].some(
-          (exercise) => exercise.id.trim().toLocaleLowerCase("pt-BR") === candidate.id.trim().toLocaleLowerCase("pt-BR"),
+          (exercise) =>
+            exercise.id.trim().toLocaleLowerCase("pt-BR") ===
+            candidate.id.trim().toLocaleLowerCase("pt-BR"),
         );
         const duplicateName = [...EXERCISE_DB, ...s.customExercises].some(
-          (exercise) => exercise.name.trim().toLocaleLowerCase("pt-BR") === candidate.name.trim().toLocaleLowerCase("pt-BR"),
+          (exercise) =>
+            exercise.name.trim().toLocaleLowerCase("pt-BR") ===
+            candidate.name.trim().toLocaleLowerCase("pt-BR"),
         );
         if (duplicateId || duplicateName) return s;
 
@@ -561,10 +618,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
                   e.exerciseId === exerciseId
                     ? {
                         ...e,
-                        sets: [
-                          ...e.sets,
-                          { weight: null, reps: null, completed: false },
-                        ],
+                        sets: [...e.sets, { weight: null, reps: null, completed: false }],
                       }
                     : e,
                 ),
@@ -581,7 +635,14 @@ export function GymProvider({ children }: { children: ReactNode }) {
                 ...s.activeSession,
                 entries: s.activeSession.entries.map((e) =>
                   e.exerciseId === exerciseId && e.sets[index]
-                    ? { ...e, sets: [...e.sets.slice(0, index + 1), { ...e.sets[index], completed: false, isPR: false }, ...e.sets.slice(index + 1)] }
+                    ? {
+                        ...e,
+                        sets: [
+                          ...e.sets.slice(0, index + 1),
+                          { ...e.sets[index], completed: false, isPR: false },
+                          ...e.sets.slice(index + 1),
+                        ],
+                      }
                     : e,
                 ),
               },
@@ -606,9 +667,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
       ),
     finishSession: () => {
       const current = state.activeSession;
-      const saved = current
-        ? finishWorkoutSession(current, new Date().toISOString())
-        : null;
+      const saved = current ? finishWorkoutSession(current, new Date().toISOString()) : null;
       setState((s) => {
         if (!s.activeSession) return s;
         return {
@@ -640,24 +699,28 @@ export function GymProvider({ children }: { children: ReactNode }) {
     createRecoveryPackage: () => createEncryptedRecoveryPackage(state),
     importEncryptedSyncPackage: async (raw, password) => {
       const payload = await decryptEncryptedSyncPackage(raw, password);
-      const imported = parseBackup(JSON.stringify({
-        format: "torvgym-backup",
-        version: 1,
-        exportedAt: payload.updatedAt,
-        state: payload.state,
-      }));
+      const imported = parseBackup(
+        JSON.stringify({
+          format: "torvgym-backup",
+          version: 1,
+          exportedAt: payload.updatedAt,
+          state: payload.state,
+        }),
+      );
       if (!imported) return "invalid";
       setState(imported);
       return (await saveState(imported)) ? "saved" : "memory-only";
     },
     importRecoveryPackage: async (raw, code) => {
       const payload = await decryptEncryptedRecoveryPackage(raw, code);
-      const imported = parseBackup(JSON.stringify({
-        format: "torvgym-backup",
-        version: 1,
-        exportedAt: payload.updatedAt,
-        state: payload.state,
-      }));
+      const imported = parseBackup(
+        JSON.stringify({
+          format: "torvgym-backup",
+          version: 1,
+          exportedAt: payload.updatedAt,
+          state: payload.state,
+        }),
+      );
       if (!imported) return "invalid";
       setState(imported);
       return (await saveState(imported)) ? "saved" : "memory-only";

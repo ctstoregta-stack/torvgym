@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { exerciseDatabaseIsValid, validateExercise, validateExerciseDatabase } from "../src/lib/exercise-validation.ts";
+import {
+  exerciseDatabaseIsValid,
+  validateExercise,
+  validateExerciseDatabase,
+} from "../src/lib/exercise-validation.ts";
 import type { Exercise } from "../src/lib/types.ts";
 
 const makeExercise = (overrides: Partial<Exercise> = {}): Exercise => ({
@@ -20,9 +24,7 @@ test("valida um exercício completo", () => {
 });
 
 test("rejeita campos obrigatórios vazios e URL inválida", () => {
-  const issues = validateExercise(
-    makeExercise({ name: "", gif_url: "not-a-url", execution: "" }),
-  );
+  const issues = validateExercise(makeExercise({ name: "", gif_url: "not-a-url", execution: "" }));
   assert.ok(issues.some((issue) => issue.code === "missing-field"));
   assert.ok(issues.some((issue) => issue.code === "invalid-gif-url"));
 });
@@ -48,7 +50,6 @@ test("aceita mídia HTTPS que não termina necessariamente em .gif", () => {
     true,
   );
 });
-
 
 test("rejeita mídia HTTP para evitar conteúdo inseguro", () => {
   const issues = validateExercise(makeExercise({ gif_url: "http://example.com/exercicio.gif" }));

@@ -42,12 +42,12 @@ export function exerciseHistoryFor(sessions: Session[], exerciseId: string) {
     })
     .filter(Boolean)
     .sort((a, b) => new Date(b!.date).getTime() - new Date(a!.date).getTime()) as {
-      date: string;
-      sets: SetLog[];
-      maxWeight: number;
-      volume: number;
-      estimated1RM: number;
-    }[];
+    date: string;
+    sets: SetLog[];
+    maxWeight: number;
+    volume: number;
+    estimated1RM: number;
+  }[];
 }
 
 export type ExerciseProgression = {
@@ -93,10 +93,7 @@ export function exerciseProgressionFromHistory(
     prior > 0 ? Math.round(((current - prior) / prior) * 1000) / 10 : null;
 
   const volumeChangePercent = percentChange(latest.volume, previous.volume);
-  const estimated1RMChangePercent = percentChange(
-    latest.estimated1RM,
-    previous.estimated1RM,
-  );
+  const estimated1RMChangePercent = percentChange(latest.estimated1RM, previous.estimated1RM);
 
   let recommendation: ExerciseProgression["recommendation"] = "maintain";
   if (latest.estimated1RM >= previous.estimated1RM * 1.025) {
@@ -135,10 +132,15 @@ export function lastExerciseSets(sessions: Session[], exerciseId: string) {
   return null;
 }
 
-
 export type ExerciseAnalytics = {
   pr: number | null;
-  history: { date: string; sets: SetLog[]; maxWeight: number; volume: number; estimated1RM: number }[];
+  history: {
+    date: string;
+    sets: SetLog[];
+    maxWeight: number;
+    volume: number;
+    estimated1RM: number;
+  }[];
   lastSets: SetLog[] | null;
 };
 
@@ -182,9 +184,7 @@ export function buildExerciseAnalyticsIndex(sessions: Session[]) {
   }
 
   for (const value of index.values()) {
-    value.history.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-    );
+    value.history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 
   return index;
@@ -220,11 +220,7 @@ export type PeriodAnalytics = {
 export function sessionVolume(session: Session) {
   return session.entries.reduce(
     (total, entry) =>
-      total +
-      entry.sets.reduce(
-        (sum, set) => sum + (set.completed ? setVolume(set) : 0),
-        0,
-      ),
+      total + entry.sets.reduce((sum, set) => sum + (set.completed ? setVolume(set) : 0), 0),
     0,
   );
 }
@@ -241,8 +237,7 @@ export function sessionDurationSeconds(session: Session) {
   return Math.max(
     0,
     Math.floor(
-      (new Date(session.finishedAt).getTime() - new Date(session.startedAt).getTime()) /
-        1000,
+      (new Date(session.finishedAt).getTime() - new Date(session.startedAt).getTime()) / 1000,
     ),
   );
 }
@@ -300,9 +295,7 @@ export function buildWorkoutAnalyticsIndex(sessions: Session[]) {
     value.latestVolume = value.sessions[0]?.volume ?? 0;
     value.previousVolume = value.sessions[1]?.volume ?? null;
     value.volumeChangePercent =
-      value.previousVolume != null
-        ? percentChange(value.latestVolume, value.previousVolume)
-        : null;
+      value.previousVolume != null ? percentChange(value.latestVolume, value.previousVolume) : null;
   }
 
   return index;
@@ -398,11 +391,7 @@ export function buildPeriodAnalytics(
     }
   } else {
     for (let offset = count - 1; offset >= 0; offset -= 1) {
-      const date = new Date(
-        referenceDate.getFullYear(),
-        referenceDate.getMonth() - offset,
-        1,
-      );
+      const date = new Date(referenceDate.getFullYear(), referenceDate.getMonth() - offset, 1);
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       periods.push(
         groups.get(key) ?? {
@@ -487,11 +476,18 @@ export function buildDashboardAnalytics(sessions: Session[], now = new Date()): 
     (session) => new Date(session.finishedAt ?? session.startedAt).getTime() >= recent30Cutoff,
   );
   const sessionsLast30Days = recent30Sessions.length;
-  const volumeLast30Days = recent30Sessions.reduce((sum, session) => sum + sessionVolume(session), 0);
+  const volumeLast30Days = recent30Sessions.reduce(
+    (sum, session) => sum + sessionVolume(session),
+    0,
+  );
   const averageSessionsPerWeek = Math.round((sessionsLast30Days / (30 / 7)) * 10) / 10;
   const activeWeeksLast8 = new Set(
     completed
-      .filter((session) => new Date(session.finishedAt ?? session.startedAt).getTime() >= referenceTime - 56 * 24 * 60 * 60 * 1000)
+      .filter(
+        (session) =>
+          new Date(session.finishedAt ?? session.startedAt).getTime() >=
+          referenceTime - 56 * 24 * 60 * 60 * 1000,
+      )
       .map((session) => {
         const date = new Date(session.finishedAt ?? session.startedAt);
         const mondayOffset = (date.getDay() + 6) % 7;
@@ -499,13 +495,14 @@ export function buildDashboardAnalytics(sessions: Session[], now = new Date()): 
         return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, "0")}-${String(monday.getDate()).padStart(2, "0")}`;
       }),
   ).size;
-  const bestSessionVolume = completed.reduce((best, session) => Math.max(best, sessionVolume(session)), 0);
+  const bestSessionVolume = completed.reduce(
+    (best, session) => Math.max(best, sessionVolume(session)),
+    0,
+  );
 
   const dayKey = (date: Date) =>
     `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-  const dayKeys = new Set(
-    completed.map((session) => dayKey(new Date(session.finishedAt!))),
-  );
+  const dayKeys = new Set(completed.map((session) => dayKey(new Date(session.finishedAt!))));
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
   const yesterday = new Date(today);
@@ -613,9 +610,7 @@ export function buildDashboardAnalytics(sessions: Session[], now = new Date()): 
     streakDays,
     latestPR,
     volumeChangePercent:
-      latest && previous
-        ? percentChange(sessionVolume(latest), sessionVolume(previous))
-        : null,
+      latest && previous ? percentChange(sessionVolume(latest), sessionVolume(previous)) : null,
     topExercises: [...exerciseMap.entries()]
       .map(([exerciseId, data]) => ({ exerciseId, ...data }))
       .sort((a, b) => b.volume - a.volume)
@@ -657,9 +652,10 @@ export function workoutExerciseHistoryFor(
   routineId?: string,
 ) {
   return exerciseHistoryFor(
-    sessions.filter((session) =>
-      session.workoutId === workoutId &&
-      (routineId === undefined || session.routineId === routineId),
+    sessions.filter(
+      (session) =>
+        session.workoutId === workoutId &&
+        (routineId === undefined || session.routineId === routineId),
     ),
     exerciseId,
   );
@@ -675,7 +671,6 @@ export function workoutExerciseProgressionFor(
     workoutExerciseHistoryFor(sessions, workoutId, exerciseId, routineId),
   );
 }
-
 
 export type PersonalRecord = {
   exerciseId: string;
@@ -731,7 +726,6 @@ export function buildPersonalRecords(sessions: Session[]): PersonalRecord[] {
   });
 }
 
-
 export type ProgressionRecommendation = {
   action: ExerciseProgression["recommendation"];
   targetWeight: number | null;
@@ -749,9 +743,20 @@ function classifyProgressionTrend(values: number[]) {
   });
   const improving = changes.filter((change) => change >= 0.02).length;
   const declining = changes.filter((change) => change <= -0.05).length;
-  if (declining >= 2) return { trend: "declining" as const, confidence: values.length >= 3 ? "high" as const : "medium" as const };
-  if (improving >= 2) return { trend: "improving" as const, confidence: values.length >= 3 ? "high" as const : "medium" as const };
-  return { trend: "stable" as const, confidence: values.length >= 3 ? "medium" as const : "low" as const };
+  if (declining >= 2)
+    return {
+      trend: "declining" as const,
+      confidence: values.length >= 3 ? ("high" as const) : ("medium" as const),
+    };
+  if (improving >= 2)
+    return {
+      trend: "improving" as const,
+      confidence: values.length >= 3 ? ("high" as const) : ("medium" as const),
+    };
+  return {
+    trend: "stable" as const,
+    confidence: values.length >= 3 ? ("medium" as const) : ("low" as const),
+  };
 }
 
 export function workoutExerciseAdvancedRecommendationFor(
@@ -769,27 +774,36 @@ export function workoutExerciseAdvancedRecommendationFor(
     .sort((a, b) => (b.reps ?? 0) - (a.reps ?? 0))[0];
   const latestWeight = latestSet?.weight ?? progression.latest.maxWeight;
   const latestReps = latestSet?.reps ?? null;
-  const trend = classifyProgressionTrend(
-    history.map((item) => item.estimated1RM).reverse(),
-  );
+  const trend = classifyProgressionTrend(history.map((item) => item.estimated1RM).reverse());
 
-  const recentDeclines = history.length >= 3
-    ? history.slice(0, 3).every((item, index, items) =>
-        index === items.length - 1 || item.estimated1RM <= (items[index + 1]?.estimated1RM ?? item.estimated1RM),
-      )
-    : false;
-  const recentImprovement = history.length >= 3
-    ? history.slice(0, 3).every((item, index, items) =>
-        index === items.length - 1 || item.estimated1RM >= (items[index + 1]?.estimated1RM ?? item.estimated1RM),
-      )
-    : false;
+  const recentDeclines =
+    history.length >= 3
+      ? history
+          .slice(0, 3)
+          .every(
+            (item, index, items) =>
+              index === items.length - 1 ||
+              item.estimated1RM <= (items[index + 1]?.estimated1RM ?? item.estimated1RM),
+          )
+      : false;
+  const recentImprovement =
+    history.length >= 3
+      ? history
+          .slice(0, 3)
+          .every(
+            (item, index, items) =>
+              index === items.length - 1 ||
+              item.estimated1RM >= (items[index + 1]?.estimated1RM ?? item.estimated1RM),
+          )
+      : false;
 
   if (recentDeclines && trend.trend === "declining") {
     return {
       action: "recover",
       targetWeight: latestWeight > 0 ? roundLoad(latestWeight * 0.9) : null,
       targetReps: latestReps,
-      reason: "As últimas sessões mostram queda consistente de desempenho. Reduza a carga temporariamente e priorize recuperação.",
+      reason:
+        "As últimas sessões mostram queda consistente de desempenho. Reduza a carga temporariamente e priorize recuperação.",
       ...trend,
     };
   }
@@ -799,7 +813,8 @@ export function workoutExerciseAdvancedRecommendationFor(
       action: "increase-load",
       targetWeight: latestWeight > 0 ? roundLoad(latestWeight * 1.025) : null,
       targetReps: latestReps,
-      reason: "Há evolução consistente nas últimas sessões. Teste uma pequena progressão de carga mantendo a execução.",
+      reason:
+        "Há evolução consistente nas últimas sessões. Teste uma pequena progressão de carga mantendo a execução.",
       ...trend,
     };
   }
@@ -809,7 +824,8 @@ export function workoutExerciseAdvancedRecommendationFor(
       action: "increase-load",
       targetWeight: latestWeight > 0 ? roundLoad(latestWeight * 1.025) : null,
       targetReps: latestReps,
-      reason: "O 1RM estimado melhorou e não há sinal suficiente de queda. Faça uma progressão pequena.",
+      reason:
+        "O 1RM estimado melhorou e não há sinal suficiente de queda. Faça uma progressão pequena.",
       ...trend,
     };
   }
@@ -828,9 +844,10 @@ export function workoutExerciseAdvancedRecommendationFor(
     action: "add-reps",
     targetWeight: latestWeight || null,
     targetReps: latestReps != null ? latestReps + 1 : null,
-    reason: trend.trend === "stable"
-      ? "O desempenho está estável. Mantenha a carga e busque uma repetição extra para sair da estagnação."
-      : "A evolução ainda não é consistente o bastante para aumentar a carga. Consolide a execução e tente mais uma repetição.",
+    reason:
+      trend.trend === "stable"
+        ? "O desempenho está estável. Mantenha a carga e busque uma repetição extra para sair da estagnação."
+        : "A evolução ainda não é consistente o bastante para aumentar a carga. Consolide a execução e tente mais uma repetição.",
     ...trend,
   };
 }
@@ -847,7 +864,6 @@ export function workoutExerciseRecommendationFor(
 ): ProgressionRecommendation | null {
   return workoutExerciseAdvancedRecommendationFor(sessions, workoutId, exerciseId, routineId);
 }
-
 
 export type GoalStatus = "ahead" | "on-track" | "behind" | "complete";
 
@@ -880,13 +896,14 @@ function goalInsight(current: number, target: number, expectedProgress: number):
   const safeTarget = Math.max(target, 1);
   const progressPercent = Math.round((current / safeTarget) * 100);
   const remaining = Math.max(0, safeTarget - current);
-  const status: GoalStatus = current >= safeTarget
-    ? "complete"
-    : progressPercent >= Math.round(expectedProgress * 100) + 15
-      ? "ahead"
-      : progressPercent < Math.max(0, Math.round(expectedProgress * 100) - 15)
-        ? "behind"
-        : "on-track";
+  const status: GoalStatus =
+    current >= safeTarget
+      ? "complete"
+      : progressPercent >= Math.round(expectedProgress * 100) + 15
+        ? "ahead"
+        : progressPercent < Math.max(0, Math.round(expectedProgress * 100) - 15)
+          ? "behind"
+          : "on-track";
   return { current, target: safeTarget, remaining, progressPercent, status };
 }
 
@@ -914,8 +931,12 @@ export function buildWeeklyGoalInsights(
   const volumeInsight = goalInsight(weekVolume, goals.weeklyVolumeTarget, expectedProgress);
   const streakInsight = goalInsight(dashboard.streakDays, goals.streakTarget, expectedProgress);
 
-  const allComplete = [sessionsInsight, volumeInsight, streakInsight].every((item) => item.status === "complete");
-  const anyBehind = [sessionsInsight, volumeInsight, streakInsight].some((item) => item.status === "behind");
+  const allComplete = [sessionsInsight, volumeInsight, streakInsight].every(
+    (item) => item.status === "complete",
+  );
+  const anyBehind = [sessionsInsight, volumeInsight, streakInsight].some(
+    (item) => item.status === "behind",
+  );
   const overallStatus: GoalStatus = allComplete
     ? "complete"
     : anyBehind

@@ -77,15 +77,7 @@ export type AppState = {
   goals: TrainingGoals;
 };
 
-export const WEEKDAYS = [
-  "Dom",
-  "Seg",
-  "Ter",
-  "Qua",
-  "Qui",
-  "Sex",
-  "Sáb",
-] as const;
+export const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const;
 
 export const WEEKDAYS_FULL = [
   "Domingo",

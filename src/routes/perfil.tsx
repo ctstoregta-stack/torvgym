@@ -21,7 +21,12 @@ export const Route = createFileRoute("/perfil")({
 function ProfilePage() {
   const { ready, state } = useGym();
   const dashboard = buildDashboardAnalytics(state.sessions);
-  if (!ready) return <AppShell title="Perfil"><div className="h-40 animate-pulse rounded-xl bg-card" /></AppShell>;
+  if (!ready)
+    return (
+      <AppShell title="Perfil">
+        <div className="h-40 animate-pulse rounded-xl bg-card" />
+      </AppShell>
+    );
   return (
     <AppShell title="Perfil">
       <div className="space-y-4">
@@ -29,7 +34,9 @@ function ProfilePage() {
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             Meu perfil
           </p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight">Tudo do seu treino em um só lugar</h2>
+          <h2 className="mt-1 text-2xl font-bold tracking-tight">
+            Tudo do seu treino em um só lugar
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Histórico e exercícios agora ficam organizados dentro do Perfil.
           </p>
@@ -37,9 +44,20 @@ function ProfilePage() {
 
         <Card className="p-4">
           <div className="grid grid-cols-3 gap-2 text-center">
-            <div><p className="text-[11px] text-muted-foreground">Treinos</p><p className="mt-1 text-lg font-bold">{dashboard.totalSessions}</p></div>
-            <div><p className="text-[11px] text-muted-foreground">Volume</p><p className="mt-1 text-lg font-bold">{Math.round(dashboard.totalVolume).toLocaleString("pt-BR")} kg</p></div>
-            <div><p className="text-[11px] text-muted-foreground">Sequência</p><p className="mt-1 text-lg font-bold">{dashboard.streakDays}d</p></div>
+            <div>
+              <p className="text-[11px] text-muted-foreground">Treinos</p>
+              <p className="mt-1 text-lg font-bold">{dashboard.totalSessions}</p>
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground">Volume</p>
+              <p className="mt-1 text-lg font-bold">
+                {Math.round(dashboard.totalVolume).toLocaleString("pt-BR")} kg
+              </p>
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground">Sequência</p>
+              <p className="mt-1 text-lg font-bold">{dashboard.streakDays}d</p>
+            </div>
           </div>
         </Card>
 
@@ -48,15 +66,26 @@ function ProfilePage() {
             <div>
               <p className="text-sm font-semibold">Esta semana</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {dashboard.sessionsLast7Days} treinos · {Math.round(dashboard.volumeLast7Days).toLocaleString("pt-BR")} kg
+                {dashboard.sessionsLast7Days} treinos ·{" "}
+                {Math.round(dashboard.volumeLast7Days).toLocaleString("pt-BR")} kg
               </p>
             </div>
-            <Link to="/progresso" className="text-xs font-semibold text-primary">Ver progresso</Link>
+            <Link to="/progresso" className="text-xs font-semibold text-primary">
+              Ver progresso
+            </Link>
           </div>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-elevated">
             <div
               className="h-full rounded-full bg-primary"
-              style={{ width: Math.min(100, state.goals.weeklySessionsTarget > 0 ? (dashboard.sessionsLast7Days / state.goals.weeklySessionsTarget) * 100 : 0) + "%" }}
+              style={{
+                width:
+                  Math.min(
+                    100,
+                    state.goals.weeklySessionsTarget > 0
+                      ? (dashboard.sessionsLast7Days / state.goals.weeklySessionsTarget) * 100
+                      : 0,
+                  ) + "%",
+              }}
             />
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
@@ -84,10 +113,26 @@ function ProfilePage() {
             Mais opções
           </p>
           <div className="space-y-2">
-            <SecondaryLink to="/progresso" title="Progresso" description="Acompanhe sua evolução ao longo do tempo." />
-            <SecondaryLink to="/conquistas" title="Conquistas" description="Consulte suas metas e marcos alcançados." />
-            <SecondaryLink to="/configuracoes" title="Configurações" description="Backup, recuperação e segurança dos seus dados." />
-            <SecondaryLink to="/relatorios" title="Relatórios" description="Análises detalhadas e exportação dos seus treinos." />
+            <SecondaryLink
+              to="/progresso"
+              title="Progresso"
+              description="Acompanhe sua evolução ao longo do tempo."
+            />
+            <SecondaryLink
+              to="/conquistas"
+              title="Conquistas"
+              description="Consulte suas metas e marcos alcançados."
+            />
+            <SecondaryLink
+              to="/configuracoes"
+              title="Configurações"
+              description="Backup, recuperação e segurança dos seus dados."
+            />
+            <SecondaryLink
+              to="/relatorios"
+              title="Relatórios"
+              description="Análises detalhadas e exportação dos seus treinos."
+            />
           </div>
         </section>
       </div>
@@ -117,7 +162,9 @@ function ProfileLink({
             <p className="font-semibold">{title}</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
           </div>
-          <span className="ml-auto pt-1 text-muted-foreground" aria-hidden="true">›</span>
+          <span className="ml-auto pt-1 text-muted-foreground" aria-hidden="true">
+            ›
+          </span>
         </div>
       </Card>
     </Link>
@@ -142,7 +189,9 @@ function SecondaryLink({
         <p className="text-sm font-semibold">{title}</p>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
-      <span className="text-muted-foreground" aria-hidden="true">›</span>
+      <span className="text-muted-foreground" aria-hidden="true">
+        ›
+      </span>
     </Link>
   );
 }

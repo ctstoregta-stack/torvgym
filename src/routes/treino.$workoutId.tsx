@@ -1,7 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ExerciseMedia } from "@/components/ExerciseMedia";
 import { Button, Card, EmptyState, Input, Tag } from "@/components/ui-kit";
 import { muscleGroupsOf, useGym } from "@/store/gym-store";
@@ -13,8 +20,7 @@ export const Route = createFileRoute("/treino/$workoutId")({
       { title: "Treino · TorvGym" },
       {
         name: "description",
-        content:
-          "Monte os exercícios do treino, defina séries alvo e inicie a execução.",
+        content: "Monte os exercícios do treino, defina séries alvo e inicie a execução.",
       },
       { property: "og:title", content: "Treino · TorvGym" },
       {
@@ -66,9 +72,7 @@ function WorkoutPage() {
       exercises.filter(
         (e) =>
           (!category || e.category === category) &&
-          `${e.name} ${e.category} ${e.equipment}`
-            .toLowerCase()
-            .includes(query.toLowerCase()),
+          `${e.name} ${e.category} ${e.equipment}`.toLowerCase().includes(query.toLowerCase()),
       ),
     [exercises, query, category],
   );
@@ -101,8 +105,7 @@ function WorkoutPage() {
   const currentNotes = workout.notes ?? "";
   const currentRest = workout.restSeconds ?? 60;
   const groups = muscleGroupsOf(workout.exerciseIds, getExercise);
-  const activeOther =
-    state.activeSession && state.activeSession.workoutId !== workout.id;
+  const activeOther = state.activeSession && state.activeSession.workoutId !== workout.id;
 
   const moveExercise = (index: number, direction: -1 | 1) => {
     const nextIndex = index + direction;
@@ -115,9 +118,7 @@ function WorkoutPage() {
   return (
     <AppShell title={workout.name} back={{ to: "/" }}>
       <Card className="mb-4">
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">
-          {routine.name}
-        </p>
+        <p className="text-xs uppercase tracking-widest text-muted-foreground">{routine.name}</p>
         {renaming ? (
           <div className="mt-2 flex gap-2">
             <Input value={name} onChange={(e) => setName(e.target.value)} />
@@ -145,9 +146,7 @@ function WorkoutPage() {
           </div>
         )}
 
-        <p className="mt-4 text-xs font-semibold text-muted-foreground">
-          Dias da semana
-        </p>
+        <p className="mt-4 text-xs font-semibold text-muted-foreground">Dias da semana</p>
         <div className="mt-2 flex gap-1">
           {WEEKDAYS.map((label, day) => (
             <button
@@ -171,9 +170,17 @@ function WorkoutPage() {
               className="mt-1 h-10 w-full rounded-lg border border-border bg-elevated px-3 text-sm font-normal text-foreground"
               value={currentRest}
               onChange={(e) => setRestSeconds(Number(e.target.value))}
-              onBlur={() => updateWorkout(workout.id, { restSeconds: Math.max(15, Math.min(600, restSeconds || currentRest)) })}
+              onBlur={() =>
+                updateWorkout(workout.id, {
+                  restSeconds: Math.max(15, Math.min(600, restSeconds || currentRest)),
+                })
+              }
             >
-              {[30,45,60,75,90,120,150,180].map((seconds) => <option key={seconds} value={seconds}>{seconds}s</option>)}
+              {[30, 45, 60, 75, 90, 120, 150, 180].map((seconds) => (
+                <option key={seconds} value={seconds}>
+                  {seconds}s
+                </option>
+              ))}
             </select>
           </label>
           <label className="text-xs font-semibold text-muted-foreground">
@@ -209,7 +216,16 @@ function WorkoutPage() {
         <h3 className="text-sm font-semibold text-muted-foreground">
           Exercícios ({workout.exerciseIds.length})
         </h3>
-        <Button variant="outline" className="px-3 py-1.5 text-xs" onClick={() => { setSelectedExercises([]); setQuery(""); setCategory(null); setPicker(true); }}>
+        <Button
+          variant="outline"
+          className="px-3 py-1.5 text-xs"
+          onClick={() => {
+            setSelectedExercises([]);
+            setQuery("");
+            setCategory(null);
+            setPicker(true);
+          }}
+        >
           + Adicionar
         </Button>
       </div>
@@ -229,7 +245,11 @@ function WorkoutPage() {
             return (
               <div key={id} className="surface flex items-center gap-3 p-3">
                 <Link to="/exercicio/$exerciseId" params={{ exerciseId: id }}>
-                  <ExerciseMedia exercise={ex} className="h-14 w-14 shrink-0" rounded="rounded-lg" />
+                  <ExerciseMedia
+                    exercise={ex}
+                    className="h-14 w-14 shrink-0"
+                    rounded="rounded-lg"
+                  />
                 </Link>
                 <div className="min-w-0 flex-1">
                   <Link to="/exercicio/$exerciseId" params={{ exerciseId: id }}>
@@ -238,7 +258,8 @@ function WorkoutPage() {
                   <p className="text-xs text-muted-foreground">
                     {ex.category} · {ex.equipment}
                     {pr != null ? ` · PR ${pr}kg` : ""}
-                    {" · "}{workout.targetSets[id] ?? 3} séries
+                    {" · "}
+                    {workout.targetSets[id] ?? 3} séries
                   </p>
                   <div className="mt-1.5 flex items-center gap-2">
                     <span className="text-[11px] text-muted-foreground">Séries</span>
@@ -270,14 +291,18 @@ function WorkoutPage() {
                     disabled={index === 0}
                     onClick={() => moveExercise(index, -1)}
                     className="h-8 w-8 rounded-lg bg-card text-sm font-bold text-muted-foreground disabled:opacity-30"
-                  ><span aria-hidden="true">⌃</span></button>
+                  >
+                    <span aria-hidden="true">⌃</span>
+                  </button>
                   <button
                     type="button"
                     aria-label={`Mover ${ex.name} para baixo`}
                     disabled={index === workout.exerciseIds.length - 1}
                     onClick={() => moveExercise(index, 1)}
                     className="h-8 w-8 rounded-lg bg-card text-sm font-bold text-muted-foreground disabled:opacity-30"
-                  ><span aria-hidden="true">⌄</span></button>
+                  >
+                    <span aria-hidden="true">⌄</span>
+                  </button>
                   <button
                     type="button"
                     className="mt-1 text-xs font-semibold text-destructive"
@@ -307,23 +332,27 @@ function WorkoutPage() {
             navigate({ to: "/executar/$workoutId", params: { workoutId: workout.id } });
           }}
         >
-          {state.activeSession?.workoutId === workout.id
-            ? "Continuar treino"
-            : "Iniciar Treino"}
+          {state.activeSession?.workoutId === workout.id ? "Continuar treino" : "Iniciar Treino"}
         </Button>
       </div>
-
 
       <Dialog open={confirmStart} onOpenChange={setConfirmStart}>
         <DialogContent className="max-w-md rounded-2xl border-border bg-card">
           <DialogHeader className="text-left">
             <DialogTitle>Treino em andamento</DialogTitle>
             <DialogDescription>
-              Você já tem outro treino em andamento. Iniciar este treino encerrará a sessão atual e poderá fazer você perder o progresso dela.
+              Você já tem outro treino em andamento. Iniciar este treino encerrará a sessão atual e
+              poderá fazer você perder o progresso dela.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 pt-2">
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setConfirmStart(false)}>Cancelar</Button>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setConfirmStart(false)}
+            >
+              Cancelar
+            </Button>
             <Button
               variant="danger"
               className="w-full sm:w-auto"
@@ -355,9 +384,22 @@ function WorkoutPage() {
                 onChange={(e) => setQuery(e.target.value)}
               />
               <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
-                <button type="button" aria-pressed={category === null} onClick={() => setCategory(null)} className={`min-h-9 shrink-0 rounded-full px-3 text-xs font-semibold ${category === null ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground"}`}>Todos</button>
+                <button
+                  type="button"
+                  aria-pressed={category === null}
+                  onClick={() => setCategory(null)}
+                  className={`min-h-9 shrink-0 rounded-full px-3 text-xs font-semibold ${category === null ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground"}`}
+                >
+                  Todos
+                </button>
                 {categories.map((item) => (
-                  <button type="button" key={item} aria-pressed={category === item} onClick={() => setCategory(item)} className={`min-h-9 shrink-0 rounded-full px-3 text-xs font-semibold ${category === item ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground"}`}>
+                  <button
+                    type="button"
+                    key={item}
+                    aria-pressed={category === item}
+                    onClick={() => setCategory(item)}
+                    className={`min-h-9 shrink-0 rounded-full px-3 text-xs font-semibold ${category === item ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground"}`}
+                  >
                     {item}
                   </button>
                 ))}
@@ -374,23 +416,37 @@ function WorkoutPage() {
                     disabled={added}
                     onClick={() =>
                       setSelectedExercises((current) =>
-                        current.includes(ex.id) ? current.filter((id) => id !== ex.id) : [...current, ex.id],
+                        current.includes(ex.id)
+                          ? current.filter((id) => id !== ex.id)
+                          : [...current, ex.id],
                       )
                     }
                     className={`flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition-colors disabled:opacity-40 ${selected ? "border-primary/50 bg-primary/10" : "border-border bg-elevated"}`}
                   >
-                    <ExerciseMedia exercise={ex} className="h-12 w-12 shrink-0" rounded="rounded-lg" />
+                    <ExerciseMedia
+                      exercise={ex}
+                      className="h-12 w-12 shrink-0"
+                      rounded="rounded-lg"
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">{ex.name}</p>
-                      <p className="text-xs text-muted-foreground">{ex.category} · {ex.equipment}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {ex.category} · {ex.equipment}
+                      </p>
                     </div>
-                    <span className={`text-xs font-bold ${selected ? "text-primary" : "text-muted-foreground"}`}>
+                    <span
+                      className={`text-xs font-bold ${selected ? "text-primary" : "text-muted-foreground"}`}
+                    >
                       {added ? "Adicionado" : selected ? "Selecionado" : "+"}
                     </span>
                   </button>
                 );
               })}
-              {filtered.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">Nenhum exercício encontrado.</p>}
+              {filtered.length === 0 && (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  Nenhum exercício encontrado.
+                </p>
+              )}
             </div>
             <div className="border-t border-border bg-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
               <Button
@@ -402,7 +458,9 @@ function WorkoutPage() {
                   setPicker(false);
                 }}
               >
-                {selectedExercises.length > 0 ? `Adicionar ${selectedExercises.length} exercício${selectedExercises.length === 1 ? "" : "s"}` : "Selecione exercícios"}
+                {selectedExercises.length > 0
+                  ? `Adicionar ${selectedExercises.length} exercício${selectedExercises.length === 1 ? "" : "s"}`
+                  : "Selecione exercícios"}
               </Button>
             </div>
           </div>

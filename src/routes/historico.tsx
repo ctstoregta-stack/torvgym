@@ -36,13 +36,22 @@ function HistoryPage() {
   }, [allSessions, range]);
 
   if (!ready) {
-    return <AppShell title="Histórico"><div className="h-40 animate-pulse rounded-xl bg-card" /></AppShell>;
+    return (
+      <AppShell title="Histórico">
+        <div className="h-40 animate-pulse rounded-xl bg-card" />
+      </AppShell>
+    );
   }
 
   const totalVolume = sessions.reduce((acc, session) => acc + sessionVolume(session), 0);
-  const totalSets = sessions.reduce((acc, session) => acc + session.entries.reduce((sum, entry) => sum + entry.sets.length, 0), 0);
+  const totalSets = sessions.reduce(
+    (acc, session) => acc + session.entries.reduce((sum, entry) => sum + entry.sets.length, 0),
+    0,
+  );
   const totalPRs = sessions.reduce(
-    (acc, session) => acc + session.entries.reduce((a, entry) => a + entry.sets.filter((set) => set.isPR).length, 0),
+    (acc, session) =>
+      acc +
+      session.entries.reduce((a, entry) => a + entry.sets.filter((set) => set.isPR).length, 0),
     0,
   );
 
@@ -52,17 +61,23 @@ function HistoryPage() {
         <EmptyState
           title="Nenhum treino concluído"
           description="Finalize um treino para começar a acompanhar sua evolução aqui."
-          action={<Link to="/"><Button>Ir para o início</Button></Link>}
+          action={
+            <Link to="/">
+              <Button>Ir para o início</Button>
+            </Link>
+          }
         />
       ) : (
         <>
           <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-            {([
-              [0, "Tudo"],
-              [7, "7 dias"],
-              [30, "30 dias"],
-              [90, "90 dias"],
-            ] as const).map(([value, label]) => (
+            {(
+              [
+                [0, "Tudo"],
+                [7, "7 dias"],
+                [30, "30 dias"],
+                [90, "90 dias"],
+              ] as const
+            ).map(([value, label]) => (
               <button
                 key={value}
                 type="button"
@@ -82,7 +97,8 @@ function HistoryPage() {
             <Card className="p-3">
               <p className="text-[11px] text-muted-foreground">Volume</p>
               <p className="mt-1 text-xl font-bold tabular-nums">
-                {Math.round(totalVolume).toLocaleString("pt-BR")}<span className="ml-1 text-xs font-medium text-muted-foreground">kg</span>
+                {Math.round(totalVolume).toLocaleString("pt-BR")}
+                <span className="ml-1 text-xs font-medium text-muted-foreground">kg</span>
               </p>
             </Card>
             <Card className="p-3">
@@ -101,10 +117,18 @@ function HistoryPage() {
               <p className="mb-3 text-xs text-muted-foreground">Volume de cada sessão concluída.</p>
               <div className="h-44 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={sessions.slice(0, 8).reverse().map((session) => ({
-                    name: new Date(session.finishedAt!).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
-                    volume: Math.round(sessionVolume(session)),
-                  }))}>
+                  <BarChart
+                    data={sessions
+                      .slice(0, 8)
+                      .reverse()
+                      .map((session) => ({
+                        name: new Date(session.finishedAt!).toLocaleDateString("pt-BR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                        }),
+                        volume: Math.round(sessionVolume(session)),
+                      }))}
+                  >
                     <XAxis dataKey="name" tick={{ fontSize: 10 }} />
                     <YAxis hide />
                     <Tooltip
@@ -131,7 +155,13 @@ function HistoryPage() {
                       }}
                       formatter={(value) => [`${Number(value).toLocaleString("pt-BR")} kg`, ""]}
                     />
-                    <Bar dataKey="volume" fill="var(--primary)" radius={[6, 6, 0, 0]} activeBar={false} isAnimationActive={false} />
+                    <Bar
+                      dataKey="volume"
+                      fill="var(--primary)"
+                      radius={[6, 6, 0, 0]}
+                      activeBar={false}
+                      isAnimationActive={false}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -141,12 +171,18 @@ function HistoryPage() {
           <div className="space-y-3">
             {sessions.map((session) => {
               const volume = sessionVolume(session);
-              const prs = session.entries.reduce((a, entry) => a + entry.sets.filter((set) => set.isPR).length, 0);
+              const prs = session.entries.reduce(
+                (a, entry) => a + entry.sets.filter((set) => set.isPR).length,
+                0,
+              );
               const completedSets = sessionSetCount(session);
               const durationSecs = sessionDurationSeconds(session);
-              const durationLabel = durationSecs >= 3600
-                ? `${Math.floor(durationSecs / 3600)}h ${Math.floor((durationSecs % 3600) / 60).toString().padStart(2, "0")}min`
-                : `${Math.floor(durationSecs / 60)} min`;
+              const durationLabel =
+                durationSecs >= 3600
+                  ? `${Math.floor(durationSecs / 3600)}h ${Math.floor((durationSecs % 3600) / 60)
+                      .toString()
+                      .padStart(2, "0")}min`
+                  : `${Math.floor(durationSecs / 60)} min`;
               return (
                 <Card key={session.id}>
                   <div className="flex items-start justify-between gap-2">
@@ -154,17 +190,27 @@ function HistoryPage() {
                       <p className="truncate text-base font-semibold">{session.workoutName}</p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(session.finishedAt!).toLocaleString("pt-BR", {
-                          day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })}
                       </p>
                     </div>
                     <div className="shrink-0 text-right">
                       <p className="text-sm font-bold tabular-nums">{Math.round(volume)} kg</p>
-                      {prs > 0 && <p className="text-[11px] font-bold text-gold">{prs} PR{prs > 1 ? "s" : ""} 👑</p>}
+                      {prs > 0 && (
+                        <p className="text-[11px] font-bold text-gold">
+                          {prs} PR{prs > 1 ? "s" : ""} 👑
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-                    <span className="rounded-full bg-elevated px-2.5 py-1">{completedSets} séries</span>
+                    <span className="rounded-full bg-elevated px-2.5 py-1">
+                      {completedSets} séries
+                    </span>
                     <span className="rounded-full bg-elevated px-2.5 py-1">{durationLabel}</span>
                   </div>
                   <div className="mt-3 space-y-2">
@@ -177,9 +223,12 @@ function HistoryPage() {
                           params={{ exerciseId: entry.exerciseId }}
                           className="flex min-h-10 items-center justify-between rounded-lg bg-elevated px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
                         >
-                          <span className="min-w-0 truncate text-xs font-medium">{ex?.name ?? entry.exerciseId}</span>
+                          <span className="min-w-0 truncate text-xs font-medium">
+                            {ex?.name ?? entry.exerciseId}
+                          </span>
                           <span className="shrink-0 pl-2 text-xs text-muted-foreground tabular-nums">
-                            {entry.sets.length} × {Math.max(...entry.sets.map((set) => set.weight ?? 0))} kg
+                            {entry.sets.length} ×{" "}
+                            {Math.max(...entry.sets.map((set) => set.weight ?? 0))} kg
                           </span>
                         </Link>
                       );

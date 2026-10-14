@@ -28,9 +28,7 @@ async function runWebBuild() {
       }
 
       reject(
-        new Error(
-          `O build web para o Capacitor falhou com código ${code ?? "desconhecido"}.`,
-        ),
+        new Error(`O build web para o Capacitor falhou com código ${code ?? "desconhecido"}.`),
       );
     });
   });

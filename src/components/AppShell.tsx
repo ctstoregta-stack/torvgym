@@ -34,7 +34,13 @@ export function AppShell({
               className="-ml-1 flex h-9 w-9 items-center justify-center rounded-full bg-card text-muted-foreground tap active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
               aria-label="Voltar"
             >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                viewBox="0 0 24 24"
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </Link>
@@ -44,7 +50,9 @@ export function AppShell({
         </header>
       )}
 
-      <main className="page-content min-w-0 flex-1 px-3 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-5 sm:px-6 sm:pt-6 lg:px-8">{children}</main>
+      <main className="page-content min-w-0 flex-1 px-3 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-5 sm:px-6 sm:pt-6 lg:px-8">
+        {children}
+      </main>
 
       {active && pathname !== "/" && !pathname.startsWith("/executar") && (
         <Link
@@ -56,21 +64,29 @@ export function AppShell({
         </Link>
       )}
 
-      <nav aria-label="Navegação principal" className="fixed bottom-0 left-1/2 z-20 w-full max-w-6xl -translate-x-1/2 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      <nav
+        aria-label="Navegação principal"
+        className="fixed bottom-0 left-1/2 z-20 w-full max-w-6xl -translate-x-1/2 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-card/80"
+      >
         <ul className="grid grid-cols-3">
           {NAV.map(({ to, label, icon: Icon }) => {
-            const isActive = to === "/"
-              ? pathname === "/"
-              : to === "/perfil"
-                ? pathname === "/perfil" || pathname.startsWith("/historico") || pathname.startsWith("/exercicios")
-                : pathname.startsWith(to);
+            const isActive =
+              to === "/"
+                ? pathname === "/"
+                : to === "/perfil"
+                  ? pathname === "/perfil" ||
+                    pathname.startsWith("/historico") ||
+                    pathname.startsWith("/exercicios")
+                  : pathname.startsWith(to);
             return (
               <li key={to}>
                 <Link
                   to={to}
                   aria-current={isActive ? "page" : undefined}
                   className={`flex min-h-16 flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium tap ${
-                    isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-elevated/50 hover:text-foreground"
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-elevated/50 hover:text-foreground"
                   }`}
                 >
                   <Icon />
@@ -88,7 +104,10 @@ export function AppShell({
 function HomeIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" strokeLinejoin="round" />
+      <path
+        d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

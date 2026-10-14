@@ -7,7 +7,13 @@ test("backup protegido faz round-trip", async () => {
     format: "torvgym-backup",
     version: 1,
     exportedAt: "2026-10-04T00:00:00.000Z",
-    state: { routines: [], activeRoutineId: null, customExercises: [], sessions: [], activeSession: null },
+    state: {
+      routines: [],
+      activeRoutineId: null,
+      customExercises: [],
+      sessions: [],
+      activeSession: null,
+    },
   });
 
   const encrypted = await createProtectedBackup(raw, "uma-senha-protegida-segura");
@@ -29,7 +35,9 @@ test("backup protegido detecta senha incorreta e adulteração", async () => {
 
   const parsed = JSON.parse(encrypted);
   parsed.ciphertext = parsed.ciphertext.slice(0, -2) + "AA";
-  await assert.rejects(() => decryptProtectedBackup(JSON.stringify(parsed), "uma-senha-protegida-segura"));
+  await assert.rejects(() =>
+    decryptProtectedBackup(JSON.stringify(parsed), "uma-senha-protegida-segura"),
+  );
 });
 
 test("backup protegido rejeita senha curta", async () => {
@@ -41,5 +49,7 @@ test("backup protegido detecta alteração dos metadados autenticados", async ()
   const encrypted = await createProtectedBackup("conteudo privado", "uma-senha-protegida-segura");
   const parsed = JSON.parse(encrypted);
   parsed.createdAt = "2026-10-05T00:00:00.000Z";
-  await assert.rejects(() => decryptProtectedBackup(JSON.stringify(parsed), "uma-senha-protegida-segura"));
+  await assert.rejects(() =>
+    decryptProtectedBackup(JSON.stringify(parsed), "uma-senha-protegida-segura"),
+  );
 });

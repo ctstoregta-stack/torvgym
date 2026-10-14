@@ -25,7 +25,19 @@ function formatBytes(bytes: number) {
 }
 
 function Settings() {
-  const { ready, state, createBackup, importBackup, createProtectedBackup, importProtectedBackup, storageSizeBytes, createEncryptedSyncPackage, importEncryptedSyncPackage, createRecoveryPackage, importRecoveryPackage } = useGym();
+  const {
+    ready,
+    state,
+    createBackup,
+    importBackup,
+    createProtectedBackup,
+    importProtectedBackup,
+    storageSizeBytes,
+    createEncryptedSyncPackage,
+    importEncryptedSyncPackage,
+    createRecoveryPackage,
+    importRecoveryPackage,
+  } = useGym();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [syncPassword, setSyncPassword] = useState("");
@@ -71,7 +83,9 @@ function Settings() {
       URL.revokeObjectURL(url);
       toast.success("Backup protegido exportado com sucesso.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível criar o backup protegido.");
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível criar o backup protegido.",
+      );
     }
   }
 
@@ -83,13 +97,21 @@ function Settings() {
     setBusy(true);
     try {
       const raw = await file.text();
-      if (state.activeSession && !window.confirm("Existe um treino em andamento. Restaurar o backup protegido substituirá esse estado. Continuar?")) return;
+      if (
+        state.activeSession &&
+        !window.confirm(
+          "Existe um treino em andamento. Restaurar o backup protegido substituirá esse estado. Continuar?",
+        )
+      )
+        return;
 
       const result = await importProtectedBackup(raw, backupPassword);
       if (result === "saved") {
         toast.success("Backup protegido restaurado com sucesso.");
       } else if (result === "memory-only") {
-        toast.warning("Backup restaurado em memória, mas o armazenamento local está cheio ou indisponível.");
+        toast.warning(
+          "Backup restaurado em memória, mas o armazenamento local está cheio ou indisponível.",
+        );
       } else {
         toast.error("O conteúdo descriptografado não é um backup válido do TorvGym.");
       }
@@ -105,7 +127,12 @@ function Settings() {
     setBusy(true);
     try {
       const raw = await file.text();
-      if (state.activeSession && !window.confirm("Existe um treino em andamento. Restaurar o backup substituirá esse estado. Continuar?")) {
+      if (
+        state.activeSession &&
+        !window.confirm(
+          "Existe um treino em andamento. Restaurar o backup substituirá esse estado. Continuar?",
+        )
+      ) {
         return;
       }
 
@@ -113,7 +140,9 @@ function Settings() {
       if (result === "saved") {
         toast.success("Backup restaurado com sucesso.");
       } else if (result === "memory-only") {
-        toast.warning("Backup restaurado em memória, mas o armazenamento local está cheio ou indisponível.");
+        toast.warning(
+          "Backup restaurado em memória, mas o armazenamento local está cheio ou indisponível.",
+        );
       } else {
         toast.error("Esse arquivo não é um backup válido do TorvGym.");
       }
@@ -138,7 +167,9 @@ function Settings() {
       anchor.remove();
       URL.revokeObjectURL(url);
       setRecoveryCode(code);
-      toast.success("Pacote de recuperação exportado. Guarde o código mostrado abaixo em local seguro.");
+      toast.success(
+        "Pacote de recuperação exportado. Guarde o código mostrado abaixo em local seguro.",
+      );
     } catch {
       toast.error("Não foi possível criar o pacote de recuperação.");
     }
@@ -153,12 +184,20 @@ function Settings() {
     setBusy(true);
     try {
       const raw = await file.text();
-      if (state.activeSession && !window.confirm("Existe um treino em andamento. Restaurar a recuperação substituirá esse estado. Continuar?")) return;
+      if (
+        state.activeSession &&
+        !window.confirm(
+          "Existe um treino em andamento. Restaurar a recuperação substituirá esse estado. Continuar?",
+        )
+      )
+        return;
       const result = await importRecoveryPackage(raw, code);
       if (result === "saved") {
         toast.success("Recuperação concluída com sucesso neste dispositivo.");
       } else if (result === "memory-only") {
-        toast.warning("Recuperação concluída em memória, mas não foi possível gravar no armazenamento local.");
+        toast.warning(
+          "Recuperação concluída em memória, mas não foi possível gravar no armazenamento local.",
+        );
       } else {
         toast.error("O pacote foi aberto, mas os dados não passaram na validação.");
       }
@@ -200,12 +239,20 @@ function Settings() {
     setBusy(true);
     try {
       const raw = await file.text();
-      if (state.activeSession && !window.confirm("Existe um treino em andamento. Restaurar a sincronização substituirá esse estado. Continuar?")) return;
+      if (
+        state.activeSession &&
+        !window.confirm(
+          "Existe um treino em andamento. Restaurar a sincronização substituirá esse estado. Continuar?",
+        )
+      )
+        return;
       const result = await importEncryptedSyncPackage(raw, syncPassword);
       if (result === "saved") {
         toast.success("Dados E2EE restaurados neste dispositivo.");
       } else if (result === "memory-only") {
-        toast.warning("Dados E2EE restaurados em memória, mas não puderam ser gravados no armazenamento local.");
+        toast.warning(
+          "Dados E2EE restaurados em memória, mas não puderam ser gravados no armazenamento local.",
+        );
       } else {
         toast.error("O pacote foi aberto, mas os dados não passaram na validação.");
       }
@@ -230,7 +277,9 @@ function Settings() {
   return (
     <AppShell>
       <div className="mb-6">
-        <Link to="/" className="text-xs font-semibold text-primary">← Início</Link>
+        <Link to="/" className="text-xs font-semibold text-primary">
+          ← Início
+        </Link>
         <h1 className="mt-2 text-2xl font-bold tracking-tight">Configurações</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Proteja seu histórico e mantenha uma cópia dos dados do TorvGym.
@@ -243,7 +292,8 @@ function Settings() {
             <div>
               <h2 className="text-base font-semibold">Backup dos dados</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Exporta rotinas, treinos, exercícios personalizados, histórico e sessão em andamento.
+                Exporta rotinas, treinos, exercícios personalizados, histórico e sessão em
+                andamento.
               </p>
             </div>
             <span className="shrink-0 rounded-full bg-elevated px-2.5 py-1 text-xs font-medium text-muted-foreground">
@@ -255,11 +305,7 @@ function Settings() {
             <Button variant="outline" onClick={() => void handleProtectedExport()}>
               Exportar backup protegido
             </Button>
-            <Button
-              variant="outline"
-              disabled={busy}
-              onClick={() => inputRef.current?.click()}
-            >
+            <Button variant="outline" disabled={busy} onClick={() => inputRef.current?.click()}>
               {busy ? "Restaurando…" : "Restaurar backup"}
             </Button>
           </div>
@@ -305,7 +351,10 @@ function Settings() {
         <Card>
           <h2 className="text-base font-semibold">Sincronização E2EE</h2>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            Gere um pacote com criptografia de ponta a ponta. Os dados são criptografados neste dispositivo antes de serem exportados; quem armazenar o arquivo não consegue ler o conteúdo sem a senha. O TorvGym continua funcionando offline e não envia seus dados para um servidor sem uma configuração de nuvem explícita.
+            Gere um pacote com criptografia de ponta a ponta. Os dados são criptografados neste
+            dispositivo antes de serem exportados; quem armazenar o arquivo não consegue ler o
+            conteúdo sem a senha. O TorvGym continua funcionando offline e não envia seus dados para
+            um servidor sem uma configuração de nuvem explícita.
           </p>
           <label className="mt-4 block text-xs font-semibold text-muted-foreground">
             Senha de sincronização
@@ -340,7 +389,9 @@ function Settings() {
         <Card>
           <h2 className="text-base font-semibold">Recuperação entre dispositivos</h2>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            Crie uma cópia de recuperação cifrada para restaurar seus dados em outro aparelho. O TorvGym não armazena o código de recuperação; quem tiver apenas o arquivo não consegue descriptografá-lo.
+            Crie uma cópia de recuperação cifrada para restaurar seus dados em outro aparelho. O
+            TorvGym não armazena o código de recuperação; quem tiver apenas o arquivo não consegue
+            descriptografá-lo.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button onClick={() => void handleRecoveryExport()}>Gerar recuperação</Button>
@@ -360,7 +411,8 @@ function Settings() {
             />
           </label>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            O código é exibido somente quando você gera uma nova recuperação. Salve-o separadamente do arquivo.
+            O código é exibido somente quando você gera uma nova recuperação. Salve-o separadamente
+            do arquivo.
           </p>
           <input
             ref={setRecoveryInput}
@@ -394,7 +446,11 @@ function Settings() {
         <Card>
           <h2 className="text-base font-semibold">Segurança dos dados</h2>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            O backup é validado antes de ser restaurado. Backups protegidos e recuperações entre dispositivos usam AES-256-GCM com PBKDF2-SHA256. A recuperação usa um código aleatório de alta entropia que não é armazenado pelo TorvGym. Mantenha os arquivos e códigos fora do aparelho para reduzir o risco de perda após desinstalação ou limpeza dos dados do aplicativo.
+            O backup é validado antes de ser restaurado. Backups protegidos e recuperações entre
+            dispositivos usam AES-256-GCM com PBKDF2-SHA256. A recuperação usa um código aleatório
+            de alta entropia que não é armazenado pelo TorvGym. Mantenha os arquivos e códigos fora
+            do aparelho para reduzir o risco de perda após desinstalação ou limpeza dos dados do
+            aplicativo.
           </p>
         </Card>
       </div>

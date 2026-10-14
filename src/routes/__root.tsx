@@ -86,7 +86,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Treinos, rotinas, cargas e evolução em um só lugar." },
       { name: "author", content: "TorvGym" },
       { property: "og:title", content: "TorvGym — Acompanhamento de Treino" },
-      { property: "og:description", content: "Treinos, rotinas, cargas e evolução em um só lugar." },
+      {
+        property: "og:description",
+        content: "Treinos, rotinas, cargas e evolução em um só lugar.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@TorvGym" },
@@ -121,7 +124,9 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function isStaleChunkError(err: unknown) {
   const msg = err instanceof Error ? err.message : String(err ?? "");
-  return /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(msg);
+  return /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(
+    msg,
+  );
 }
 
 function reloadOnceForStaleChunk() {

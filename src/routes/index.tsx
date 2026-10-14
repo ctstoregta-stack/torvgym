@@ -29,13 +29,22 @@ function Home() {
   const today = new Date().getDay();
 
   const workouts = activeRoutine?.workouts ?? [];
-  const todayWorkouts = useMemo(() => workouts.filter((w) => w.days.includes(today)), [workouts, today]);
-  const totalSessions = useMemo(() => state.sessions.filter((session) => session.finishedAt).length, [state.sessions]);
+  const todayWorkouts = useMemo(
+    () => workouts.filter((w) => w.days.includes(today)),
+    [workouts, today],
+  );
+  const totalSessions = useMemo(
+    () => state.sessions.filter((session) => session.finishedAt).length,
+    [state.sessions],
+  );
   const activeSession = state.activeSession;
-  const activeWorkout = activeSession ? workouts.find((w) => w.id === activeSession.workoutId) : undefined;
-  const activeDoneExercises = activeSession?.entries.filter((entry) =>
-    entry.sets.length > 0 && entry.sets.every((set) => set.completed),
-  ).length ?? 0;
+  const activeWorkout = activeSession
+    ? workouts.find((w) => w.id === activeSession.workoutId)
+    : undefined;
+  const activeDoneExercises =
+    activeSession?.entries.filter(
+      (entry) => entry.sets.length > 0 && entry.sets.every((set) => set.completed),
+    ).length ?? 0;
   const activeTotalExercises = activeSession?.entries.length ?? 0;
   const otherWorkouts = workouts.filter(
     (w) =>
@@ -54,7 +63,9 @@ function Home() {
     <AppShell>
       <div className="mb-6 flex items-end justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{WEEKDAYS_FULL[today]}</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            {WEEKDAYS_FULL[today]}
+          </p>
           <h1 className="mt-1 truncate text-2xl font-bold tracking-tight">Olá, vamos treinar?</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {activeRoutine ? activeRoutine.name : "Configure sua rotina para começar"}
@@ -81,15 +92,25 @@ function Home() {
             <section className="mb-6">
               <div className="mb-2 flex items-center justify-between">
                 <div>
-                  <h2 className="text-sm font-semibold text-muted-foreground">Treino em andamento</h2>
-                  <p className="mt-0.5 text-xs text-muted-foreground">Continue exatamente de onde parou.</p>
+                  <h2 className="text-sm font-semibold text-muted-foreground">
+                    Treino em andamento
+                  </h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Continue exatamente de onde parou.
+                  </p>
                 </div>
               </div>
-              <Link to="/executar/$workoutId" params={{ workoutId: activeSession.workoutId }} className="block">
+              <Link
+                to="/executar/$workoutId"
+                params={{ workoutId: activeSession.workoutId }}
+                className="block"
+              >
                 <div className="surface border-primary/40 p-4 shadow-[var(--shadow-glow)] tap active:scale-[0.99]">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-base font-semibold">{activeSession.workoutName}</p>
+                      <p className="truncate text-base font-semibold">
+                        {activeSession.workoutName}
+                      </p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         {activeDoneExercises}/{activeTotalExercises} exercícios concluídos
                       </p>
@@ -99,7 +120,9 @@ function Home() {
                   <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-elevated">
                     <div
                       className="h-full rounded-full bg-primary transition-[width]"
-                      style={{ width: `${activeTotalExercises ? (activeDoneExercises / activeTotalExercises) * 100 : 0}%` }}
+                      style={{
+                        width: `${activeTotalExercises ? (activeDoneExercises / activeTotalExercises) * 100 : 0}%`,
+                      }}
                     />
                   </div>
                 </div>
@@ -111,13 +134,18 @@ function Home() {
             <div className="mb-2 flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-muted-foreground">Treino de hoje</h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">Sua próxima ação, sem complicação.</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Sua próxima ação, sem complicação.
+                </p>
               </div>
-              <Link to="/rotinas" className="text-xs font-semibold text-primary">Gerenciar</Link>
+              <Link to="/rotinas" className="text-xs font-semibold text-primary">
+                Gerenciar
+              </Link>
             </div>
             {todayWorkouts.filter((w) => w.id !== activeSession?.workoutId).length === 0 ? (
               <Card className="text-sm text-muted-foreground">
-                {activeSession?.workoutId && todayWorkouts.some((w) => w.id === activeSession.workoutId)
+                {activeSession?.workoutId &&
+                todayWorkouts.some((w) => w.id === activeSession.workoutId)
                   ? "Seu treino de hoje já está em andamento. Continue acima."
                   : "Nenhum treino programado para hoje. Veja outros treinos abaixo ou atribua dias na rotina."}
               </Card>
@@ -125,7 +153,9 @@ function Home() {
               <div className="grid gap-3 md:grid-cols-2">
                 {todayWorkouts
                   .filter((w) => w.id !== activeSession?.workoutId)
-                  .map((w) => <WorkoutCard key={w.id} workoutId={w.id} highlight />)}
+                  .map((w) => (
+                    <WorkoutCard key={w.id} workoutId={w.id} highlight />
+                  ))}
               </div>
             )}
           </section>
@@ -133,7 +163,9 @@ function Home() {
           <section>
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-muted-foreground">Outros treinos</h2>
-              <Link to="/rotinas" className="text-xs font-semibold text-primary">Gerenciar</Link>
+              <Link to="/rotinas" className="text-xs font-semibold text-primary">
+                Gerenciar
+              </Link>
             </div>
             {otherWorkouts.length === 0 ? (
               <Card className="text-sm text-muted-foreground">
@@ -142,11 +174,18 @@ function Home() {
             ) : (
               <details className="group">
                 <summary className="surface flex cursor-pointer list-none items-center justify-between p-4 text-sm font-semibold tap">
-                  <span>{otherWorkouts.length} treino{otherWorkouts.length === 1 ? "" : "s"} {otherWorkouts.length === 1 ? "disponível" : "disponíveis"}</span>
-                  <span className="text-muted-foreground transition-transform group-open:rotate-180">⌄</span>
+                  <span>
+                    {otherWorkouts.length} treino{otherWorkouts.length === 1 ? "" : "s"}{" "}
+                    {otherWorkouts.length === 1 ? "disponível" : "disponíveis"}
+                  </span>
+                  <span className="text-muted-foreground transition-transform group-open:rotate-180">
+                    ⌄
+                  </span>
                 </summary>
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
-                  {otherWorkouts.map((w) => <WorkoutCard key={w.id} workoutId={w.id} />)}
+                  {otherWorkouts.map((w) => (
+                    <WorkoutCard key={w.id} workoutId={w.id} />
+                  ))}
                 </div>
               </details>
             )}
@@ -158,9 +197,7 @@ function Home() {
         <Link to="/exercicios">
           <Card className="h-full">
             <p className="text-sm font-semibold">Biblioteca</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Animações e execução
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Animações e execução</p>
           </Card>
         </Link>
         <Link to="/progresso">
@@ -178,17 +215,13 @@ function Home() {
         <Link to="/historico">
           <Card className="h-full">
             <p className="text-sm font-semibold">Histórico</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Sessões e progressão
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Sessões e progressão</p>
           </Card>
         </Link>
         <Link to="/configuracoes">
           <Card className="h-full">
             <p className="text-sm font-semibold">Dados e backup</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Exportar e restaurar
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Exportar e restaurar</p>
           </Card>
         </Link>
       </div>
@@ -207,10 +240,7 @@ function Home() {
     const workout = workouts.find((w) => w.id === workoutId)!;
     const groups = muscleGroupsOf(workout.exerciseIds, getExercise);
     return (
-      <Link
-        to={active ? "/executar/$workoutId" : "/treino/$workoutId"}
-        params={{ workoutId }}
-      >
+      <Link to={active ? "/executar/$workoutId" : "/treino/$workoutId"} params={{ workoutId }}>
         <div
           className={`surface p-4 tap active:scale-[0.99] ${
             highlight ? "border-primary/40 shadow-[var(--shadow-glow)]" : ""

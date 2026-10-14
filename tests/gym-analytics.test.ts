@@ -105,7 +105,6 @@ test("índice por treino: separa as últimas séries por treino e exercício", (
   assert.equal(index.has("w1::agachamento"), false);
 });
 
-
 test("dashboard calcula sequência consecutiva e PR mais recente", async () => {
   const data = [
     makeSession("d1", "w1", "2026-10-02T10:00:00.000Z", [

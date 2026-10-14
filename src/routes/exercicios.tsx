@@ -11,8 +11,7 @@ export const Route = createFileRoute("/exercicios")({
       { title: "Exercícios · TorvGym" },
       {
         name: "description",
-        content:
-          "Biblioteca de exercícios com animação em loop, execução e músculos trabalhados.",
+        content: "Biblioteca de exercícios com animação em loop, execução e músculos trabalhados.",
       },
       { property: "og:title", content: "Biblioteca de Exercícios · TorvGym" },
       {
@@ -25,7 +24,16 @@ export const Route = createFileRoute("/exercicios")({
 });
 
 function ExercisesPage() {
-  const { ready, state, exercises, toggleFavoriteExercise, addCustomExercise, updateCustomExercise, deleteCustomExercise, prFor } = useGym();
+  const {
+    ready,
+    state,
+    exercises,
+    toggleFavoriteExercise,
+    addCustomExercise,
+    updateCustomExercise,
+    deleteCustomExercise,
+    prFor,
+  } = useGym();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [equipment, setEquipment] = useState<string | null>(null);
@@ -45,7 +53,10 @@ function ExercisesPage() {
   });
 
   const equipmentOptions = useMemo(
-    () => Array.from(new Set(exercises.map((e) => e.equipment))).sort((a, b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" })),
+    () =>
+      Array.from(new Set(exercises.map((e) => e.equipment))).sort((a, b) =>
+        a.localeCompare(b, "pt-BR", { sensitivity: "base" }),
+      ),
     [exercises],
   );
 
@@ -66,15 +77,17 @@ function ExercisesPage() {
             (!favoritesOnly || state.favoriteExerciseIds.includes(e.id)) &&
             (!category || e.category === category) &&
             (!equipment || e.equipment === equipment) &&
-            `${e.name} ${e.equipment}`.toLocaleLowerCase("pt-BR").includes(query.toLocaleLowerCase("pt-BR")),
+            `${e.name} ${e.equipment}`
+              .toLocaleLowerCase("pt-BR")
+              .includes(query.toLocaleLowerCase("pt-BR")),
         )
-        .sort((a, b) =>
-          a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }),
-        ),
+        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })),
     [exercises, query, category, equipment, scope, favoritesOnly, state.favoriteExerciseIds],
   );
 
-  useEffect(() => { setVisibleLimit(24); }, [query, category, equipment, scope, favoritesOnly]);
+  useEffect(() => {
+    setVisibleLimit(24);
+  }, [query, category, equipment, scope, favoritesOnly]);
 
   const visibleExercises = filtered.slice(0, visibleLimit);
 
@@ -98,9 +111,16 @@ function ExercisesPage() {
       <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
         <button
           aria-pressed={scope === "all" && category === null}
-          onClick={() => { setScope("all"); setCategory(null); setEquipment(null); setFavoritesOnly(false); }}
+          onClick={() => {
+            setScope("all");
+            setCategory(null);
+            setEquipment(null);
+            setFavoritesOnly(false);
+          }}
           className={`min-h-10 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
-            category === null ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"
+            category === null
+              ? "bg-primary text-primary-foreground"
+              : "bg-card text-muted-foreground"
           }`}
         >
           Todos
@@ -114,7 +134,11 @@ function ExercisesPage() {
         </button>
         <button
           aria-pressed={scope === "custom"}
-          onClick={() => { setScope("custom"); setCategory(null); setEquipment(null); }}
+          onClick={() => {
+            setScope("custom");
+            setCategory(null);
+            setEquipment(null);
+          }}
           className={`min-h-10 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${scope === "custom" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
         >
           Personalizados
@@ -123,7 +147,11 @@ function ExercisesPage() {
           <button
             key={item}
             aria-pressed={equipment === item}
-            onClick={() => { setScope("all"); setCategory(null); setEquipment(equipment === item ? null : item); }}
+            onClick={() => {
+              setScope("all");
+              setCategory(null);
+              setEquipment(equipment === item ? null : item);
+            }}
             className={`min-h-10 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${equipment === item ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
           >
             {item}
@@ -133,9 +161,15 @@ function ExercisesPage() {
           <button
             key={c}
             aria-pressed={scope === "all" && category === c}
-            onClick={() => { setScope("all"); setCategory(c); setEquipment(null); }}
+            onClick={() => {
+              setScope("all");
+              setCategory(c);
+              setEquipment(null);
+            }}
             className={`min-h-10 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
-              category === c ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"
+              category === c
+                ? "bg-primary text-primary-foreground"
+                : "bg-card text-muted-foreground"
             }`}
           >
             {c}
@@ -153,16 +187,32 @@ function ExercisesPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="truncate text-sm font-semibold">{ex.name}</p>
-                    {ex.custom && <span className="shrink-0 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">Personalizado</span>}
+                    {ex.custom && (
+                      <span className="shrink-0 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+                        Personalizado
+                      </span>
+                    )}
                   </div>
-                  <p className="text-xs text-muted-foreground">{ex.category} · {ex.equipment}</p>
-                  {pr != null && <p className="mt-0.5 text-xs font-semibold text-gold">PR {pr} kg</p>}
+                  <p className="text-xs text-muted-foreground">
+                    {ex.category} · {ex.equipment}
+                  </p>
+                  {pr != null && (
+                    <p className="mt-0.5 text-xs font-semibold text-gold">PR {pr} kg</p>
+                  )}
                 </div>
                 <button
                   type="button"
-                  aria-label={state.favoriteExerciseIds.includes(ex.id) ? `Remover ${ex.name} dos favoritos` : `Adicionar ${ex.name} aos favoritos`}
+                  aria-label={
+                    state.favoriteExerciseIds.includes(ex.id)
+                      ? `Remover ${ex.name} dos favoritos`
+                      : `Adicionar ${ex.name} aos favoritos`
+                  }
                   aria-pressed={state.favoriteExerciseIds.includes(ex.id)}
-                  title={state.favoriteExerciseIds.includes(ex.id) ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                  title={
+                    state.favoriteExerciseIds.includes(ex.id)
+                      ? "Remover dos favoritos"
+                      : "Adicionar aos favoritos"
+                  }
                   className={`min-h-10 min-w-10 shrink-0 rounded-full text-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${state.favoriteExerciseIds.includes(ex.id) ? "text-gold" : "text-muted-foreground"}`}
                   onClick={(event) => {
                     event.preventDefault();
@@ -174,20 +224,43 @@ function ExercisesPage() {
                 </button>
                 {ex.custom && (
                   <div className="flex shrink-0 flex-col gap-1">
-                    <button type="button" className="text-[11px] font-semibold text-primary" onClick={(event) => {
-                      event.preventDefault(); event.stopPropagation();
-                      setEditingId(ex.id); setCreating(true); setForm({
-                        name: ex.name, category: ex.category, equipment: ex.equipment,
-                        gif_url: ex.gif_url, execution: ex.execution,
-                        primary: ex.primary_muscles.join(", "), secondary: ex.secondary_muscles.join(", "),
-                      }); setCreating(false);
-                    }}>Editar</button>
-                    <button type="button" className="text-[11px] font-semibold text-destructive" onClick={(event) => {
-                      event.preventDefault(); event.stopPropagation();
-                      if (deleteCustomExercise(ex.id) === "in-use") {
-                        window.alert("Este exercício já está em um treino ou histórico e não pode ser excluído.");
-                      }
-                    }}>Excluir</button>
+                    <button
+                      type="button"
+                      className="text-[11px] font-semibold text-primary"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setEditingId(ex.id);
+                        setCreating(true);
+                        setForm({
+                          name: ex.name,
+                          category: ex.category,
+                          equipment: ex.equipment,
+                          gif_url: ex.gif_url,
+                          execution: ex.execution,
+                          primary: ex.primary_muscles.join(", "),
+                          secondary: ex.secondary_muscles.join(", "),
+                        });
+                        setCreating(false);
+                      }}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      className="text-[11px] font-semibold text-destructive"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (deleteCustomExercise(ex.id) === "in-use") {
+                          window.alert(
+                            "Este exercício já está em um treino ou histórico e não pode ser excluído.",
+                          );
+                        }
+                      }}
+                    >
+                      Excluir
+                    </button>
                   </div>
                 )}
               </div>
@@ -214,7 +287,9 @@ function ExercisesPage() {
 
       <Card className="mt-6">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold">{editingId ? "Editar exercício personalizado" : "Criar exercício"}</p>
+          <p className="text-sm font-semibold">
+            {editingId ? "Editar exercício personalizado" : "Criar exercício"}
+          </p>
           <button
             className="text-xs font-semibold text-primary"
             onClick={() => setCreating((v) => !v)}
@@ -264,7 +339,10 @@ function ExercisesPage() {
               disabled={!form.name.trim() || !form.category.trim()}
               onClick={() => {
                 const split = (v: string) =>
-                  v.split(",").map((s) => s.trim()).filter(Boolean);
+                  v
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean);
                 if (editingId) {
                   updateCustomExercise(editingId, {
                     name: form.name.trim(),
@@ -278,17 +356,23 @@ function ExercisesPage() {
                 } else {
                   addCustomExercise({
                     id: `custom-${form.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36)}`,
-                  name: form.name.trim(),
-                  category: form.category.trim(),
-                  equipment: form.equipment.trim() || "Livre",
-                  gif_url: form.gif_url.trim(),
-                  execution: form.execution.trim(),
-                  primary_muscles: split(form.primary),
-                  secondary_muscles: split(form.secondary),
+                    name: form.name.trim(),
+                    category: form.category.trim(),
+                    equipment: form.equipment.trim() || "Livre",
+                    gif_url: form.gif_url.trim(),
+                    execution: form.execution.trim(),
+                    primary_muscles: split(form.primary),
+                    secondary_muscles: split(form.secondary),
                   });
                 }
                 setForm({
-                  name: "", category: "", equipment: "", gif_url: "", execution: "", primary: "", secondary: "",
+                  name: "",
+                  category: "",
+                  equipment: "",
+                  gif_url: "",
+                  execution: "",
+                  primary: "",
+                  secondary: "",
                 });
                 setCreating(false);
                 setEditingId(null);

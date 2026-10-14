@@ -10,23 +10,26 @@ export function Button({
   const base =
     "control inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold tap active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100";
   const styles: Record<string, string> = {
-    primary: "accent-gradient text-primary-foreground shadow-[var(--shadow-glow)] hover:brightness-110",
+    primary:
+      "accent-gradient text-primary-foreground shadow-[var(--shadow-glow)] hover:brightness-110",
     ghost: "bg-transparent text-muted-foreground hover:bg-elevated/60 hover:text-foreground",
-    outline: "border border-border bg-card text-foreground hover:border-primary/30 hover:bg-elevated/60",
-    danger: "bg-destructive/15 text-destructive border border-destructive/30 hover:bg-destructive/20",
+    outline:
+      "border border-border bg-card text-foreground hover:border-primary/30 hover:bg-elevated/60",
+    danger:
+      "bg-destructive/15 text-destructive border border-destructive/30 hover:bg-destructive/20",
     success: "bg-success/15 text-success border border-success/30 hover:bg-success/20",
   };
   return <button className={`${base} ${styles[variant]} ${className}`} {...props} />;
 }
 
-export function Card({
-  children,
-  className = "",
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return <div className={`surface interactive-surface p-4 hover:shadow-[var(--shadow-card)] ${className}`}>{children}</div>;
+export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return (
+    <div
+      className={`surface interactive-surface p-4 hover:shadow-[var(--shadow-card)] ${className}`}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function Tag({ children }: { children: ReactNode }) {
@@ -78,10 +81,7 @@ export function PRBadge({ small = false }: { small?: boolean }) {
   );
 }
 
-export function Input({
-  className = "",
-  ...props
-}: React.InputHTMLAttributes<HTMLInputElement>) {
+export function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       aria-label={props["aria-label"] ?? props.placeholder}

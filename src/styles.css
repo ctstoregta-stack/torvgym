@@ -69,7 +69,8 @@
 
   --gradient-accent: linear-gradient(135deg, oklch(0.623 0.214 259.815), oklch(0.55 0.21 275));
   --shadow-card: 0 1px 2px oklch(0 0 0 / 40%), 0 8px 24px -12px oklch(0 0 0 / 60%);
-  --shadow-glow: 0 0 0 1px oklch(0.623 0.214 259.815 / 35%), 0 10px 30px -12px oklch(0.623 0.214 259.815 / 45%);
+  --shadow-glow:
+    0 0 0 1px oklch(0.623 0.214 259.815 / 35%), 0 10px 30px -12px oklch(0.623 0.214 259.815 / 45%);
 }
 
 @layer base {
@@ -87,18 +88,31 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family:
-      ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      "Segoe UI",
+      Roboto,
+      sans-serif;
     overscroll-behavior-y: none;
     line-height: 1.45;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
   }
 
-  button, a, input, textarea, select {
+  button,
+  a,
+  input,
+  textarea,
+  select {
     -webkit-tap-highlight-color: transparent;
   }
 
-  button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
@@ -173,14 +187,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
 }
-
 
 @utility page-content {
   width: 100%;

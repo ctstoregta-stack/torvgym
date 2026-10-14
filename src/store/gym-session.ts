@@ -15,10 +15,11 @@ export function createWorkoutSession(
     finishedAt: null,
     entries: workout.exerciseIds.map((exerciseId) => ({
       exerciseId,
-      sets: Array.from(
-        { length: workout.targetSets[exerciseId] ?? 3 },
-        () => ({ weight: null, reps: null, completed: false }),
-      ),
+      sets: Array.from({ length: workout.targetSets[exerciseId] ?? 3 }, () => ({
+        weight: null,
+        reps: null,
+        completed: false,
+      })),
     })),
   };
 }
@@ -34,9 +35,7 @@ export function updateWorkoutSessionSet(
     entry.exerciseId === exerciseId
       ? {
           ...entry,
-          sets: entry.sets.map((set, i) =>
-            i === index ? { ...set, ...patch } : set,
-          ),
+          sets: entry.sets.map((set, i) => (i === index ? { ...set, ...patch } : set)),
         }
       : entry,
   );
@@ -54,17 +53,12 @@ export function updateWorkoutSessionSet(
   return {
     ...session,
     entries: nextEntries.map((entry) =>
-      entry.exerciseId === exerciseId
-        ? { ...entry, sets: recalculated }
-        : entry,
+      entry.exerciseId === exerciseId ? { ...entry, sets: recalculated } : entry,
     ),
   };
 }
 
-export function finishWorkoutSession(
-  current: Session,
-  finishedAt: string,
-): Session | null {
+export function finishWorkoutSession(current: Session, finishedAt: string): Session | null {
   const entries = current.entries
     .map((entry) => ({
       ...entry,
@@ -80,7 +74,6 @@ export function finishWorkoutSession(
     finishedAt,
   };
 }
-
 
 /**
  * Finds the latest completed sets for an exercise in the same workout context.
@@ -100,10 +93,7 @@ export function lastCompletedSetsForWorkout(
         item.workoutId === workoutId &&
         (routineId === undefined || item.routineId === routineId),
     )
-    .sort(
-      (a, b) =>
-        new Date(b.finishedAt!).getTime() - new Date(a.finishedAt!).getTime(),
-    );
+    .sort((a, b) => new Date(b.finishedAt!).getTime() - new Date(a.finishedAt!).getTime());
 
   for (const item of ordered) {
     const entry = item.entries.find((candidate) => candidate.exerciseId === exerciseId);

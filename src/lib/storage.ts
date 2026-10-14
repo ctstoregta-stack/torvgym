@@ -30,7 +30,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function normalizeExercise(input: unknown): Exercise | null {
   if (!isRecord(input)) return null;
-  const { id, name, category, equipment, gif_url, execution, primary_muscles, secondary_muscles, custom } = input;
+  const {
+    id,
+    name,
+    category,
+    equipment,
+    gif_url,
+    execution,
+    primary_muscles,
+    secondary_muscles,
+    custom,
+  } = input;
   if (typeof id !== "string" || typeof name !== "string") return null;
   return {
     id,
@@ -39,8 +49,12 @@ function normalizeExercise(input: unknown): Exercise | null {
     equipment: typeof equipment === "string" ? equipment : "Não informado",
     gif_url: typeof gif_url === "string" ? gif_url : "",
     execution: typeof execution === "string" ? execution : "",
-    primary_muscles: Array.isArray(primary_muscles) ? primary_muscles.filter((item): item is string => typeof item === "string") : [],
-    secondary_muscles: Array.isArray(secondary_muscles) ? secondary_muscles.filter((item): item is string => typeof item === "string") : [],
+    primary_muscles: Array.isArray(primary_muscles)
+      ? primary_muscles.filter((item): item is string => typeof item === "string")
+      : [],
+    secondary_muscles: Array.isArray(secondary_muscles)
+      ? secondary_muscles.filter((item): item is string => typeof item === "string")
+      : [],
     custom: Boolean(custom),
   };
 }
@@ -49,10 +63,18 @@ function normalizeWorkout(input: unknown): Workout | null {
   if (!isRecord(input)) return null;
   const { id, name, days: rawDays, exerciseIds: rawIds, targetSets: rawTargets } = input;
   if (typeof id !== "string" || typeof name !== "string") return null;
-  const days = Array.isArray(rawDays) ? rawDays.filter((day): day is number => Number.isInteger(day) && day >= 0 && day <= 6) : [];
-  const exerciseIds = Array.isArray(rawIds) ? rawIds.filter((item): item is string => typeof item === "string") : [];
+  const days = Array.isArray(rawDays)
+    ? rawDays.filter((day): day is number => Number.isInteger(day) && day >= 0 && day <= 6)
+    : [];
+  const exerciseIds = Array.isArray(rawIds)
+    ? rawIds.filter((item): item is string => typeof item === "string")
+    : [];
   const targetSets = isRecord(rawTargets)
-    ? Object.fromEntries(Object.entries(rawTargets).filter(([, sets]) => typeof sets === "number" && Number.isFinite(sets) && sets > 0).map(([key, sets]) => [key, Math.max(1, Math.round(sets as number))]))
+    ? Object.fromEntries(
+        Object.entries(rawTargets)
+          .filter(([, sets]) => typeof sets === "number" && Number.isFinite(sets) && sets > 0)
+          .map(([key, sets]) => [key, Math.max(1, Math.round(sets as number))]),
+      )
     : {};
 
   const workout: Workout = {
@@ -75,7 +97,9 @@ function normalizeRoutine(input: unknown): Routine | null {
   if (!isRecord(input)) return null;
   const { id, name, createdAt, workouts: rawWorkouts } = input;
   if (typeof id !== "string" || typeof name !== "string") return null;
-  const workouts = Array.isArray(rawWorkouts) ? rawWorkouts.map(normalizeWorkout).filter((workout): workout is Workout => workout !== null) : [];
+  const workouts = Array.isArray(rawWorkouts)
+    ? rawWorkouts.map(normalizeWorkout).filter((workout): workout is Workout => workout !== null)
+    : [];
   return {
     id,
     name,
@@ -87,10 +111,21 @@ function normalizeRoutine(input: unknown): Routine | null {
 function normalizeSession(input: unknown): Session | null {
   if (!isRecord(input)) return null;
   const {
-    id, workoutId, entries: rawEntries, routineId, workoutName, startedAt, finishedAt,
-    currentExerciseIndex, restStartedAt, restTotal, restRemaining, restRunning,
+    id,
+    workoutId,
+    entries: rawEntries,
+    routineId,
+    workoutName,
+    startedAt,
+    finishedAt,
+    currentExerciseIndex,
+    restStartedAt,
+    restTotal,
+    restRemaining,
+    restRunning,
   } = input;
-  if (typeof id !== "string" || typeof workoutId !== "string" || !Array.isArray(rawEntries)) return null;
+  if (typeof id !== "string" || typeof workoutId !== "string" || !Array.isArray(rawEntries))
+    return null;
   const entries: Session["entries"] = rawEntries.filter(isRecord).flatMap((entry) => {
     const { exerciseId, sets: rawSets } = entry;
     if (typeof exerciseId !== "string" || !Array.isArray(rawSets)) return [];
@@ -101,7 +136,10 @@ function normalizeSession(input: unknown): Session | null {
         reps: typeof reps === "number" && Number.isFinite(reps) ? reps : null,
         completed: Boolean(completed),
         isPR: Boolean(isPR),
-        rpe: typeof rpe === "number" && Number.isFinite(rpe) ? Math.min(10, Math.max(1, Math.round(rpe))) : null,
+        rpe:
+          typeof rpe === "number" && Number.isFinite(rpe)
+            ? Math.min(10, Math.max(1, Math.round(rpe)))
+            : null,
         note: typeof note === "string" ? note.slice(0, 500) : "",
       };
     });
@@ -121,7 +159,8 @@ function normalizeSession(input: unknown): Session | null {
   if (typeof currentExerciseIndex === "number") {
     session.currentExerciseIndex = Math.max(0, Math.floor(currentExerciseIndex));
   }
-  if (typeof restStartedAt === "string" || restStartedAt === null) session.restStartedAt = restStartedAt;
+  if (typeof restStartedAt === "string" || restStartedAt === null)
+    session.restStartedAt = restStartedAt;
   if (typeof restTotal === "number" && Number.isFinite(restTotal)) {
     session.restTotal = Math.max(0, restTotal);
   }
@@ -144,39 +183,61 @@ function normalizeState(input: unknown): AppState | null {
     activeRoutineId: rawActiveRoutine,
     goals: rawGoals,
   } = input;
-  const routines = Array.isArray(rawRoutines) ? rawRoutines.map(normalizeRoutine).filter((routine): routine is Routine => routine !== null) : [];
-  const customExercises = Array.isArray(rawCustom) ? rawCustom.map(normalizeExercise).filter((exercise): exercise is Exercise => exercise !== null) : [];
-  const favoriteExerciseIds = Array.isArray(rawFavoriteExerciseIds)
-    ? [...new Set(rawFavoriteExerciseIds.filter((id): id is string => typeof id === "string" && id.trim().length > 0))]
+  const routines = Array.isArray(rawRoutines)
+    ? rawRoutines.map(normalizeRoutine).filter((routine): routine is Routine => routine !== null)
     : [];
-  const sessions = Array.isArray(rawSessions) ? rawSessions.map(normalizeSession).filter((session): session is Session => session !== null) : [];
+  const customExercises = Array.isArray(rawCustom)
+    ? rawCustom.map(normalizeExercise).filter((exercise): exercise is Exercise => exercise !== null)
+    : [];
+  const favoriteExerciseIds = Array.isArray(rawFavoriteExerciseIds)
+    ? [
+        ...new Set(
+          rawFavoriteExerciseIds.filter(
+            (id): id is string => typeof id === "string" && id.trim().length > 0,
+          ),
+        ),
+      ]
+    : [];
+  const sessions = Array.isArray(rawSessions)
+    ? rawSessions.map(normalizeSession).filter((session): session is Session => session !== null)
+    : [];
   const activeSession = rawActive ? normalizeSession(rawActive) : null;
-  const activeRoutineId = typeof rawActiveRoutine === "string" && routines.some((routine) => routine.id === rawActiveRoutine)
-    ? rawActiveRoutine
-    : routines[0]?.id ?? null;
+  const activeRoutineId =
+    typeof rawActiveRoutine === "string" &&
+    routines.some((routine) => routine.id === rawActiveRoutine)
+      ? rawActiveRoutine
+      : (routines[0]?.id ?? null);
 
   const goals = isRecord(rawGoals)
     ? {
         weeklySessionsTarget:
-          typeof rawGoals['weeklySessionsTarget'] === "number"
-            ? Math.min(14, Math.max(1, Math.round(rawGoals['weeklySessionsTarget'])))
+          typeof rawGoals["weeklySessionsTarget"] === "number"
+            ? Math.min(14, Math.max(1, Math.round(rawGoals["weeklySessionsTarget"])))
             : emptyState.goals.weeklySessionsTarget,
         weeklyVolumeTarget:
-          typeof rawGoals['weeklyVolumeTarget'] === "number"
-            ? Math.min(1000000, Math.max(0, Math.round(rawGoals['weeklyVolumeTarget'])))
+          typeof rawGoals["weeklyVolumeTarget"] === "number"
+            ? Math.min(1000000, Math.max(0, Math.round(rawGoals["weeklyVolumeTarget"])))
             : emptyState.goals.weeklyVolumeTarget,
         streakTarget:
-          typeof rawGoals['streakTarget'] === "number"
-            ? Math.min(365, Math.max(1, Math.round(rawGoals['streakTarget'])))
+          typeof rawGoals["streakTarget"] === "number"
+            ? Math.min(365, Math.max(1, Math.round(rawGoals["streakTarget"])))
             : emptyState.goals.streakTarget,
         weeklyStreakTarget:
-          typeof rawGoals['weeklyStreakTarget'] === "number"
-            ? Math.min(52, Math.max(1, Math.round(rawGoals['weeklyStreakTarget'])))
+          typeof rawGoals["weeklyStreakTarget"] === "number"
+            ? Math.min(52, Math.max(1, Math.round(rawGoals["weeklyStreakTarget"])))
             : emptyState.goals.weeklyStreakTarget,
       }
     : emptyState.goals;
 
-  return { routines, activeRoutineId, customExercises, favoriteExerciseIds, sessions, activeSession, goals };
+  return {
+    routines,
+    activeRoutineId,
+    customExercises,
+    favoriteExerciseIds,
+    sessions,
+    activeSession,
+    goals,
+  };
 }
 
 function migrate(raw: unknown, version: number): AppState | null {
@@ -233,13 +294,20 @@ export async function loadState(): Promise<AppState | null> {
     const version = Number.isFinite(storedVersion) ? storedVersion : 1;
     const state = migrate(await readStoredState(KEY), version);
     if (state) {
-      if (version !== CURRENT_VERSION || !isEncryptedValue(window.localStorage.getItem(KEY))) await repairStorage(state);
+      if (version !== CURRENT_VERSION || !isEncryptedValue(window.localStorage.getItem(KEY)))
+        await repairStorage(state);
       return state;
     }
     const recovery = await readStoredState(RECOVERY_KEY);
-    if (recovery) { await repairStorage(recovery); return recovery; }
+    if (recovery) {
+      await repairStorage(recovery);
+      return recovery;
+    }
     const automaticBackup = await readStoredState(AUTO_BACKUP_KEY);
-    if (automaticBackup) { await repairStorage(automaticBackup); return automaticBackup; }
+    if (automaticBackup) {
+      await repairStorage(automaticBackup);
+      return automaticBackup;
+    }
     return null;
   } catch {
     return null;
@@ -250,8 +318,14 @@ function isEncryptedValue(raw: string | null): boolean {
   if (!raw) return false;
   try {
     const parsed = JSON.parse(raw);
-    return parsed?.format === "torvgym-local" && parsed?.version === 1 && typeof parsed?.ciphertext === "string";
-  } catch { return false; }
+    return (
+      parsed?.format === "torvgym-local" &&
+      parsed?.version === 1 &&
+      typeof parsed?.ciphertext === "string"
+    );
+  } catch {
+    return false;
+  }
 }
 
 let saveQueue: Promise<void> = Promise.resolve();
@@ -289,7 +363,10 @@ export function saveState(state: AppState): Promise<boolean> {
   });
 
   // Mantém a fila viva mesmo quando uma gravação falha.
-  saveQueue = write.then(() => undefined, () => undefined);
+  saveQueue = write.then(
+    () => undefined,
+    () => undefined,
+  );
   return write;
 }
 export function createBackup(state: AppState): string {
@@ -308,7 +385,11 @@ export function createBackup(state: AppState): string {
 export function parseBackup(raw: string): AppState | null {
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (!isRecord(parsed) || parsed["format"] !== BACKUP_FORMAT || parsed["version"] !== BACKUP_VERSION) {
+    if (
+      !isRecord(parsed) ||
+      parsed["format"] !== BACKUP_FORMAT ||
+      parsed["version"] !== BACKUP_VERSION
+    ) {
       return null;
     }
     return normalizeState(parsed["state"]);
@@ -321,7 +402,10 @@ export function storageSizeBytes(): number {
   if (typeof window === "undefined") return 0;
   try {
     const keys = [KEY, VERSION_KEY, RECOVERY_KEY, AUTO_BACKUP_KEY];
-    return keys.reduce((total, key) => total + ((window.localStorage.getItem(key)?.length ?? 0) * 2), 0);
+    return keys.reduce(
+      (total, key) => total + (window.localStorage.getItem(key)?.length ?? 0) * 2,
+      0,
+    );
   } catch {
     return 0;
   }

@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { getExerciseMediaSources } from "../src/lib/exercise-media-sources.ts";
 
 test("tenta primeiro o proxy para GIFs do FitnessProgramer e mantém a URL original como fallback", () => {
-  const original = "https://fitnessprogramer.com/wp-content/uploads/2021/05/Cable-Donkey-Kickback.gif";
+  const original =
+    "https://fitnessprogramer.com/wp-content/uploads/2021/05/Cable-Donkey-Kickback.gif";
   const sources = getExerciseMediaSources(original);
   assert.equal(sources.length, 3);
   assert.match(sources[0]!, /^https:\/\/wsrv\.nl\//);

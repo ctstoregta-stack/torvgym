@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { createBackup, emptyState, loadState, parseBackup, saveState, storageSizeBytes, uid } from "../src/lib/storage.ts";
+import {
+  createBackup,
+  emptyState,
+  loadState,
+  parseBackup,
+  saveState,
+  storageSizeBytes,
+  uid,
+} from "../src/lib/storage.ts";
 
 const KEY = "gymtrack.state.v1";
 const VERSION_KEY = "gymtrack.state.version";
@@ -39,7 +47,14 @@ test("loadState retorna null quando não há dados salvos", async () => {
 test("loadState recupera do snapshot quando o estado principal está corrompido", async () => {
   const state = {
     ...emptyState,
-    routines: [{ id: "r-recovery", name: "Recuperação", createdAt: "2026-01-01T00:00:00.000Z", workouts: [] }],
+    routines: [
+      {
+        id: "r-recovery",
+        name: "Recuperação",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        workouts: [],
+      },
+    ],
     activeRoutineId: "r-recovery",
   };
   await saveState(state);
@@ -51,7 +66,9 @@ test("loadState recupera do snapshot quando o estado principal está corrompido"
 test("loadState recupera do snapshot quando o envelope criptografado foi adulterado", async () => {
   const state = {
     ...emptyState,
-    routines: [{ id: "r-tamper", name: "Integridade", createdAt: "2026-01-02T00:00:00.000Z", workouts: [] }],
+    routines: [
+      { id: "r-tamper", name: "Integridade", createdAt: "2026-01-02T00:00:00.000Z", workouts: [] },
+    ],
     activeRoutineId: "r-tamper",
   };
   await saveState(state);
@@ -68,7 +85,14 @@ test("loadState recupera do snapshot quando o envelope criptografado foi adulter
 test("loadState usa o backup interno quando o estado principal e o snapshot estão corrompidos", async () => {
   const state = {
     ...emptyState,
-    routines: [{ id: "r-auto", name: "Backup automático", createdAt: "2026-01-01T00:00:00.000Z", workouts: [] }],
+    routines: [
+      {
+        id: "r-auto",
+        name: "Backup automático",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        workouts: [],
+      },
+    ],
     activeRoutineId: "r-auto",
   };
   await saveState(state);
@@ -87,12 +111,16 @@ test("loadState retorna null quando todas as cópias estão inválidas", async (
 test("gravações concorrentes preservam a ordem das chamadas", async () => {
   const first = {
     ...emptyState,
-    routines: [{ id: "r-first", name: "Primeiro", createdAt: "2026-01-01T00:00:00.000Z", workouts: [] }],
+    routines: [
+      { id: "r-first", name: "Primeiro", createdAt: "2026-01-01T00:00:00.000Z", workouts: [] },
+    ],
     activeRoutineId: "r-first",
   };
   const second = {
     ...emptyState,
-    routines: [{ id: "r-second", name: "Segundo", createdAt: "2026-01-01T00:00:00.000Z", workouts: [] }],
+    routines: [
+      { id: "r-second", name: "Segundo", createdAt: "2026-01-01T00:00:00.000Z", workouts: [] },
+    ],
     activeRoutineId: "r-second",
   };
 
@@ -112,7 +140,13 @@ test("saveState e loadState preservam os dados (ida e volta)", async () => {
         name: "Hipertrofia",
         createdAt: "2026-01-01T00:00:00.000Z",
         workouts: [
-          { id: "w1", name: "Treino A", days: [1, 3], exerciseIds: ["supino"], targetSets: { supino: 3 } },
+          {
+            id: "w1",
+            name: "Treino A",
+            days: [1, 3],
+            exerciseIds: ["supino"],
+            targetSets: { supino: 3 },
+          },
         ],
       },
     ],
@@ -129,7 +163,19 @@ test("loadState descarta itens inválidos e preenche padrões", async () => {
     KEY,
     JSON.stringify({
       routines: [
-        { id: "r1", name: "Rotina", workouts: [{ id: "w1", name: "A", days: [1, 1, 9, "x"], exerciseIds: ["a", 5], targetSets: { a: 0, b: 2.6 } }] },
+        {
+          id: "r1",
+          name: "Rotina",
+          workouts: [
+            {
+              id: "w1",
+              name: "A",
+              days: [1, 1, 9, "x"],
+              exerciseIds: ["a", 5],
+              targetSets: { a: 0, b: 2.6 },
+            },
+          ],
+        },
         { name: "sem id" },
         null,
       ],
@@ -156,7 +202,10 @@ test("activeRoutineId inexistente cai para a primeira rotina", async () => {
   storage.setItem(
     KEY,
     JSON.stringify({
-      routines: [{ id: "r1", name: "A", workouts: [] }, { id: "r2", name: "B", workouts: [] }],
+      routines: [
+        { id: "r1", name: "A", workouts: [] },
+        { id: "r2", name: "B", workouts: [] },
+      ],
       activeRoutineId: "nao-existe",
     }),
   );
@@ -201,7 +250,12 @@ test("migração preserva RPE e observação da série", async () => {
       activeSession: {
         id: "s1",
         workoutId: "w1",
-        entries: [{ exerciseId: "supino", sets: [{ weight: 50, reps: 10, completed: true, rpe: 9, note: "Última série pesada" }] }],
+        entries: [
+          {
+            exerciseId: "supino",
+            sets: [{ weight: 50, reps: 10, completed: true, rpe: 9, note: "Última série pesada" }],
+          },
+        ],
       },
     }),
   );

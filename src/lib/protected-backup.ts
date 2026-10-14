@@ -16,7 +16,9 @@ function base64ToBytes(value: string) {
 }
 
 async function deriveKey(password: string, salt: Uint8Array) {
-  const material = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
+  const material = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, [
+    "deriveKey",
+  ]);
   return crypto.subtle.deriveKey(
     {
       name: "PBKDF2",

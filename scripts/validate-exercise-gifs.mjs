@@ -94,12 +94,16 @@ const results = [];
 const concurrency = 6;
 for (let i = 0; i < uniqueUrls.length; i += concurrency) {
   const batch = uniqueUrls.slice(i, i + concurrency);
-  results.push(...await Promise.all(batch.map((url) => checkUrl(url))));
+  results.push(...(await Promise.all(batch.map((url) => checkUrl(url)))));
 }
 
 const failures = results.filter((result) => !result.ok);
-console.log(`Exercícios auditados: ${urls.length}; URLs únicas: ${uniqueUrls.length}; falhas: ${failures.length}`);
-console.log("Validação inclui HTTPS, redirecionamentos, Content-Type e assinatura GIF/PNG; mídias PNG válidas são reportadas como não animadas.");
+console.log(
+  `Exercícios auditados: ${urls.length}; URLs únicas: ${uniqueUrls.length}; falhas: ${failures.length}`,
+);
+console.log(
+  "Validação inclui HTTPS, redirecionamentos, Content-Type e assinatura GIF/PNG; mídias PNG válidas são reportadas como não animadas.",
+);
 
 for (const failure of failures) console.log(JSON.stringify(failure));
 

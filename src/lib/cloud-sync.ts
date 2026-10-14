@@ -16,16 +16,18 @@ function bytesToBase64(bytes: Uint8Array) {
 }
 function base64ToBytes(value: string) {
   const binary = atob(value);
-  return Uint8Array.from(binary, char => char.charCodeAt(0));
+  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
 }
 async function deriveKeyWithIterations(password: string, salt: Uint8Array, iterations: number) {
-  const material = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
+  const material = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, [
+    "deriveKey",
+  ]);
   return crypto.subtle.deriveKey(
-    { name:"PBKDF2", salt: salt as unknown as BufferSource, iterations, hash:"SHA-256" },
+    { name: "PBKDF2", salt: salt as unknown as BufferSource, iterations, hash: "SHA-256" },
     material,
-    { name:"AES-GCM", length:256 },
+    { name: "AES-GCM", length: 256 },
     false,
-    ["encrypt","decrypt"],
+    ["encrypt", "decrypt"],
   );
 }
 
@@ -56,8 +58,12 @@ export function getSyncDeviceId() {
   return id;
 }
 
-export async function createEncryptedSyncPackage(state: AppState, password: string): Promise<string> {
-  if (password.length < 12) throw new Error("A senha de sincronização deve ter pelo menos 12 caracteres.");
+export async function createEncryptedSyncPackage(
+  state: AppState,
+  password: string,
+): Promise<string> {
+  if (password.length < 12)
+    throw new Error("A senha de sincronização deve ter pelo menos 12 caracteres.");
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKeyWithIterations(password, salt, ITERATIONS);
@@ -65,7 +71,11 @@ export async function createEncryptedSyncPackage(state: AppState, password: stri
   const aadText = `${FORMAT}|${VERSION}|${now}|${now}|${getSyncDeviceId()}`;
   const aad = enc.encode(aadText);
   const plaintext = enc.encode(JSON.stringify({ state, updatedAt: now }));
-  const ciphertext = await crypto.subtle.encrypt({ name:"AES-GCM", iv, additionalData: aad }, key, plaintext);
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv, additionalData: aad },
+    key,
+    plaintext,
+  );
   const envelope: SyncEnvelope = {
     format: FORMAT,
     version: VERSION,
@@ -82,42 +92,85 @@ export async function createEncryptedSyncPackage(state: AppState, password: stri
   return JSON.stringify(envelope, null, 2);
 }
 
-export async function decryptEncryptedSyncPackage(raw: string, password: string): Promise<{ state: AppState; updatedAt: string }> {
+export async function decryptEncryptedSyncPackage(
+  raw: string,
+  password: string,
+): Promise<{ state: AppState; updatedAt: string }> {
   const parsed: unknown = JSON.parse(raw);
   if (!parsed || typeof parsed !== "object") throw new Error("Pacote de sincronização inválido.");
   const envelope = parsed as Partial<SyncEnvelope>;
   const legacy = envelope.version === LEGACY_VERSION;
-  const current = envelope.version === VERSION && envelope.algorithm === "AES-256-GCM" && envelope.kdf === "PBKDF2-SHA256" && envelope.iterations === ITERATIONS;
-  if (envelope.format !== FORMAT || (!legacy && !current) || !envelope.salt || !envelope.iv || !envelope.ciphertext || !envelope.deviceId || !envelope.createdAt || !envelope.updatedAt) {
+  const current =
+    envelope.version === VERSION &&
+    envelope.algorithm === "AES-256-GCM" &&
+    envelope.kdf === "PBKDF2-SHA256" &&
+    envelope.iterations === ITERATIONS;
+  if (
+    envelope.format !== FORMAT ||
+    (!legacy && !current) ||
+    !envelope.salt ||
+    !envelope.iv ||
+    !envelope.ciphertext ||
+    !envelope.deviceId ||
+    !envelope.createdAt ||
+    !envelope.updatedAt
+  ) {
     throw new Error("Pacote de sincronização incompatível.");
   }
   const iterations = envelope.version === LEGACY_VERSION ? LEGACY_ITERATIONS : ITERATIONS;
   const key = await deriveKeyWithIterations(password, base64ToBytes(envelope.salt), iterations);
   const aadText = `${FORMAT}|${VERSION}|${envelope.createdAt}|${envelope.updatedAt}|${envelope.deviceId}`;
   const aad = enc.encode(aadText);
-  const decryptParams = envelope.version === LEGACY_VERSION
-    ? { name:"AES-GCM" as const, iv:base64ToBytes(envelope.iv) as unknown as BufferSource }
-    : { name:"AES-GCM" as const, iv:base64ToBytes(envelope.iv) as unknown as BufferSource, additionalData: aad };
-  const plaintext = await crypto.subtle.decrypt(decryptParams, key, base64ToBytes(envelope.ciphertext));
+  const decryptParams =
+    envelope.version === LEGACY_VERSION
+      ? { name: "AES-GCM" as const, iv: base64ToBytes(envelope.iv) as unknown as BufferSource }
+      : {
+          name: "AES-GCM" as const,
+          iv: base64ToBytes(envelope.iv) as unknown as BufferSource,
+          additionalData: aad,
+        };
+  const plaintext = await crypto.subtle.decrypt(
+    decryptParams,
+    key,
+    base64ToBytes(envelope.ciphertext),
+  );
   const payload: unknown = JSON.parse(dec.decode(plaintext));
-  if (!payload || typeof payload !== "object" || !("state" in payload) || typeof (payload as { updatedAt?: unknown }).updatedAt !== "string") {
+  if (
+    !payload ||
+    typeof payload !== "object" ||
+    !("state" in payload) ||
+    typeof (payload as { updatedAt?: unknown }).updatedAt !== "string"
+  ) {
     throw new Error("Conteúdo de sincronização inválido.");
   }
   const data = payload as { state?: AppState; updatedAt?: string };
-  if (!data.state || typeof data.updatedAt !== "string") throw new Error("Conteúdo de sincronização inválido.");
+  if (!data.state || typeof data.updatedAt !== "string")
+    throw new Error("Conteúdo de sincronização inválido.");
   return { state: data.state, updatedAt: data.updatedAt };
 }
 
 export function syncPackageMetadata(raw: string) {
   const parsed = JSON.parse(raw) as Partial<SyncEnvelope>;
-  if (parsed.format !== FORMAT || (parsed.version !== VERSION && parsed.version !== LEGACY_VERSION)) return null;
-  if (parsed.version === LEGACY_VERSION) return {
-    deviceId: parsed.deviceId ?? "", createdAt: parsed.createdAt ?? "", updatedAt: parsed.updatedAt ?? "",
+  if (parsed.format !== FORMAT || (parsed.version !== VERSION && parsed.version !== LEGACY_VERSION))
+    return null;
+  if (parsed.version === LEGACY_VERSION)
+    return {
+      deviceId: parsed.deviceId ?? "",
+      createdAt: parsed.createdAt ?? "",
+      updatedAt: parsed.updatedAt ?? "",
+    };
+  if (
+    parsed.algorithm !== "AES-256-GCM" ||
+    parsed.kdf !== "PBKDF2-SHA256" ||
+    parsed.iterations !== ITERATIONS
+  )
+    return null;
+  return {
+    deviceId: parsed.deviceId ?? "",
+    createdAt: parsed.createdAt ?? "",
+    updatedAt: parsed.updatedAt ?? "",
   };
-  if (parsed.algorithm !== "AES-256-GCM" || parsed.kdf !== "PBKDF2-SHA256" || parsed.iterations !== ITERATIONS) return null;
-  return { deviceId: parsed.deviceId ?? "", createdAt: parsed.createdAt ?? "", updatedAt: parsed.updatedAt ?? "" };
 }
-
 
 const RECOVERY_FORMAT = "torvgym-recovery";
 const RECOVERY_VERSION = 1;
@@ -129,7 +182,12 @@ export type RecoveryPackage = {
 
 export function generateRecoveryCode() {
   const bytes = crypto.getRandomValues(new Uint8Array(24));
-  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("").match(/.{1,4}/g)?.join("-") ?? "";
+  return (
+    Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"))
+      .join("")
+      .match(/.{1,4}/g)
+      ?.join("-") ?? ""
+  );
 }
 
 export async function createEncryptedRecoveryPackage(state: AppState): Promise<RecoveryPackage> {
@@ -215,6 +273,7 @@ export async function decryptEncryptedRecoveryPackage(
   const payload: unknown = JSON.parse(dec.decode(plaintext));
   if (!payload || typeof payload !== "object") throw new Error("Conteúdo de recuperação inválido.");
   const data = payload as { state?: AppState; updatedAt?: unknown };
-  if (!data.state || typeof data.updatedAt !== "string") throw new Error("Conteúdo de recuperação inválido.");
+  if (!data.state || typeof data.updatedAt !== "string")
+    throw new Error("Conteúdo de recuperação inválido.");
   return { state: data.state, updatedAt: data.updatedAt };
 }

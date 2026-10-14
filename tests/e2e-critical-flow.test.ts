@@ -28,12 +28,7 @@ const workout: Workout = {
 };
 
 test("E2E crítico: iniciar → séries → descanso persistido → próximo exercício → finalizar → relatório", () => {
-  let session = createWorkoutSession(
-    routine,
-    workout,
-    "session-e2e",
-    "2026-10-06T10:00:00.000Z",
-  );
+  let session = createWorkoutSession(routine, workout, "session-e2e", "2026-10-06T10:00:00.000Z");
 
   assert.equal(session.entries.length, 2);
   assert.equal(session.entries[0]?.sets.length, 2);
@@ -93,12 +88,7 @@ test("E2E crítico: iniciar → séries → descanso persistido → próximo exe
 
 test("E2E crítico: fechar/reabrir preserva sessão ativa, exercício atual e descanso", () => {
   const session = {
-    ...createWorkoutSession(
-      routine,
-      workout,
-      "session-resume",
-      "2026-10-06T11:00:00.000Z",
-    ),
+    ...createWorkoutSession(routine, workout, "session-resume", "2026-10-06T11:00:00.000Z"),
     currentExerciseIndex: 1,
     restStartedAt: "2026-10-06T11:05:00.000Z",
     restTotal: 90,

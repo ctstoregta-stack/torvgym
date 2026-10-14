@@ -10,31 +10,31 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
+import { Route as ConquistasRouteImport } from './routes/conquistas'
 import { Route as ExerciciosRouteImport } from './routes/exercicios'
 import { Route as HistoricoRouteImport } from './routes/historico'
+import { Route as PerfilRouteImport } from './routes/perfil'
+import { Route as ProgressoRouteImport } from './routes/progresso'
+import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as RotinasRouteImport } from './routes/rotinas'
 import { Route as ExecutarWorkoutIdRouteImport } from './routes/executar.$workoutId'
 import { Route as ExercicioExerciseIdRouteImport } from './routes/exercicio.$exerciseId'
 import { Route as TreinoWorkoutIdRouteImport } from './routes/treino.$workoutId'
-import { Route as ProgressoRouteImport } from './routes/progresso'
-import { Route as RelatoriosRouteImport } from './routes/relatorios'
-import { Route as ConquistasRouteImport } from './routes/conquistas'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PerfilRoute = PerfilRouteImport.update({
-  id: '/perfil',
-  path: '/perfil',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConquistasRoute = ConquistasRouteImport.update({
+  id: '/conquistas',
+  path: '/conquistas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExerciciosRoute = ExerciciosRouteImport.update({
@@ -45,6 +45,21 @@ const ExerciciosRoute = ExerciciosRouteImport.update({
 const HistoricoRoute = HistoricoRouteImport.update({
   id: '/historico',
   path: '/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerfilRoute = PerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgressoRoute = ProgressoRouteImport.update({
+  id: '/progresso',
+  path: '/progresso',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RelatoriosRoute = RelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RotinasRoute = RotinasRouteImport.update({
@@ -67,120 +82,108 @@ const TreinoWorkoutIdRoute = TreinoWorkoutIdRouteImport.update({
   path: '/treino/$workoutId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProgressoRoute = ProgressoRouteImport.update({
-  id: '/progresso',
-  path: '/progresso',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RelatoriosRoute = RelatoriosRouteImport.update({
-  id: '/relatorios',
-  path: '/relatorios',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ConquistasRoute = ConquistasRouteImport.update({
-  id: '/conquistas',
-  path: '/conquistas',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/perfil': typeof PerfilRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/conquistas': typeof ConquistasRoute
   '/exercicios': typeof ExerciciosRoute
   '/historico': typeof HistoricoRoute
+  '/perfil': typeof PerfilRoute
+  '/progresso': typeof ProgressoRoute
+  '/relatorios': typeof RelatoriosRoute
   '/rotinas': typeof RotinasRoute
   '/executar/$workoutId': typeof ExecutarWorkoutIdRoute
   '/exercicio/$exerciseId': typeof ExercicioExerciseIdRoute
   '/treino/$workoutId': typeof TreinoWorkoutIdRoute
-  '/progresso': typeof ProgressoRoute
-  '/relatorios': typeof RelatoriosRoute
-  '/conquistas': typeof ConquistasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/perfil': typeof PerfilRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/conquistas': typeof ConquistasRoute
   '/exercicios': typeof ExerciciosRoute
   '/historico': typeof HistoricoRoute
+  '/perfil': typeof PerfilRoute
+  '/progresso': typeof ProgressoRoute
+  '/relatorios': typeof RelatoriosRoute
   '/rotinas': typeof RotinasRoute
   '/executar/$workoutId': typeof ExecutarWorkoutIdRoute
   '/exercicio/$exerciseId': typeof ExercicioExerciseIdRoute
   '/treino/$workoutId': typeof TreinoWorkoutIdRoute
-  '/progresso': typeof ProgressoRoute
-  '/relatorios': typeof RelatoriosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/perfil': typeof PerfilRoute
   '/': typeof IndexRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/conquistas': typeof ConquistasRoute
   '/exercicios': typeof ExerciciosRoute
   '/historico': typeof HistoricoRoute
+  '/perfil': typeof PerfilRoute
+  '/progresso': typeof ProgressoRoute
+  '/relatorios': typeof RelatoriosRoute
   '/rotinas': typeof RotinasRoute
   '/executar/$workoutId': typeof ExecutarWorkoutIdRoute
   '/exercicio/$exerciseId': typeof ExercicioExerciseIdRoute
   '/treino/$workoutId': typeof TreinoWorkoutIdRoute
-  '/progresso': typeof ProgressoRoute
-  '/relatorios': typeof RelatoriosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/perfil'
     | '/'
     | '/configuracoes'
+    | '/conquistas'
     | '/exercicios'
     | '/historico'
+    | '/perfil'
+    | '/progresso'
+    | '/relatorios'
     | '/rotinas'
     | '/executar/$workoutId'
     | '/exercicio/$exerciseId'
     | '/treino/$workoutId'
-    | '/progresso'
-    | '/relatorios'
-    | '/conquistas'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/perfil'
     | '/'
     | '/configuracoes'
+    | '/conquistas'
     | '/exercicios'
     | '/historico'
+    | '/perfil'
+    | '/progresso'
+    | '/relatorios'
     | '/rotinas'
     | '/executar/$workoutId'
     | '/exercicio/$exerciseId'
     | '/treino/$workoutId'
-    | '/progresso'
-    | '/relatorios'
-    | '/conquistas'
   id:
     | '__root__'
-    | '/perfil'
     | '/'
     | '/configuracoes'
+    | '/conquistas'
     | '/exercicios'
     | '/historico'
+    | '/perfil'
+    | '/progresso'
+    | '/relatorios'
     | '/rotinas'
     | '/executar/$workoutId'
     | '/exercicio/$exerciseId'
     | '/treino/$workoutId'
-    | '/progresso'
-    | '/relatorios'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  PerfilRoute: typeof PerfilRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
+  ConquistasRoute: typeof ConquistasRoute
   ExerciciosRoute: typeof ExerciciosRoute
   HistoricoRoute: typeof HistoricoRoute
+  PerfilRoute: typeof PerfilRoute
+  ProgressoRoute: typeof ProgressoRoute
+  RelatoriosRoute: typeof RelatoriosRoute
   RotinasRoute: typeof RotinasRoute
   ExecutarWorkoutIdRoute: typeof ExecutarWorkoutIdRoute
   ExercicioExerciseIdRoute: typeof ExercicioExerciseIdRoute
   TreinoWorkoutIdRoute: typeof TreinoWorkoutIdRoute
-  ProgressoRoute: typeof ProgressoRoute
-  RelatoriosRoute: typeof RelatoriosRoute
-  ConquistasRoute: typeof ConquistasRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,18 +195,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/perfil': {
-      id: '/perfil'
-      path: '/perfil'
-      fullPath: '/perfil'
-      preLoaderRoute: typeof PerfilRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/configuracoes': {
       id: '/configuracoes'
       path: '/configuracoes'
       fullPath: '/configuracoes'
       preLoaderRoute: typeof ConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conquistas': {
+      id: '/conquistas'
+      path: '/conquistas'
+      fullPath: '/conquistas'
+      preLoaderRoute: typeof ConquistasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/exercicios': {
@@ -218,6 +221,27 @@ declare module '@tanstack/react-router' {
       path: '/historico'
       fullPath: '/historico'
       preLoaderRoute: typeof HistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/perfil': {
+      id: '/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof PerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/progresso': {
+      id: '/progresso'
+      path: '/progresso'
+      fullPath: '/progresso'
+      preLoaderRoute: typeof ProgressoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/relatorios': {
+      id: '/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof RelatoriosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rotinas': {
@@ -248,42 +272,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TreinoWorkoutIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/progresso': {
-      id: '/progresso'
-      path: '/progresso'
-      fullPath: '/progresso'
-      preLoaderRoute: typeof ProgressoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/relatorios': {
-      id: '/relatorios'
-      path: '/relatorios'
-      fullPath: '/relatorios'
-      preLoaderRoute: typeof RelatoriosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/conquistas': {
-      id: '/conquistas'
-      path: '/conquistas'
-      fullPath: '/conquistas'
-      preLoaderRoute: typeof ConquistasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  PerfilRoute: PerfilRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
+  ConquistasRoute: ConquistasRoute,
   ExerciciosRoute: ExerciciosRoute,
   HistoricoRoute: HistoricoRoute,
+  PerfilRoute: PerfilRoute,
+  ProgressoRoute: ProgressoRoute,
+  RelatoriosRoute: RelatoriosRoute,
   RotinasRoute: RotinasRoute,
   ExecutarWorkoutIdRoute: ExecutarWorkoutIdRoute,
   ExercicioExerciseIdRoute: ExercicioExerciseIdRoute,
   TreinoWorkoutIdRoute: TreinoWorkoutIdRoute,
-  ProgressoRoute: ProgressoRoute,
-  RelatoriosRoute: RelatoriosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

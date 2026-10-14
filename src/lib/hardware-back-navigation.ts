@@ -1,4 +1,9 @@
-const PROFILE_CHILD_ROUTES = new Set(["/configuracoes", "/conquistas", "/progresso", "/relatorios"]);
+const PROFILE_CHILD_ROUTES = new Set([
+  "/configuracoes",
+  "/conquistas",
+  "/progresso",
+  "/relatorios",
+]);
 
 /** Returns the in-app parent destination for Android's hardware Back action. */
 export function getHardwareBackTarget(pathname: string): string | null {

@@ -25,10 +25,8 @@ export function getExerciseMediaSources(url: string): string[] {
       }
     })();
 
-    const candidates = isFitnessProgramer
-      ? [proxied, url, alternate]
-      : [url, proxied, alternate];
-    return [...new Set(candidates.filter((candidate) => candidate.startsWith("https://")) )];
+    const candidates = isFitnessProgramer ? [proxied, url, alternate] : [url, proxied, alternate];
+    return [...new Set(candidates.filter((candidate) => candidate.startsWith("https://")))];
   } catch {
     return url.startsWith("https://") ? [url] : [];
   }
