@@ -180,25 +180,21 @@ function BodyPage() {
 
           <div className="mt-4">
             <p className="mb-2 text-xs font-semibold text-muted-foreground">Quando você mediu?</p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {[
                 { label: "Hoje", value: todayLocalDay() },
                 { label: "Ontem", value: yesterday },
-                { label: "Escolher data", value: "custom" },
-              ].map((option) => {
-                const active = option.value === "custom" ? date !== todayLocalDay() && date !== yesterday : date === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => option.value !== "custom" && setDate(option.value)}
-                    aria-pressed={active}
-                    className={`min-h-10 rounded-xl px-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${active ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground"}`}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setDate(option.value)}
+                  aria-pressed={date === option.value}
+                  className={`min-h-10 rounded-xl px-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${date === option.value ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground"}`}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
             <label className="mt-3 block text-xs font-semibold text-muted-foreground">
               Data personalizada
