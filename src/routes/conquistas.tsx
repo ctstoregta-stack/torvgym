@@ -26,7 +26,7 @@ function AchievementsPage() {
   const [reminderTime, setReminderTime] = useState("18:00");
   const [reminderInterval, setReminderInterval] = useState(1);
   const [reminderMessage, setReminderMessage] = useState("");
-  useEffect(() => { try { const raw = window.localStorage.getItem("torvgym.training-reminder.v1"); if (!raw) return; const saved = JSON.parse(raw) as {enabled?: boolean; time?: string; intervalDays?: number}; setReminderEnabled(saved.enabled === true); if (typeof saved.time === "string" && /^([01]\\d|2[0-3]):[0-5]\\d$/.test(saved.time)) setReminderTime(saved.time); if (typeof saved.intervalDays === "number") setReminderInterval(Math.min(7, Math.max(1, Math.round(saved.intervalDays)))); } catch { /* Ignora configuração inválida. */ } }, []);
+  useEffect(() => { try { const raw = window.localStorage.getItem("torvgym.training-reminder.v1"); if (!raw) return; const saved = JSON.parse(raw) as {enabled?: boolean; time?: string; intervalDays?: number}; setReminderEnabled(saved.enabled === true); if (typeof saved.time === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(saved.time)) setReminderTime(saved.time); if (typeof saved.intervalDays === "number") setReminderInterval(Math.min(7, Math.max(1, Math.round(saved.intervalDays)))); } catch { /* Ignora configuração inválida. */ } }, []);
   useEffect(() => {
     if (!ready) return;
     setWeeklySessionsTarget(state.goals.weeklySessionsTarget);
@@ -49,6 +49,16 @@ function AchievementsPage() {
   const weeklyVolume = recentSessions.reduce((sum, session) => sum + sessionVolume(session), 0);
   const saveGoals = () => {
     updateGoals({ weeklySessionsTarget, weeklyVolumeTarget, streakTarget, weeklyStreakTarget });
+  };
+  const saveReminder = async () => {
+    const [hour, minute] = reminderTime.split(":").map(Number);
+    const result = await configureNativeTrainingReminder({ enabled: reminderEnabled, hour, minute, intervalDays: reminderInterval });
+    if (reminderEnabled && !result.scheduled) {
+      setReminderMessage("Agendamento disponível apenas no aplicativo Android instalado, não no navegador/preview.");
+      return;
+    }
+    window.localStorage.setItem("torvgym.training-reminder.v1", JSON.stringify({ enabled: reminderEnabled, time: reminderTime, intervalDays: reminderInterval }));
+    setReminderMessage(!reminderEnabled ? "Lembretes desativados." : result.notificationsEnabled ? "Lembrete agendado no Android." : "Agendamento salvo. Permita notificações do TorvGym nas configurações do Android.");
   };
   if (!ready) return <AppShell title="Conquistas"><div className="h-40 animate-pulse rounded-xl bg-card" /></AppShell>;
   return <AppShell title="Conquistas" back={{to:"/"}}>
