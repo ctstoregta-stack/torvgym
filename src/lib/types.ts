@@ -64,6 +64,7 @@ export type TrainingGoals = {
   weeklySessionsTarget: number;
   weeklyVolumeTarget: number;
   streakTarget: number;
+  weeklyStreakTarget: number;
 };
 
 export type AppState = {

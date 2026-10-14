@@ -20,6 +20,7 @@ export const emptyState: AppState = {
     weeklySessionsTarget: 4,
     weeklyVolumeTarget: 10000,
     streakTarget: 7,
+    weeklyStreakTarget: 4,
   },
 };
 
@@ -168,6 +169,10 @@ function normalizeState(input: unknown): AppState | null {
           typeof rawGoals['streakTarget'] === "number"
             ? Math.min(365, Math.max(1, Math.round(rawGoals['streakTarget'])))
             : emptyState.goals.streakTarget,
+        weeklyStreakTarget:
+          typeof rawGoals['weeklyStreakTarget'] === "number"
+            ? Math.min(52, Math.max(1, Math.round(rawGoals['weeklyStreakTarget'])))
+            : emptyState.goals.weeklyStreakTarget,
       }
     : emptyState.goals;
 

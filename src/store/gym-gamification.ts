@@ -17,6 +17,8 @@ export type GamificationSummary = {
   levelProgress: number;
   currentStreak: number;
   bestStreak: number;
+  currentWeekStreak: number;
+  bestWeekStreak: number;
   totalSessions: number;
   totalVolume: number;
   totalSets: number;
@@ -56,15 +58,55 @@ function bestConsecutive(days: string[]) {
   return best;
 }
 
-export function buildGamificationSummary(sessions: Session[]): GamificationSummary {
+function mondayKey(value: Date) {
+  const monday = new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, "0")}-${String(monday.getDate()).padStart(2, "0")}`;
+}
+
+function weekKeyFromDay(day: string) {
+  return mondayKey(new Date(`${day}T12:00:00`));
+}
+
+function weeklyStreaks(days: string[], now: Date) {
+  const activeWeeks = new Set(days.map(weekKeyFromDay));
+  const currentWeek = mondayKey(now);
+  let cursor = new Date(`${currentWeek}T12:00:00`);
+  // A week without training yet does not break the streak until it has ended.
+  if (!activeWeeks.has(currentWeek)) cursor.setDate(cursor.getDate() - 7);
+  let current = 0;
+  while (activeWeeks.has(mondayKey(cursor))) {
+    current += 1;
+    cursor.setDate(cursor.getDate() - 7);
+  }
+
+  const ordered = [...activeWeeks].sort();
+  let best = 0;
+  let running = 0;
+  let previous: Date | null = null;
+  for (const key of ordered) {
+    const week = new Date(`${key}T12:00:00`);
+    running = previous && week.getTime() - previous.getTime() === 7 * 86400000 ? running + 1 : 1;
+    best = Math.max(best, running);
+    previous = week;
+  }
+  return { currentWeekStreak: current, bestWeekStreak: best };
+}
+
+export function buildGamificationSummary(sessions: Session[], now = new Date()): GamificationSummary {
   const completed = sessions.filter(s => s.finishedAt);
   const totalSessions = completed.length;
   const totalVolume = completed.reduce((n,s) => n + sessionVolume(s), 0);
   const totalSets = completed.reduce((n,s) => n + sessionSetCount(s), 0);
   const prs = completed.reduce((n,s) => n + s.entries.reduce((e,entry) => e + entry.sets.filter(set => set.isPR).length,0),0);
-  const days = uniqueTrainingDays(completed);
+  const validCompleted = completed.filter(s => {
+    const timestamp = s.finishedAt ? new Date(s.finishedAt).getTime() : Number.NaN;
+    return Number.isFinite(timestamp) && timestamp <= now.getTime();
+  });
+  const days = uniqueTrainingDays(validCompleted);
   const currentStreak = consecutiveFromEnd(days);
   const bestStreak = bestConsecutive(days);
+  const weekStreaks = weeklyStreaks(days, now);
 
   const xp = totalSessions * 100 + totalSets * 5 + Math.floor(totalVolume / 100) + prs * 50;
   const level = Math.floor(xp / 500) + 1;
@@ -79,7 +121,8 @@ export function buildGamificationSummary(sessions: Session[]): GamificationSumma
     { id:"first-pr", title:"Novo recorde", description:"Conquiste seu primeiro PR.", unlocked:prs >= 1, progress:Math.min(prs,1), target:1, xp:150 },
     { id:"streak-three", title:"Sequência", description:"Treine em 3 dias consecutivos.", unlocked:bestStreak >= 3, progress:Math.min(bestStreak,3), target:3, xp:200 },
     { id:"streak-seven", title:"Semana de ferro", description:"Treine em 7 dias consecutivos.", unlocked:bestStreak >= 7, progress:Math.min(bestStreak,7), target:7, xp:500 },
+    { id:"weekly-consistency-four", title:"Constância de verdade", description:"Treine em 4 semanas consecutivas, respeitando os dias de descanso.", unlocked:weekStreaks.bestWeekStreak >= 4, progress:Math.min(weekStreaks.bestWeekStreak,4), target:4, xp:350 },
   ];
 
-  return { xp, level, levelProgress, currentStreak, bestStreak, totalSessions, totalVolume, totalSets, achievements };
+  return { xp, level, levelProgress, currentStreak, bestStreak, ...weekStreaks, totalSessions, totalVolume, totalSets, achievements };
 }

@@ -368,6 +368,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
           weeklySessionsTarget: Math.min(14, Math.max(1, Math.round(patch.weeklySessionsTarget ?? s.goals.weeklySessionsTarget))),
           weeklyVolumeTarget: Math.min(1000000, Math.max(0, Math.round(patch.weeklyVolumeTarget ?? s.goals.weeklyVolumeTarget))),
           streakTarget: Math.min(365, Math.max(1, Math.round(patch.streakTarget ?? s.goals.streakTarget))),
+          weeklyStreakTarget: Math.min(52, Math.max(1, Math.round(patch.weeklyStreakTarget ?? s.goals.weeklyStreakTarget))),
         },
       })),
 

@@ -20,11 +20,13 @@ function AchievementsPage() {
   const [weeklySessionsTarget, setWeeklySessionsTarget] = useState(state.goals.weeklySessionsTarget);
   const [weeklyVolumeTarget, setWeeklyVolumeTarget] = useState(state.goals.weeklyVolumeTarget);
   const [streakTarget, setStreakTarget] = useState(state.goals.streakTarget);
+  const [weeklyStreakTarget, setWeeklyStreakTarget] = useState(state.goals.weeklyStreakTarget);
   useEffect(() => {
     if (!ready) return;
     setWeeklySessionsTarget(state.goals.weeklySessionsTarget);
     setWeeklyVolumeTarget(state.goals.weeklyVolumeTarget);
     setStreakTarget(state.goals.streakTarget);
+    setWeeklyStreakTarget(state.goals.weeklyStreakTarget);
   }, [ready, state.goals]);
   const recentSessions = useMemo(() => {
     const now = new Date();
@@ -40,7 +42,7 @@ function AchievementsPage() {
   }, [state.sessions]);
   const weeklyVolume = recentSessions.reduce((sum, session) => sum + sessionVolume(session), 0);
   const saveGoals = () => {
-    updateGoals({ weeklySessionsTarget, weeklyVolumeTarget, streakTarget });
+    updateGoals({ weeklySessionsTarget, weeklyVolumeTarget, streakTarget, weeklyStreakTarget });
   };
   if (!ready) return <AppShell title="Conquistas"><div className="h-40 animate-pulse rounded-xl bg-card" /></AppShell>;
   return <AppShell title="Conquistas" back={{to:"/"}}>
@@ -56,15 +58,17 @@ function AchievementsPage() {
     <Card className="mt-4">
       <p className="text-sm font-semibold">Metas pessoais</p>
       <p className="mt-1 text-xs text-muted-foreground">Ajuste seus objetivos sem depender de serviços externos.</p>
-      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <GoalInput label="Treinos/semana" value={weeklySessionsTarget} onChange={setWeeklySessionsTarget} min={1} max={14} />
         <GoalInput label="Volume/semana (kg)" value={weeklyVolumeTarget} onChange={setWeeklyVolumeTarget} min={0} max={1000000} step={500} />
         <GoalInput label="Sequência (dias)" value={streakTarget} onChange={setStreakTarget} min={1} max={365} />
+        <GoalInput label="Consistência (semanas)" value={weeklyStreakTarget} onChange={setWeeklyStreakTarget} min={1} max={52} />
       </div>
-      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <GoalProgress label="Treinos" current={recentSessions.length} target={state.goals.weeklySessionsTarget} />
         <GoalProgress label="Volume" current={weeklyVolume} target={state.goals.weeklyVolumeTarget} />
-        <GoalProgress label="Sequência" current={summary.currentStreak} target={state.goals.streakTarget} />
+        <GoalProgress label="Sequência diária" current={summary.currentStreak} target={state.goals.streakTarget} />
+        <GoalProgress label="Sequência semanal" current={summary.currentWeekStreak} target={state.goals.weeklyStreakTarget} />
       </div>
       <Button className="mt-3 w-full" onClick={saveGoals}>Salvar metas</Button>
     </Card>
