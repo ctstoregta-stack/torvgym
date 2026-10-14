@@ -80,3 +80,36 @@ export function finishWorkoutSession(
     finishedAt,
   };
 }
+
+
+/**
+ * Finds the latest completed sets for an exercise in the same workout context.
+ * Sorts by completion timestamp instead of relying on the array order, which
+ * may change after backup import or recovery. Active sessions are ignored.
+ */
+export function lastCompletedSetsForWorkout(
+  sessions: Session[],
+  workoutId: string,
+  exerciseId: string,
+  routineId?: string,
+): SetLog[] | null {
+  const ordered = [...sessions]
+    .filter(
+      (item) =>
+        item.finishedAt &&
+        item.workoutId === workoutId &&
+        (routineId === undefined || item.routineId === routineId),
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.finishedAt!).getTime() - new Date(a.finishedAt!).getTime(),
+    );
+
+  for (const item of ordered) {
+    const entry = item.entries.find((candidate) => candidate.exerciseId === exerciseId);
+    const sets = entry?.sets.filter((set) => set.completed) ?? [];
+    if (sets.length) return sets;
+  }
+
+  return null;
+}

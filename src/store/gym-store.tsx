@@ -15,7 +15,7 @@ import { validateExercise } from "@/lib/exercise-validation";
 import { duplicateRoutineTemplate } from "@/lib/routine-templates";
 import { createEncryptedRecoveryPackage, createEncryptedSyncPackage, decryptEncryptedRecoveryPackage, decryptEncryptedSyncPackage } from "@/lib/cloud-sync";
 import { createProtectedBackup, decryptProtectedBackup } from "@/lib/protected-backup";
-import { createWorkoutSession, finishWorkoutSession, updateWorkoutSessionSet } from "@/store/gym-session";
+import { createWorkoutSession, finishWorkoutSession, lastCompletedSetsForWorkout, updateWorkoutSessionSet } from "@/store/gym-session";
 import { startNativeWorkoutNotification, stopNativeWorkoutNotification } from "@/lib/native-workout";
 import type {
   AppState,
@@ -280,18 +280,8 @@ export function GymProvider({ children }: { children: ReactNode }) {
   );
 
   const lastSetsForWorkout = useCallback(
-    (workoutId: string, exerciseId: string, routineId?: string) => {
-      // A referência anterior precisa ser a sessão mais recente, não a primeira
-      // encontrada no histórico. O histórico é cronológico (mais antigo → mais novo).
-      for (let i = finishedSessions.length - 1; i >= 0; i -= 1) {
-        const session = finishedSessions[i];
-        if (!session || session.workoutId !== workoutId || (routineId !== undefined && session.routineId !== routineId)) continue;
-        const entry = session.entries.find((item) => item.exerciseId === exerciseId);
-        const sets = entry?.sets.filter((set) => set.completed) ?? [];
-        if (sets.length) return sets;
-      }
-      return null;
-    },
+    (workoutId: string, exerciseId: string, routineId?: string) =>
+      lastCompletedSetsForWorkout(finishedSessions, workoutId, exerciseId, routineId),
     [finishedSessions],
   );
 
