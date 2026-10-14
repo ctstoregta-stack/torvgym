@@ -119,7 +119,7 @@ test("dashboard calcula sequência consecutiva e PR mais recente", async () => {
     ]),
   ];
   const { buildDashboardAnalytics } = await import("../src/store/gym-analytics.ts");
-  const dashboard = buildDashboardAnalytics(data);
+  const dashboard = buildDashboardAnalytics(data, new Date("2026-10-04T12:00:00.000Z"));
   assert.equal(dashboard.streakDays, 3);
   assert.deepEqual(dashboard.latestPR, {
     exerciseId: "supino",
