@@ -24,6 +24,7 @@ import {
   stopNativeWorkoutNotification,
   updateNativeWorkoutNotification,
 } from "@/lib/native-workout";
+import { keepScreenAwake } from "@/lib/screen-wake-lock";
 
 const DEFAULT_REST = 60;
 
@@ -165,6 +166,13 @@ function ExecutePage() {
     if (state.activeSession?.workoutId === workoutId)
       void startNativeWorkoutNotification(state.activeSession.workoutName);
   }, [state.activeSession?.id, state.activeSession?.workoutName, workoutId]);
+
+  // Mantém a tela acesa durante o treino e libera ao finalizar, descartar ou sair da tela.
+  const hasActiveWorkout = state.activeSession?.workoutId === workoutId;
+  useEffect(() => {
+    if (!hasActiveWorkout) return;
+    return keepScreenAwake();
+  }, [hasActiveWorkout]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
