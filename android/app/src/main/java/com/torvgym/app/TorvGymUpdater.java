@@ -40,6 +40,7 @@ final class TorvGymUpdater {
     private static final String PREF_PENDING_DOWNLOAD_ID = "pending_download_id";
     private static final String PREF_PENDING_SHA256 = "pending_sha256";
     private static final String PREF_PENDING_VERSION_CODE = "pending_version_code";
+    private static final String PREF_PENDING_CLEANUP_DOWNLOAD_ID = "pending_cleanup_download_id";
     private static final String PREF_LAST_CHECK_MS = "last_check_ms";
     private static final long CHECK_INTERVAL_MS = 30L * 60L * 1000L;
     private static final Pattern VERSION_TAG = Pattern.compile("^v1\\.0\\.(\\d+)$");
@@ -63,6 +64,7 @@ final class TorvGymUpdater {
     private String pendingTag;
     private String pendingSha256;
     private int pendingVersionCode = -1;
+    private long pendingInstallCleanupDownloadId = -1L;
     private boolean receiverRegistered;
 
     TorvGymUpdater(@NonNull BridgeActivity activity) {
@@ -71,6 +73,7 @@ final class TorvGymUpdater {
         this.pendingDownloadId = preferences.getLong(PREF_PENDING_DOWNLOAD_ID, -1L);
         this.pendingSha256 = preferences.getString(PREF_PENDING_SHA256, null);
         this.pendingVersionCode = preferences.getInt(PREF_PENDING_VERSION_CODE, -1);
+        this.pendingInstallCleanupDownloadId = preferences.getLong(PREF_PENDING_CLEANUP_DOWNLOAD_ID, -1L);
     }
 
     void checkForUpdate() {
@@ -187,6 +190,7 @@ final class TorvGymUpdater {
     }
 
     void onResume() {
+        cleanupInstalledDownload();
         if (pendingDownloadId != -1L) {
             registerDownloadReceiver();
             resumePendingDownload();
@@ -222,7 +226,10 @@ final class TorvGymUpdater {
         request.setNotificationVisibility(
             DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
         );
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
+        // Keep the APK in the app-specific directory, not the user's public Downloads folder.
+        // It will be removed when the installer returns to TorvGym.
+        request.setDestinationInExternalFilesDir(activity, Environment.DIRECTORY_DOWNLOADS, fileName);
+        request.setVisibleInDownloadsUi(false);
 
         pendingDownloadId = downloadManager.enqueue(request);
         preferences.edit()
@@ -397,6 +404,9 @@ final class TorvGymUpdater {
         Uri uri = downloadManager.getUriForDownloadedFile(downloadId);
         if (uri == null) return;
 
+        pendingInstallCleanupDownloadId = downloadId;
+        preferences.edit().putLong(PREF_PENDING_CLEANUP_DOWNLOAD_ID, downloadId).apply();
+
         Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
         intent.setDataAndType(uri, "application/vnd.android.package-archive");
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -407,6 +417,18 @@ final class TorvGymUpdater {
         } catch (Exception e) {
             Log.w(TAG, "Não foi possível abrir o instalador do Android", e);
         }
+    }
+
+    private void cleanupInstalledDownload() {
+        if (pendingInstallCleanupDownloadId == -1L) return;
+
+        DownloadManager downloadManager =
+            (DownloadManager) activity.getSystemService(Context.DOWNLOAD_SERVICE);
+        if (downloadManager != null) {
+            downloadManager.remove(pendingInstallCleanupDownloadId);
+        }
+        pendingInstallCleanupDownloadId = -1L;
+        preferences.edit().remove(PREF_PENDING_CLEANUP_DOWNLOAD_ID).apply();
     }
 
     void shutdown() {
