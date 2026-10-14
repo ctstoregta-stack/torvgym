@@ -76,6 +76,7 @@ export function AppShell({
                 : to === "/perfil"
                   ? pathname === "/perfil" ||
                     pathname.startsWith("/historico") ||
+                    pathname.startsWith("/corpo") ||
                     pathname.startsWith("/exercicios")
                   : pathname.startsWith(to);
             return (

@@ -67,6 +67,21 @@ export type TrainingGoals = {
   weeklyStreakTarget: number;
 };
 
+export type BodyMetricKey = "weightKg" | "bodyFatPct" | "waistCm" | "chestCm" | "armCm" | "thighCm";
+
+/** Registro corporal de um dia (AAAA-MM-DD). Todas as medidas são opcionais, mas ao menos uma existe. */
+export type BodyEntry = {
+  id: string;
+  date: string;
+  weightKg?: number;
+  bodyFatPct?: number;
+  waistCm?: number;
+  chestCm?: number;
+  armCm?: number;
+  thighCm?: number;
+  note?: string;
+};
+
 export type AppState = {
   routines: Routine[];
   activeRoutineId: string | null;
@@ -75,6 +90,7 @@ export type AppState = {
   sessions: Session[];
   activeSession: Session | null;
   goals: TrainingGoals;
+  bodyMetrics: BodyEntry[];
 };
 
 export const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const;

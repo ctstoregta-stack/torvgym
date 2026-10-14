@@ -114,6 +114,11 @@ function ProfilePage() {
           </p>
           <div className="space-y-2">
             <SecondaryLink
+              to="/corpo"
+              title="Peso e medidas"
+              description="Registre peso corporal e medidas e veja a evolução."
+            />
+            <SecondaryLink
               to="/progresso"
               title="Progresso"
               description="Acompanhe sua evolução ao longo do tempo."
@@ -176,7 +181,7 @@ function SecondaryLink({
   title,
   description,
 }: {
-  to: "/progresso" | "/conquistas" | "/configuracoes" | "/relatorios";
+  to: "/progresso" | "/conquistas" | "/configuracoes" | "/relatorios" | "/corpo";
   title: string;
   description: string;
 }) {

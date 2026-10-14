@@ -1,5 +1,6 @@
 import type { AppState, Exercise, Routine, Session, Workout } from "./types";
 import { decryptLocal, encryptLocal } from "./secure-storage.ts";
+import { normalizeBodyEntries } from "./body-metrics.ts";
 
 const KEY = "gymtrack.state.v1";
 const VERSION_KEY = "gymtrack.state.version";
@@ -22,6 +23,7 @@ export const emptyState: AppState = {
     streakTarget: 7,
     weeklyStreakTarget: 4,
   },
+  bodyMetrics: [],
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -182,6 +184,7 @@ function normalizeState(input: unknown): AppState | null {
     activeSession: rawActive,
     activeRoutineId: rawActiveRoutine,
     goals: rawGoals,
+    bodyMetrics: rawBodyMetrics,
   } = input;
   const routines = Array.isArray(rawRoutines)
     ? rawRoutines.map(normalizeRoutine).filter((routine): routine is Routine => routine !== null)
@@ -237,12 +240,14 @@ function normalizeState(input: unknown): AppState | null {
     sessions,
     activeSession,
     goals,
+    bodyMetrics: normalizeBodyEntries(rawBodyMetrics),
   };
 }
 
 function migrate(raw: unknown, version: number): AppState | null {
   // V1-V3 mantêm o formato lógico anterior. V4 adiciona feedback por série
-  // (RPE e observação) sem invalidar os dados existentes.
+  // (RPE e observação) e os registros corporais (bodyMetrics, opcional: dados
+  // sem o campo carregam como lista vazia) sem invalidar os dados existentes.
   if (version >= 1 && version <= CURRENT_VERSION) return normalizeState(raw);
   return null;
 }

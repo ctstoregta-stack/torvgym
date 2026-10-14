@@ -38,6 +38,7 @@ import {
   startNativeWorkoutNotification,
   stopNativeWorkoutNotification,
 } from "@/lib/native-workout";
+import { upsertBodyEntry, type BodyEntryInput } from "@/lib/body-metrics";
 import type {
   AppState,
   Exercise,
@@ -132,6 +133,9 @@ type Ctx = {
   deleteCustomExercise: (id: string) => "deleted" | "in-use" | "not-found";
   // goals
   updateGoals: (patch: Partial<TrainingGoals>) => void;
+  // body metrics
+  addBodyEntry: (input: BodyEntryInput) => boolean;
+  deleteBodyEntry: (id: string) => void;
   // sessions
   startSession: (workoutId: string) => string | null;
   updateSet: (exerciseId: string, index: number, patch: Partial<SetLog>) => void;
@@ -406,6 +410,16 @@ export function GymProvider({ children }: { children: ReactNode }) {
         };
       }),
     setActiveRoutine: (id) => setState((s) => ({ ...s, activeRoutineId: id })),
+    addBodyEntry: (input) => {
+      if (!upsertBodyEntry(state.bodyMetrics, input, uid("corpo"))) return false;
+      setState((s) => {
+        const result = upsertBodyEntry(s.bodyMetrics, input, uid("corpo"));
+        return result ? { ...s, bodyMetrics: result.entries } : s;
+      });
+      return true;
+    },
+    deleteBodyEntry: (id) =>
+      setState((s) => ({ ...s, bodyMetrics: s.bodyMetrics.filter((entry) => entry.id !== id) })),
     updateGoals: (patch) =>
       setState((s) => ({
         ...s,
