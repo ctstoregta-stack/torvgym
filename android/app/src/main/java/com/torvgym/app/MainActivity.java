@@ -17,6 +17,19 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
+    public void onBackPressed() {
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().evaluateJavascript(
+                "window.dispatchEvent(new Event('torvgym:hardware-back'))",
+                null
+            );
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         if (updater != null) {

@@ -14,6 +14,7 @@ import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 import { GymProvider } from "@/store/gym-store";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { getHardwareBackTarget } from "../lib/hardware-back-navigation";
 
 function NotFoundComponent() {
   return (
@@ -134,6 +135,7 @@ function reloadOnceForStaleChunk() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
 
   useEffect(() => {
     const onPreload = (e: Event) => {
@@ -143,9 +145,21 @@ function RootComponent() {
     const onRejection = (e: PromiseRejectionEvent) => {
       if (isStaleChunkError(e.reason)) reloadOnceForStaleChunk();
     };
+    const onHardwareBack = () => {
+      const target = getHardwareBackTarget(router.state.location.pathname);
+      if (!target) return;
+      if (target.startsWith("/treino/")) {
+        const workoutId = target.slice("/treino/".length);
+        void router.navigate({ to: "/treino/$workoutId", params: { workoutId }, replace: true });
+        return;
+      }
+      void router.navigate({ to: target as never, replace: true });
+    };
+    window.addEventListener("torvgym:hardware-back", onHardwareBack);
     window.addEventListener("vite:preloadError", onPreload);
     window.addEventListener("unhandledrejection", onRejection);
     return () => {
+      window.removeEventListener("torvgym:hardware-back", onHardwareBack);
       window.removeEventListener("vite:preloadError", onPreload);
       window.removeEventListener("unhandledrejection", onRejection);
     };
