@@ -51,7 +51,8 @@ function AchievementsPage() {
     updateGoals({ weeklySessionsTarget, weeklyVolumeTarget, streakTarget, weeklyStreakTarget });
   };
   const saveReminder = async () => {
-    const [hour, minute] = reminderTime.split(":").map(Number);
+    const hour = Number(reminderTime.slice(0, 2));
+    const minute = Number(reminderTime.slice(3, 5));
     const result = await configureNativeTrainingReminder({ enabled: reminderEnabled, hour, minute, intervalDays: reminderInterval });
     if (reminderEnabled && !result.scheduled) {
       setReminderMessage("Agendamento disponível apenas no aplicativo Android instalado, não no navegador/preview.");
