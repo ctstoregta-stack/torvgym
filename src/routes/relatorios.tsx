@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Button, Card, EmptyState } from "@/components/ui-kit";
 import { useGym } from "@/store/gym-store";
+import { buildReportImageData, renderReportImage, shareOrDownloadImage } from "@/lib/report-image";
 import {
   buildPeriodAnalytics,
   buildWorkoutAnalyticsIndex,
@@ -27,6 +29,7 @@ function ReportsPage() {
   const { ready, state, getExercise } = useGym();
   const [range, setRange] = useState<Range>(90);
   const [exporting, setExporting] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const sessions = useMemo(() => {
     const completed = state.sessions.filter((s) => s.finishedAt);
     if (!range) return completed;
@@ -103,6 +106,40 @@ function ReportsPage() {
     anchor.click();
     URL.revokeObjectURL(url);
     setExporting(false);
+  };
+
+  const shareImage = async () => {
+    setSharing(true);
+    try {
+      const data = buildReportImageData({
+        periodLabel: range === 0 ? "Todo o período" : `Últimos ${range} dias`,
+        sessions: sessions.length,
+        volume: metrics.volume,
+        sets: metrics.sets,
+        prs: metrics.prs,
+        durationSeconds: metrics.duration,
+        averageDurationSeconds: metrics.averageDuration,
+        previous: previousMetrics,
+        weeks: periods.map((p) => ({ label: p.label, volume: p.volume })),
+        workouts: workouts.map((w) => ({
+          name: w.workoutName,
+          volume: w.totalVolume,
+          sessions: w.sessions.length,
+          sets: w.totalSets,
+        })),
+      });
+      const blob = await renderReportImage(data);
+      const result = await shareOrDownloadImage(
+        blob,
+        `torvgym-resumo-${new Date().toISOString().slice(0, 10)}.png`,
+        "Resumo de treinos",
+      );
+      if (result === "downloaded") toast.success("Imagem do resumo salva.");
+    } catch {
+      toast.error("Não foi possível gerar a imagem do resumo.");
+    } finally {
+      setSharing(false);
+    }
   };
 
   if (!ready)
@@ -242,7 +279,10 @@ function ReportsPage() {
           Total {formatDuration(metrics.duration)} · média {formatDuration(metrics.averageDuration)}
         </p>
       </Card>
-      <Button className="mt-4 w-full" onClick={exportCsv} disabled={exporting}>
+      <Button className="mt-4 w-full" onClick={() => void shareImage()} disabled={sharing}>
+        {sharing ? "Gerando imagem..." : "Compartilhar resumo (imagem)"}
+      </Button>
+      <Button variant="outline" className="mt-2 w-full" onClick={exportCsv} disabled={exporting}>
         {exporting ? "Preparando relatório..." : "Exportar relatório CSV"}
       </Button>
     </AppShell>
