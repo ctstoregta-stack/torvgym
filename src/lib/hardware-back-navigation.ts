@@ -2,15 +2,16 @@ const PROFILE_CHILD_ROUTES = new Set(["/configuracoes", "/conquistas", "/progres
 
 /** Returns the in-app parent destination for Android's hardware Back action. */
 export function getHardwareBackTarget(pathname: string): string | null {
-  const path = pathname.split("?")[0]?.replace(/\\/+$/, "") || "/";
+  let path = pathname.split("?")[0] || "/";
+  while (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
+  const segments = path.split("/").filter(Boolean);
 
-  if (/^\\/exercicio\\/[^/]+$/.test(path)) return "/exercicios";
+  if (segments.length === 2 && segments[0] === "exercicio") return "/exercicios";
   if (path === "/exercicios" || path === "/historico") return "/perfil";
   if (PROFILE_CHILD_ROUTES.has(path)) return "/perfil";
 
-  const activeWorkout = path.match(/^\\/executar\\/([^/]+)$/);
-  if (activeWorkout) return `/treino/${activeWorkout[1]}`;
-  if (/^\\/treino\\/[^/]+$/.test(path)) return "/rotinas";
+  if (segments.length === 2 && segments[0] === "executar") return `/treino/${segments[1]}`;
+  if (segments.length === 2 && segments[0] === "treino") return "/rotinas";
   if (path === "/rotinas" || path === "/perfil") return "/";
 
   // On the home screen, keep the app open instead of letting Back exit it.

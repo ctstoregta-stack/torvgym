@@ -163,7 +163,7 @@ function RootComponent() {
       window.removeEventListener("vite:preloadError", onPreload);
       window.removeEventListener("unhandledrejection", onRejection);
     };
-  }, []);
+  }, [router]);
 
   return (
     <QueryClientProvider client={queryClient}>
