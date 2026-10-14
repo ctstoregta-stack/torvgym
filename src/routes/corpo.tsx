@@ -122,8 +122,8 @@ function BodyPage() {
 
   return (
     <AppShell title="Peso e medidas" back={{ to: "/perfil" }}>
-      <div className="space-y-4">
-        <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/15 via-card to-card p-0">
+      <div className="mx-auto w-full max-w-3xl min-w-0 space-y-4">
+        <Card className="min-w-0 overflow-hidden border-primary/20 bg-gradient-to-br from-primary/15 via-card to-card p-0">
           <div className="p-4">
             <div className="flex items-center gap-2">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
@@ -157,7 +157,7 @@ function BodyPage() {
                 <TrendIcon />
               </div>
             </div>
-            <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border/70 pt-3">
+            <div className="mt-4 grid min-w-0 grid-cols-3 gap-2 border-t border-border/70 pt-3">
               <MiniSummary label="Registros" value={String(entries.length)} />
               <MiniSummary label="Medidas" value={String(availableKeys.length)} />
               <MiniSummary label="Último dia" value={entries.length ? formatDay(entries[entries.length - 1]!.date) : "—"} />
@@ -165,7 +165,7 @@ function BodyPage() {
           </div>
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-base font-semibold">Novo registro</p>
@@ -236,11 +236,11 @@ function BodyPage() {
 
           <div className="mt-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Medidas complementares</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
               {BODY_METRIC_FIELDS.filter((field) => field.key !== "weightKg").map((field) => (
-                <label key={field.key} className="rounded-xl bg-elevated p-3">
+                <label key={field.key} className="min-w-0 rounded-xl bg-elevated p-3">
                   <span className="block text-xs font-semibold text-foreground">{field.label}</span>
-                  <span className="mt-1 flex items-center gap-2">
+                  <span className="mt-1 flex min-w-0 items-center gap-2">
                     <Input
                       type="text"
                       inputMode="decimal"
@@ -282,7 +282,7 @@ function BodyPage() {
           />
         ) : (
           <>
-            <Card>
+            <Card className="min-w-0 overflow-hidden">
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
                   <p className="text-base font-semibold">Sua evolução</p>
@@ -329,7 +329,7 @@ function BodyPage() {
 
               {series.length >= 2 ? (
                 <div
-                  className="mt-3 h-48 w-full"
+                  className="mt-3 h-48 min-w-0 w-full"
                   role="img"
                   aria-label={`Gráfico de ${chartField.label.toLowerCase()} ao longo do tempo`}
                 >
@@ -375,7 +375,7 @@ function BodyPage() {
               </p>
               <div className="space-y-2">
                 {history.map((entry) => (
-                  <Card key={entry.id} className="p-3">
+                  <Card key={entry.id} className="min-w-0 p-3">
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-semibold">{formatDay(entry.date, true)}</p>
                       <button
