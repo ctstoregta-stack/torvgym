@@ -5,6 +5,7 @@ import { Button, Card, EmptyState, Tag } from "@/components/ui-kit";
 import { buildGamificationSummary } from "@/store/gym-gamification";
 import { useGym } from "@/store/gym-store";
 import { sessionVolume } from "@/store/gym-analytics";
+import { configureNativeTrainingReminder } from "@/lib/native-workout";
 
 export const Route = createFileRoute("/conquistas")({
   head: () => ({ meta: [
@@ -21,6 +22,11 @@ function AchievementsPage() {
   const [weeklyVolumeTarget, setWeeklyVolumeTarget] = useState(state.goals.weeklyVolumeTarget);
   const [streakTarget, setStreakTarget] = useState(state.goals.streakTarget);
   const [weeklyStreakTarget, setWeeklyStreakTarget] = useState(state.goals.weeklyStreakTarget);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderTime, setReminderTime] = useState("18:00");
+  const [reminderInterval, setReminderInterval] = useState(1);
+  const [reminderMessage, setReminderMessage] = useState("");
+  useEffect(() => { try { const raw = window.localStorage.getItem("torvgym.training-reminder.v1"); if (!raw) return; const saved = JSON.parse(raw) as {enabled?: boolean; time?: string; intervalDays?: number}; setReminderEnabled(saved.enabled === true); if (typeof saved.time === "string" && /^([01]\\d|2[0-3]):[0-5]\\d$/.test(saved.time)) setReminderTime(saved.time); if (typeof saved.intervalDays === "number") setReminderInterval(Math.min(7, Math.max(1, Math.round(saved.intervalDays)))); } catch { /* Ignora configuração inválida. */ } }, []);
   useEffect(() => {
     if (!ready) return;
     setWeeklySessionsTarget(state.goals.weeklySessionsTarget);
@@ -72,6 +78,8 @@ function AchievementsPage() {
       </div>
       <Button className="mt-3 w-full" onClick={saveGoals}>Salvar metas</Button>
     </Card>
+
+    <Card className="mt-4"><p className="text-sm font-semibold">Lembretes de treino</p><p className="mt-1 text-xs text-muted-foreground">Avisos locais no Android, mesmo com o TorvGym fechado. Sem serviços externos.</p><label className="mt-3 flex items-center gap-3 text-sm"><input type="checkbox" checked={reminderEnabled} onChange={(event) => { setReminderEnabled(event.target.checked); setReminderMessage(""); }} className="h-4 w-4 accent-primary" />Ativar lembretes</label><div className="mt-3 grid grid-cols-2 gap-3"><label className="block text-xs font-semibold text-muted-foreground">Horário<input type="time" value={reminderTime} onChange={(event) => setReminderTime(event.target.value)} className="mt-1 h-10 w-full rounded-lg border border-border bg-elevated px-3 text-sm font-normal text-foreground" /></label><label className="block text-xs font-semibold text-muted-foreground">Frequência<select value={reminderInterval} onChange={(event) => setReminderInterval(Number(event.target.value))} className="mt-1 h-10 w-full rounded-lg border border-border bg-elevated px-3 text-sm font-normal text-foreground">{[1,2,3,4,5,6,7].map(days => <option key={days} value={days}>{days === 1 ? "Todos os dias" : days === 7 ? "Uma vez por semana" : "A cada " + days + " dias"}</option>)}</select></label></div><Button className="mt-3 w-full" onClick={() => void saveReminder()}>Salvar lembretes</Button>{reminderMessage && <p role="status" className="mt-2 text-xs text-muted-foreground">{reminderMessage}</p>}</Card>
 
     <Card className="mt-4"><p className="text-sm font-semibold">Conquistas</p><div className="mt-3 space-y-2">
       {!summary.totalSessions ? (
