@@ -66,6 +66,22 @@ function BodyPage() {
   const series = useMemo(() => bodyMetricSeries(entries, chartKey), [entries, chartKey]);
   const change = useMemo(() => bodyMetricChange(entries, chartKey), [entries, chartKey]);
   const history = useMemo(() => [...entries].reverse(), [entries]);
+  const weightEntries = useMemo(
+    () => entries.filter((entry) => entry.weightKg != null),
+    [entries],
+  );
+  const latestWeight = weightEntries[weightEntries.length - 1]?.weightKg;
+  const previousWeight = weightEntries.length > 1 ? weightEntries[weightEntries.length - 2]?.weightKg : undefined;
+  const weightDelta =
+    latestWeight != null && previousWeight != null
+      ? Math.round((latestWeight - previousWeight) * 10) / 10
+      : null;
+  const filledCount = BODY_METRIC_FIELDS.filter((field) => texts[field.key].trim() !== "").length;
+  const yesterday = (() => {
+    const day = new Date();
+    day.setDate(day.getDate() - 1);
+    return todayLocalDay(day);
+  })();
 
   function handleSave() {
     const input: BodyEntryInput = { date };
@@ -107,51 +123,159 @@ function BodyPage() {
   return (
     <AppShell title="Peso e medidas" back={{ to: "/perfil" }}>
       <div className="space-y-4">
-        <Card>
-          <h2 className="text-base font-semibold">Novo registro</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Preencha só o que quiser. Se já houver registro na data, as medidas são somadas a ele.
-          </p>
-          <label className="mt-3 block text-xs font-semibold text-muted-foreground">
-            Data
-            <Input
-              type="date"
-              value={date}
-              max={todayLocalDay()}
-              onChange={(event) => setDate(event.target.value)}
-              className="mt-1"
-            />
-          </label>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            {BODY_METRIC_FIELDS.map((field) => (
-              <label key={field.key} className="block text-xs font-semibold text-muted-foreground">
-                {field.label} ({field.unit})
-                <Input
-                  type="text"
-                  inputMode="decimal"
-                  autoComplete="off"
-                  value={texts[field.key]}
-                  placeholder="0"
-                  onChange={(event) =>
-                    setTexts((current) => ({ ...current, [field.key]: event.target.value }))
-                  }
-                  className="mt-1"
-                />
-              </label>
-            ))}
+        <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/15 via-card to-card p-0">
+          <div className="p-4">
+            <div className="flex items-center gap-2">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <ScaleIcon />
+              </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  Minha evolução
+                </p>
+                <h2 className="text-lg font-bold tracking-tight">Peso e medidas</h2>
+              </div>
+            </div>
+            <div className="mt-4 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Último peso registrado</p>
+                <p className="mt-1 text-3xl font-bold tracking-tight tabular-nums">
+                  {latestWeight != null ? latestWeight.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) : "—"}
+                  <span className="ml-1 text-sm font-semibold text-muted-foreground">kg</span>
+                </p>
+                {weightDelta != null ? (
+                  <p className="mt-1 text-xs font-semibold text-foreground">
+                    {weightDelta > 0 ? "+" : ""}{weightDelta.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg desde o registro anterior
+                  </p>
+                ) : (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {latestWeight == null ? "Registre seu peso para começar a acompanhar." : "Adicione outro registro para comparar sua evolução."}
+                  </p>
+                )}
+              </div>
+              <div className="rounded-2xl bg-background/60 p-3 text-primary">
+                <TrendIcon />
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border/70 pt-3">
+              <MiniSummary label="Registros" value={String(entries.length)} />
+              <MiniSummary label="Medidas" value={String(availableKeys.length)} />
+              <MiniSummary label="Último dia" value={entries.length ? formatDay(entries[entries.length - 1]!.date) : "—"} />
+            </div>
           </div>
-          <label className="mt-3 block text-xs font-semibold text-muted-foreground">
+        </Card>
+
+        <Card>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-base font-semibold">Novo registro</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Registre apenas o que quiser hoje. Os dados ficam salvos no seu TorvGym.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+              {filledCount}/6 preenchidos
+            </span>
+          </div>
+
+          <div className="mt-4">
+            <p className="mb-2 text-xs font-semibold text-muted-foreground">Quando você mediu?</p>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: "Hoje", value: todayLocalDay() },
+                { label: "Ontem", value: yesterday },
+                { label: "Escolher data", value: "custom" },
+              ].map((option) => {
+                const active = option.value === "custom" ? date !== todayLocalDay() && date !== yesterday : date === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => option.value !== "custom" && setDate(option.value)}
+                    aria-pressed={active}
+                    className={`min-h-10 rounded-xl px-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${active ? "bg-primary text-primary-foreground" : "bg-elevated text-muted-foreground hover:text-foreground"}`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+            <label className="mt-3 block text-xs font-semibold text-muted-foreground">
+              Data personalizada
+              <Input
+                type="date"
+                value={date}
+                max={todayLocalDay()}
+                onChange={(event) => setDate(event.target.value)}
+                className="mt-1"
+              />
+            </label>
+          </div>
+
+          <div className="mt-4">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Peso corporal</p>
+              <span className="text-[11px] text-muted-foreground">kg</span>
+            </div>
+            <label className="flex items-center gap-3 rounded-2xl border border-primary/25 bg-primary/5 p-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <WeightIcon />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-foreground">Peso atual</span>
+                <span className="block text-[11px] text-muted-foreground">Ex.: 72,5</span>
+              </span>
+              <Input
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                aria-label="Peso corporal em quilogramas"
+                value={texts.weightKg}
+                placeholder="0,0"
+                onChange={(event) => setTexts((current) => ({ ...current, weightKg: event.target.value }))}
+                className="h-12 w-24 text-right text-lg font-bold tabular-nums"
+              />
+            </label>
+          </div>
+
+          <div className="mt-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Medidas complementares</p>
+            <div className="grid grid-cols-2 gap-2">
+              {BODY_METRIC_FIELDS.filter((field) => field.key !== "weightKg").map((field) => (
+                <label key={field.key} className="rounded-xl bg-elevated p-3">
+                  <span className="block text-xs font-semibold text-foreground">{field.label}</span>
+                  <span className="mt-1 flex items-center gap-2">
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      autoComplete="off"
+                      value={texts[field.key]}
+                      placeholder="—"
+                      aria-label={`${field.label} em ${field.unit}`}
+                      onChange={(event) => setTexts((current) => ({ ...current, [field.key]: event.target.value }))}
+                      className="h-10 min-w-0 text-base font-semibold tabular-nums"
+                    />
+                    <span className="text-xs text-muted-foreground">{field.unit}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <label className="mt-4 block text-xs font-semibold text-muted-foreground">
             Observação (opcional)
             <Input
               type="text"
               maxLength={200}
               value={note}
+              placeholder="Como você está se sentindo?"
               onChange={(event) => setNote(event.target.value)}
               className="mt-1"
             />
           </label>
           <Button className="mt-4 w-full" onClick={handleSave}>
-            Salvar registro
+            <SaveIcon />
+            <span className="ml-2">{filledCount ? `Salvar registro · ${filledCount} medida${filledCount === 1 ? "" : "s"}` : "Salvar registro"}</span>
           </Button>
         </Card>
 
@@ -163,6 +287,15 @@ function BodyPage() {
         ) : (
           <>
             <Card>
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-base font-semibold">Sua evolução</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Toque em uma medida para explorar o histórico.</p>
+                </div>
+                <span className="rounded-full bg-elevated px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+                  {series.length} ponto{series.length === 1 ? "" : "s"}
+                </span>
+              </div>
               <div
                 className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
                 role="group"
@@ -258,14 +391,14 @@ function BodyPage() {
                         Excluir
                       </button>
                     </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {BODY_METRIC_FIELDS.filter((field) => entry[field.key] != null)
-                        .map(
-                          (field) => `${field.label} ${formatValue(entry[field.key]!, field.unit)}`,
-                        )
-                        .join(" · ")}
-                    </p>
-                    {entry.note && <p className="mt-1 text-xs">{entry.note}</p>}
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {BODY_METRIC_FIELDS.filter((field) => entry[field.key] != null).map((field) => (
+                        <span key={field.key} className={`rounded-lg px-2 py-1 text-[11px] font-semibold tabular-nums ${field.key === "weightKg" ? "bg-primary/10 text-primary" : "bg-elevated text-foreground"}`}>
+                          {field.label}: {formatValue(entry[field.key]!, field.unit)}
+                        </span>
+                      ))}
+                    </div>
+                    {entry.note && <p className="mt-2 rounded-lg bg-elevated px-3 py-2 text-xs text-muted-foreground">{entry.note}</p>}
                   </Card>
                 ))}
               </div>
@@ -320,6 +453,50 @@ function emptyTexts(): Record<BodyMetricKey, string> {
     armCm: "",
     thighCm: "",
   };
+}
+
+function ScaleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M4 7h16l-2 13H6L4 7Z" strokeLinejoin="round" />
+      <path d="M9 7a3 3 0 0 1 6 0M12 10l2 2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function WeightIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M7 4h10l3 4v11H4V8l3-4Z" strokeLinejoin="round" />
+      <path d="M9 9a3 3 0 0 1 6 0M12 9l2 2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function TrendIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M4 17l6-6 4 3 6-7M14 7h6v6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SaveIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M5 4h12l3 3v13H4V4h1Z" strokeLinejoin="round" />
+      <path d="M8 4v6h8V4M8 20v-6h8v6" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function MiniSummary({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[10px] text-muted-foreground">{label}</p>
+      <p className="mt-1 truncate text-sm font-bold tabular-nums">{value}</p>
+    </div>
+  );
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
