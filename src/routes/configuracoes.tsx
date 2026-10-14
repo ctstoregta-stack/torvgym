@@ -1,9 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button, Card } from "@/components/ui-kit";
 import { useGym } from "@/store/gym-store";
 import { toast } from "sonner";
+import {
+  DEFAULT_REST_ALERT,
+  loadRestAlertPrefs,
+  playRestAlert,
+  saveRestAlertPrefs,
+  type RestAlertPrefs,
+} from "@/lib/rest-alert";
 
 export const Route = createFileRoute("/configuracoes")({
   head: () => ({
@@ -46,6 +53,16 @@ function Settings() {
   const [protectedBackupInput, setProtectedBackupInput] = useState<HTMLInputElement | null>(null);
   const [recoveryCode, setRecoveryCode] = useState("");
   const [recoveryInput, setRecoveryInput] = useState<HTMLInputElement | null>(null);
+  const [restAlert, setRestAlert] = useState<RestAlertPrefs>(DEFAULT_REST_ALERT);
+
+  useEffect(() => {
+    setRestAlert(loadRestAlertPrefs());
+  }, []);
+
+  function updateRestAlert(next: RestAlertPrefs) {
+    setRestAlert(next);
+    saveRestAlertPrefs(next);
+  }
 
   function handleExport() {
     try {
@@ -424,6 +441,45 @@ function Settings() {
               if (file) void handleRecoveryImport(file);
             }}
           />
+        </Card>
+
+        <Card>
+          <h2 className="text-base font-semibold">Aviso do descanso</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Escolha como o TorvGym avisa que o descanso entre séries terminou.
+          </p>
+          <label className="mt-3 flex items-center gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={restAlert.vibrate}
+              onChange={(event) => updateRestAlert({ ...restAlert, vibrate: event.target.checked })}
+              className="h-4 w-4 accent-primary"
+            />
+            Vibrar
+          </label>
+          <label className="mt-3 flex items-center gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={restAlert.sound}
+              onChange={(event) => updateRestAlert({ ...restAlert, sound: event.target.checked })}
+              className="h-4 w-4 accent-primary"
+            />
+            Tocar um som
+          </label>
+          <Button
+            variant="outline"
+            className="mt-3 w-full"
+            onClick={() => {
+              const result = playRestAlert(restAlert);
+              if (!restAlert.vibrate && !restAlert.sound) {
+                toast("Nenhum aviso ativado.");
+              } else if (!result.vibrated && !result.sounded) {
+                toast("Este aparelho não permitiu vibrar nem tocar o som agora.");
+              }
+            }}
+          >
+            Testar aviso
+          </Button>
         </Card>
 
         <Card>

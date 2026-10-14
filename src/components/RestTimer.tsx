@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { playRestAlert } from "@/lib/rest-alert";
 
 export type RestState = {
   total: number;
@@ -55,10 +56,20 @@ export function RestTimer({
     return () => window.clearInterval(timer);
   }, [rest, onChange]);
 
+  // Avisa só quando um descanso em andamento termina (não ao reabrir um descanso já concluído).
+  const wasRunning = useRef(false);
   useEffect(() => {
-    if (!rest || rest.remaining !== 0 || rest.running) return;
-    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-      navigator.vibrate?.(120);
+    if (!rest) {
+      wasRunning.current = false;
+      return;
+    }
+    if (rest.running) {
+      wasRunning.current = true;
+      return;
+    }
+    if (rest.remaining === 0 && wasRunning.current) {
+      wasRunning.current = false;
+      playRestAlert();
     }
   }, [rest?.remaining, rest?.running]);
 
