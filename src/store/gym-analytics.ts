@@ -431,6 +431,8 @@ export type DashboardAnalytics = {
   volumeLast30Days: number;
   averageSessionsPerWeek: number;
   activeWeeksLast8: number;
+  activeWeekStreak: number;
+  bestWeekStreak: number;
   bestSessionVolume: number;
   streakDays: number;
   latestPR: {
@@ -447,8 +449,13 @@ export type DashboardAnalytics = {
   }[];
 };
 
-export function buildDashboardAnalytics(sessions: Session[]): DashboardAnalytics {
-  const completed = sessions.filter((session) => session.finishedAt);
+export function buildDashboardAnalytics(sessions: Session[], now = new Date()): DashboardAnalytics {
+  const referenceTime = now.getTime();
+  const completed = sessions.filter((session) => {
+    if (!session.finishedAt) return false;
+    const finishedAt = new Date(session.finishedAt).getTime();
+    return Number.isFinite(finishedAt) && finishedAt <= referenceTime;
+  });
   const sorted = [...completed].sort(
     (a, b) =>
       new Date(b.finishedAt ?? b.startedAt).getTime() -
@@ -469,13 +476,13 @@ export function buildDashboardAnalytics(sessions: Session[]): DashboardAnalytics
   const durations = completed.map(sessionDurationSeconds);
   const latest = sorted[0];
   const previous = sorted[1];
-  const recentCutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const recentCutoff = referenceTime - 7 * 24 * 60 * 60 * 1000;
   const recentSessions = completed.filter(
     (session) => new Date(session.finishedAt ?? session.startedAt).getTime() >= recentCutoff,
   );
   const sessionsLast7Days = recentSessions.length;
   const volumeLast7Days = recentSessions.reduce((sum, session) => sum + sessionVolume(session), 0);
-  const recent30Cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const recent30Cutoff = referenceTime - 30 * 24 * 60 * 60 * 1000;
   const recent30Sessions = completed.filter(
     (session) => new Date(session.finishedAt ?? session.startedAt).getTime() >= recent30Cutoff,
   );
@@ -484,7 +491,7 @@ export function buildDashboardAnalytics(sessions: Session[]): DashboardAnalytics
   const averageSessionsPerWeek = Math.round((sessionsLast30Days / (30 / 7)) * 10) / 10;
   const activeWeeksLast8 = new Set(
     completed
-      .filter((session) => new Date(session.finishedAt ?? session.startedAt).getTime() >= Date.now() - 56 * 24 * 60 * 60 * 1000)
+      .filter((session) => new Date(session.finishedAt ?? session.startedAt).getTime() >= referenceTime - 56 * 24 * 60 * 60 * 1000)
       .map((session) => {
         const date = new Date(session.finishedAt ?? session.startedAt);
         const mondayOffset = (date.getDay() + 6) % 7;
@@ -494,21 +501,60 @@ export function buildDashboardAnalytics(sessions: Session[]): DashboardAnalytics
   ).size;
   const bestSessionVolume = completed.reduce((best, session) => Math.max(best, sessionVolume(session)), 0);
 
+  const dayKey = (date: Date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   const dayKeys = new Set(
-    completed.map((session) => {
-      const date = new Date(session.finishedAt ?? session.startedAt);
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-    }),
+    completed.map((session) => dayKey(new Date(session.finishedAt!))),
   );
-  const latestDate = sorted[0]?.finishedAt ?? sorted[0]?.startedAt;
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const latestDate = sorted[0]?.finishedAt;
   let streakDays = 0;
   if (latestDate) {
-    const cursor = new Date(latestDate);
-    cursor.setHours(0, 0, 0, 0);
-    while (dayKeys.has(`${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`)) {
-      streakDays += 1;
-      cursor.setDate(cursor.getDate() - 1);
+    const latestTrainingDay = new Date(latestDate);
+    latestTrainingDay.setHours(0, 0, 0, 0);
+    // Um dia sem treino é descanso; a sequência diária só expira após dois dias
+    // sem sessão concluída, em vez de permanecer ativa indefinidamente no histórico.
+    if (latestTrainingDay.getTime() >= yesterday.getTime()) {
+      const cursor = latestTrainingDay;
+      while (dayKeys.has(dayKey(cursor))) {
+        streakDays += 1;
+        cursor.setDate(cursor.getDate() - 1);
+      }
     }
+  }
+
+  const weekStart = (date: Date) => {
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+    return start;
+  };
+  const weekKey = (date: Date) => dayKey(weekStart(date));
+  const activeWeekKeys = new Set(
+    completed.map((session) => weekKey(new Date(session.finishedAt!))),
+  );
+  let activeWeekStreak = 0;
+  const streakCursor = weekStart(now);
+  if (!activeWeekKeys.has(weekKey(streakCursor))) streakCursor.setDate(streakCursor.getDate() - 7);
+  while (activeWeekKeys.has(weekKey(streakCursor))) {
+    activeWeekStreak += 1;
+    streakCursor.setDate(streakCursor.getDate() - 7);
+  }
+  const orderedWeeks = [...activeWeekKeys].sort();
+  let bestWeekStreak = 0;
+  let runningWeekStreak = 0;
+  let previousWeek: Date | null = null;
+  for (const key of orderedWeeks) {
+    const currentWeek = new Date(`${key}T12:00:00`);
+    runningWeekStreak =
+      previousWeek && currentWeek.getTime() - previousWeek.getTime() === 7 * 24 * 60 * 60 * 1000
+        ? runningWeekStreak + 1
+        : 1;
+    bestWeekStreak = Math.max(bestWeekStreak, runningWeekStreak);
+    previousWeek = currentWeek;
   }
 
   let latestPR: DashboardAnalytics["latestPR"] = null;
@@ -561,6 +607,8 @@ export function buildDashboardAnalytics(sessions: Session[]): DashboardAnalytics
     volumeLast30Days,
     averageSessionsPerWeek,
     activeWeeksLast8,
+    activeWeekStreak,
+    bestWeekStreak,
     bestSessionVolume,
     streakDays,
     latestPR,

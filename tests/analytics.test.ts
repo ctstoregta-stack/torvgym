@@ -297,3 +297,40 @@ test("métricas ignoram séries não concluídas mesmo quando carga e repetiçõ
   assert.equal(dashboard.totalVolume, 600);
   assert.equal(dashboard.totalSets, 1);
 });
+
+
+test("dashboard exclui sessões futuras e calcula consistência semanal sem penalizar descanso", () => {
+  const sessions = [
+    {
+      id: "week-1", routineId: "r1", workoutId: "w1", workoutName: "Treino A",
+      startedAt: "2026-09-28T10:00:00.000Z", finishedAt: "2026-09-28T11:00:00.000Z",
+      entries: [{ exerciseId: "supino", sets: [{ weight: 60, reps: 5, completed: true }] }],
+    },
+    {
+      id: "week-2", routineId: "r1", workoutId: "w1", workoutName: "Treino A",
+      startedAt: "2026-10-05T10:00:00.000Z", finishedAt: "2026-10-05T11:00:00.000Z",
+      entries: [{ exerciseId: "supino", sets: [{ weight: 65, reps: 5, completed: true }] }],
+    },
+    {
+      id: "future", routineId: "r1", workoutId: "w1", workoutName: "Treino A",
+      startedAt: "2026-10-20T10:00:00.000Z", finishedAt: "2026-10-20T11:00:00.000Z",
+      entries: [{ exerciseId: "supino", sets: [{ weight: 100, reps: 10, completed: true }] }],
+    },
+  ];
+  const dashboard = buildDashboardAnalytics(sessions, new Date("2026-10-13T12:00:00"));
+  assert.equal(dashboard.totalSessions, 2);
+  assert.equal(dashboard.totalVolume, 625);
+  assert.equal(dashboard.activeWeekStreak, 2);
+  assert.equal(dashboard.bestWeekStreak, 2);
+});
+
+test("dashboard não mantém sequência atual após ficar mais de um dia sem treinar", () => {
+  const sessions = [{
+    id: "old", routineId: "r1", workoutId: "w1", workoutName: "Treino A",
+    startedAt: "2026-10-01T10:00:00.000Z", finishedAt: "2026-10-01T11:00:00.000Z",
+    entries: [{ exerciseId: "supino", sets: [{ weight: 60, reps: 5, completed: true }] }],
+  }];
+  const dashboard = buildDashboardAnalytics(sessions, new Date("2026-10-13T12:00:00"));
+  assert.equal(dashboard.streakDays, 0);
+  assert.equal(dashboard.activeWeekStreak, 0);
+});

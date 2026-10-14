@@ -216,8 +216,12 @@ function ProgressPage() {
           <p className="mt-1 text-xl font-bold tabular-nums">
             {dashboard.streakDays} dia{dashboard.streakDays === 1 ? "" : "s"}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">Dias consecutivos com treino concluído.</p>
-          <p className="mt-2 text-[11px] text-muted-foreground">Melhor sessão: <strong className="text-foreground">{Math.round(dashboard.bestSessionVolume).toLocaleString("pt-BR")} kg</strong></p>
+          <p className="mt-1 text-xs text-muted-foreground">Dias seguidos treinando, com tolerância de um dia de descanso.</p>
+          <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3">
+            <span className="text-xs text-muted-foreground">Consistência semanal</span>
+            <strong className="text-sm tabular-nums">{dashboard.activeWeekStreak} semana{dashboard.activeWeekStreak === 1 ? "" : "s"}</strong>
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">Melhor sequência semanal: {dashboard.bestWeekStreak} · Melhor sessão: <strong className="text-foreground">{Math.round(dashboard.bestSessionVolume).toLocaleString("pt-BR")} kg</strong></p>
         </Card>
         <Card className="p-3">
           <p className="text-[11px] text-muted-foreground">PR mais recente</p>
