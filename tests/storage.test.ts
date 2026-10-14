@@ -4,6 +4,7 @@ import {
   createBackup,
   emptyState,
   loadState,
+  hasStoredState,
   parseBackup,
   saveState,
   storageSizeBytes,
@@ -40,8 +41,24 @@ afterEach(() => {
   delete (globalThis as GlobalWithWindow).window;
 });
 
-test("loadState retorna null quando não há dados salvos", async () => {
+test("loadState retorna null e não indica recuperação quando não há dados salvos", async () => {
   assert.equal(await loadState(), null);
+  assert.equal(hasStoredState(), false);
+});
+
+test("detecta dados existentes mesmo quando todos os registros criptografados estão ilegíveis", async () => {
+  storage.setItem(KEY, JSON.stringify({
+    format: "torvgym-local",
+    version: 1,
+    iv: "iv-inválido",
+    ciphertext: "conteúdo que exige chave",
+  }));
+  storage.setItem(RECOVERY_KEY, storage.getItem(KEY) ?? "");
+  storage.setItem(AUTO_BACKUP_KEY, storage.getItem(KEY) ?? "");
+
+  assert.equal(await loadState(), null);
+  assert.equal(hasStoredState(), true);
+  // A camada de inicialização usa este sinal para não semear nem salvar estado vazio.
 });
 
 test("loadState recupera do snapshot quando o estado principal está corrompido", async () => {

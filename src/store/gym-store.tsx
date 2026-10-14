@@ -13,6 +13,7 @@ import {
   createBackup,
   emptyState,
   loadState,
+  hasStoredState,
   parseBackup,
   saveState,
   storageSizeBytes,
@@ -106,6 +107,7 @@ function seedState(): AppState {
 
 type Ctx = {
   ready: boolean;
+  recoveryRequired: boolean;
   state: AppState;
   exercises: Exercise[];
   toggleFavoriteExercise: (exerciseId: string) => void;
@@ -193,13 +195,28 @@ const GymContext = createContext<Ctx | null>(null);
 export function GymProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(emptyState);
   const [ready, setReady] = useState(false);
+  const [recoveryRequired, setRecoveryRequired] = useState(false);
   const sessionStartLockRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
     void loadState().then((loaded) => {
       if (cancelled) return;
-      setState(loaded ?? seedState());
+      if (loaded) {
+        setState(loaded);
+      } else if (hasStoredState()) {
+        // Never seed defaults over encrypted/corrupt data that could still be recoverable.
+        setState(emptyState);
+        setRecoveryRequired(true);
+      } else {
+        setState(seedState());
+      }
+      setReady(true);
+    }).catch(() => {
+      if (cancelled) return;
+      // Storage failures must not trigger a destructive first-run save.
+      setState(emptyState);
+      setRecoveryRequired(true);
       setReady(true);
     });
     return () => {
@@ -208,17 +225,17 @@ export function GymProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!ready || state.activeSession) return;
+    if (!ready || recoveryRequired || state.activeSession) return;
     const save = window.setTimeout(() => void saveState(state), 150);
     return () => window.clearTimeout(save);
-  }, [state, ready]);
+  }, [state, ready, recoveryRequired]);
 
   // A sessão ativa é estado crítico: persiste imediatamente após cada
   // alteração para reduzir ao mínimo a janela de perda em crash/fechamento.
   useEffect(() => {
-    if (!ready || !state.activeSession) return;
+    if (!ready || recoveryRequired || !state.activeSession) return;
     saveState(state);
-  }, [state.activeSession, ready]);
+  }, [state.activeSession, ready, recoveryRequired]);
 
   useEffect(() => {
     if (!ready) return;
@@ -231,7 +248,9 @@ export function GymProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ready) return;
 
-    const flush = () => saveState(state);
+    const flush = () => {
+      if (!recoveryRequired) void saveState(state);
+    };
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
         flush();
@@ -251,7 +270,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("pagehide", flush);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [state, ready]);
+  }, [state, ready, recoveryRequired]);
 
   const exercises = useMemo(
     () => [...EXERCISE_DB, ...state.customExercises],
@@ -357,6 +376,7 @@ export function GymProvider({ children }: { children: ReactNode }) {
 
   const value: Ctx = {
     ready,
+    recoveryRequired,
     state,
     exercises,
     toggleFavoriteExercise: (exerciseId) =>
@@ -700,14 +720,18 @@ export function GymProvider({ children }: { children: ReactNode }) {
       const imported = parseBackup(raw);
       if (!imported) return "invalid";
       setState(imported);
-      return (await saveState(imported)) ? "saved" : "memory-only";
+      const saved = await saveState(imported);
+      if (saved) setRecoveryRequired(false);
+      return saved ? "saved" : "memory-only";
     },
     importProtectedBackup: async (raw, password) => {
       const decrypted = await decryptProtectedBackup(raw, password);
       const imported = parseBackup(decrypted);
       if (!imported) return "invalid";
       setState(imported);
-      return (await saveState(imported)) ? "saved" : "memory-only";
+      const saved = await saveState(imported);
+      if (saved) setRecoveryRequired(false);
+      return saved ? "saved" : "memory-only";
     },
     createEncryptedSyncPackage: (password) => createEncryptedSyncPackage(state, password),
     createRecoveryPackage: () => createEncryptedRecoveryPackage(state),
@@ -723,7 +747,9 @@ export function GymProvider({ children }: { children: ReactNode }) {
       );
       if (!imported) return "invalid";
       setState(imported);
-      return (await saveState(imported)) ? "saved" : "memory-only";
+      const saved = await saveState(imported);
+      if (saved) setRecoveryRequired(false);
+      return saved ? "saved" : "memory-only";
     },
     importRecoveryPackage: async (raw, code) => {
       const payload = await decryptEncryptedRecoveryPackage(raw, code);
@@ -737,7 +763,9 @@ export function GymProvider({ children }: { children: ReactNode }) {
       );
       if (!imported) return "invalid";
       setState(imported);
-      return (await saveState(imported)) ? "saved" : "memory-only";
+      const saved = await saveState(imported);
+      if (saved) setRecoveryRequired(false);
+      return saved ? "saved" : "memory-only";
     },
     storageSizeBytes,
 

@@ -34,6 +34,7 @@ function formatBytes(bytes: number) {
 function Settings() {
   const {
     ready,
+    recoveryRequired,
     state,
     createBackup,
     importBackup,
@@ -302,6 +303,20 @@ function Settings() {
           Proteja seu histórico e mantenha uma cópia dos dados do TorvGym.
         </p>
       </div>
+
+      {recoveryRequired && (
+        <Card>
+          <div role="alert" className="space-y-2">
+            <h2 className="text-base font-semibold text-destructive">Recuperação de dados necessária</h2>
+            <p className="text-sm leading-6 text-muted-foreground">
+              O TorvGym encontrou dados salvos que não conseguiu abrir. Para evitar perda de
+              informações, não gravará dados novos sobre esses registros. Restaure um backup
+              exportado anteriormente ou um backup protegido. Os dados locais atuais não foram
+              substituídos automaticamente.
+            </p>
+          </div>
+        </Card>
+      )}
 
       <div className="space-y-4">
         <Card>

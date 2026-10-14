@@ -36,10 +36,19 @@ public final class TorvGymSecureStoragePlugin extends Plugin {
             out.put("ciphertext",Base64.encodeToString(cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8)),Base64.NO_WRAP)); out.put("version",1); call.resolve(out);
         } catch(Exception e){call.reject("Não foi possível proteger os dados locais.",e);}
     }
+    private SecretKey getExistingKey() throws Exception {
+        KeyStore store = KeyStore.getInstance("AndroidKeyStore");
+        store.load(null);
+        if (!store.containsAlias(KEY_ALIAS)) {
+            throw new IllegalStateException("A chave local do TorvGym não está disponível.");
+        }
+        return ((KeyStore.SecretKeyEntry) store.getEntry(KEY_ALIAS, null)).getSecretKey();
+    }
+
     @PluginMethod public void decrypt(PluginCall call) {
         try {
             String iv=call.getString("iv"), ciphertext=call.getString("ciphertext"); if(iv==null||ciphertext==null) throw new IllegalArgumentException("dados ausentes");
-            Cipher cipher=Cipher.getInstance("AES/GCM/NoPadding"); cipher.init(Cipher.DECRYPT_MODE,getOrCreateKey(),new GCMParameterSpec(128,Base64.decode(iv,Base64.DEFAULT)));
+            Cipher cipher=Cipher.getInstance("AES/GCM/NoPadding"); cipher.init(Cipher.DECRYPT_MODE,getExistingKey(),new GCMParameterSpec(128,Base64.decode(iv,Base64.DEFAULT)));
             JSObject out=new JSObject(); out.put("plaintext",new String(cipher.doFinal(Base64.decode(ciphertext,Base64.DEFAULT)),StandardCharsets.UTF_8)); call.resolve(out);
         } catch(Exception e){call.reject("Não foi possível descriptografar os dados locais.",e);}
     }

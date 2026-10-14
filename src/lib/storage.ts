@@ -292,6 +292,17 @@ async function repairStorage(state: AppState) {
   }
 }
 
+/** Returns true when persisted state exists, even if it cannot currently be decrypted. */
+export function hasStoredState(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return [KEY, RECOVERY_KEY, AUTO_BACKUP_KEY].some((key) => window.localStorage.getItem(key) !== null);
+  } catch {
+    // Fail closed if storage access itself fails; do not seed over unknown data.
+    return true;
+  }
+}
+
 export async function loadState(): Promise<AppState | null> {
   if (typeof window === "undefined") return null;
   try {
