@@ -61,20 +61,22 @@ function Home() {
   }
   return (
     <AppShell>
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            {WEEKDAYS_FULL[today]}
-          </p>
-          <h1 className="mt-1 truncate text-2xl font-bold tracking-tight">Olá, vamos treinar?</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {activeRoutine ? activeRoutine.name : "Configure sua rotina para começar"}
-          </p>
+      <section className="relative isolate mb-6 overflow-hidden rounded-3xl border border-primary/25 bg-gradient-to-br from-primary/20 via-card to-card p-5 sm:p-6">
+        <div className="pointer-events-none absolute -right-8 -top-10 -z-10 h-36 w-36 rounded-full bg-primary/15 blur-2xl" />
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-[0.17em] text-primary">{WEEKDAYS_FULL[today]}</p>
+            <h1 className="mt-1 text-2xl font-black leading-tight tracking-tight sm:text-3xl">Olá, vamos treinar?</h1>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{activeRoutine ? activeRoutine.name : "Configure sua rotina para começar"}</p>
+          </div>
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-2xl" aria-hidden="true">💪</span>
         </div>
-        <span className="hidden rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary sm:inline-flex">
-          {totalSessions} concluído{totalSessions === 1 ? "" : "s"}
-        </span>
-      </div>
+        <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <div className="rounded-2xl border border-border/70 bg-background/50 p-3"><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Treinos concluídos</p><p className="mt-1 text-xl font-black tabular-nums">{totalSessions}</p></div>
+          <div className="rounded-2xl border border-border/70 bg-background/50 p-3"><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Treinos na rotina</p><p className="mt-1 text-xl font-black tabular-nums">{workouts.length}</p></div>
+          <div className="col-span-2 rounded-2xl border border-border/70 bg-background/50 p-3 sm:col-span-1"><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Foco de hoje</p><p className="mt-1 truncate text-sm font-bold">{todayWorkouts.length ? `${todayWorkouts.length} treino${todayWorkouts.length === 1 ? "" : "s"} programado${todayWorkouts.length === 1 ? "" : "s"}` : "No seu ritmo"}</p></div>
+        </div>
+      </section>
 
       {!activeRoutine ? (
         <EmptyState
@@ -92,9 +94,7 @@ function Home() {
             <section className="mb-6">
               <div className="mb-2 flex items-center justify-between">
                 <div>
-                  <h2 className="text-sm font-semibold text-muted-foreground">
-                    Treino em andamento
-                  </h2>
+                  <h2 className="text-base font-extrabold tracking-tight">Treino em andamento</h2>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     Continue exatamente de onde parou.
                   </p>
@@ -105,7 +105,7 @@ function Home() {
                 params={{ workoutId: activeSession.workoutId }}
                 className="block"
               >
-                <div className="surface border-primary/40 p-4 shadow-[var(--shadow-glow)] tap active:scale-[0.99]">
+                <div className="surface overflow-hidden rounded-2xl border-primary/40 bg-gradient-to-br from-primary/10 to-card p-4 shadow-[var(--shadow-glow)] transition duration-200 tap active:scale-[0.99]">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate text-base font-semibold">
@@ -133,7 +133,7 @@ function Home() {
           <section className="mb-6">
             <div className="mb-2 flex items-center justify-between">
               <div>
-                <h2 className="text-sm font-semibold text-muted-foreground">Treino de hoje</h2>
+                <h2 className="text-base font-extrabold tracking-tight">Treino de hoje</h2>
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   Sua próxima ação, sem complicação.
                 </p>
@@ -162,7 +162,7 @@ function Home() {
 
           <section>
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-muted-foreground">Outros treinos</h2>
+              <h2 className="text-base font-extrabold tracking-tight">Outros treinos</h2>
               <Link to="/rotinas" className="text-xs font-semibold text-primary">
                 Gerenciar
               </Link>
@@ -193,7 +193,7 @@ function Home() {
         </>
       )}
 
-      <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
+      <div className="mb-3 mt-7"><p className="text-[11px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Continue sua evolução</p><h2 className="mt-1 text-lg font-extrabold tracking-tight">Acesso rápido</h2></div><div className="mt-0 grid grid-cols-2 gap-3 md:grid-cols-3">
         <Link to="/exercicios">
           <Card className="h-full">
             <p className="text-sm font-semibold">Biblioteca</p>
@@ -242,7 +242,7 @@ function Home() {
     return (
       <Link to={active ? "/executar/$workoutId" : "/treino/$workoutId"} params={{ workoutId }}>
         <div
-          className={`surface p-4 tap active:scale-[0.99] ${
+          className={`surface group min-w-0 overflow-hidden rounded-2xl p-4 transition duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg tap active:scale-[0.99] ${
             highlight ? "border-primary/40 shadow-[var(--shadow-glow)]" : ""
           }`}
         >

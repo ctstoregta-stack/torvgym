@@ -70,9 +70,19 @@ function RoutinesPage() {
 
   return (
     <AppShell title="Rotinas">
-      <Card className="mb-5">
-        <p className="mb-2 text-sm font-semibold">Nova rotina</p>
-        <div className="flex gap-2">
+      <section className="relative isolate mb-5 overflow-hidden rounded-3xl border border-primary/25 bg-gradient-to-br from-primary/20 via-card to-card p-5 sm:p-6">
+        <div className="pointer-events-none absolute -right-8 -top-10 -z-10 h-32 w-32 rounded-full bg-primary/15 blur-2xl" />
+        <p className="text-[11px] font-bold uppercase tracking-[0.17em] text-primary">Planeje sua semana</p>
+        <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">Seu treino, do seu jeito.</h2>
+        <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Organize suas rotinas, distribua os treinos pelos dias e deixe tudo pronto para a próxima sessão.</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <span className="rounded-full border border-border/70 bg-background/50 px-3 py-1.5 text-xs font-semibold">{state.routines.length} rotina{state.routines.length === 1 ? "" : "s"}</span>
+          <span className="rounded-full border border-border/70 bg-background/50 px-3 py-1.5 text-xs font-semibold">{state.routines.reduce((sum, routine) => sum + routine.workouts.length, 0)} treinos organizados</span>
+        </div>
+      </section>
+      <Card className="mb-5 min-w-0 overflow-hidden border-primary/15">
+        <div className="mb-3 flex items-center gap-2"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-lg" aria-hidden="true">✦</span><div><p className="text-sm font-extrabold">Nova rotina</p><p className="mt-0.5 text-xs text-muted-foreground">Comece com um plano que combine com você.</p></div></div>
+        <div className="flex min-w-0 flex-col gap-2 min-[380px]:flex-row">
           <Input
             value={newRoutine}
             placeholder="Ex.: Hipertrofia - Foco em Força"
@@ -101,7 +111,7 @@ function RoutinesPage() {
         {state.routines.map((routine) => {
           const isActive = routine.id === state.activeRoutineId;
           return (
-            <Card key={routine.id} className={isActive ? "border-primary/40" : ""}>
+            <Card key={routine.id} className={`min-w-0 overflow-hidden transition-colors ${isActive ? "border-primary/40 bg-gradient-to-br from-primary/5 to-card" : "hover:border-primary/20"}`}>
               <div className="flex items-start justify-between gap-2">
                 {editing === routine.id ? (
                   <div className="flex flex-1 gap-2">
@@ -141,7 +151,7 @@ function RoutinesPage() {
                       </svg>
                     </span>
                     <span className="min-w-0">
-                      <p className="truncate text-base font-semibold">{routine.name}</p>
+                      <p className="break-words text-base font-extrabold tracking-tight">{routine.name}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         {routine.workouts.length} treino
                         {routine.workouts.length === 1 ? "" : "s"}
@@ -191,11 +201,11 @@ function RoutinesPage() {
               )}
 
               {expandedRoutines.has(routine.id) && (
-                <div className="mt-4 space-y-3">
+                <div className="mt-4 space-y-3 border-t border-border/70 pt-4">
                   {routine.workouts.map((w) => {
                     const groups = muscleGroupsOf(w.exerciseIds, getExercise);
                     return (
-                      <div key={w.id} className="rounded-xl border border-border bg-elevated p-3">
+                      <div key={w.id} className="min-w-0 rounded-2xl border border-border/80 bg-elevated p-3.5 transition-colors hover:border-primary/20">
                         <div className="flex items-start justify-between gap-2">
                           <Link
                             to="/treino/$workoutId"
@@ -229,7 +239,7 @@ function RoutinesPage() {
                           </button>
                         </div>
 
-                        <div className="mt-3 flex gap-1">
+                        <div className="mt-3 grid grid-cols-7 gap-1">
                           {WEEKDAYS.map((label, day) => (
                             <button
                               key={day}
