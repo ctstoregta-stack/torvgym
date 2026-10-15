@@ -117,8 +117,16 @@ function WorkoutPage() {
 
   return (
     <AppShell title={workout.name} back={{ to: "/" }}>
-      <Card className="mb-4">
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">{routine.name}</p>
+      <Card className="relative mb-5 min-w-0 overflow-hidden border-primary/20 bg-gradient-to-br from-primary/15 via-card to-card p-4 sm:p-5">
+        <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
+        <div className="relative">
+          <div className="flex items-center gap-2">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary" aria-hidden="true">✦</span>
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">{routine.name}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">PERSONALIZE SEU TREINO</p>
+            </div>
+          </div>
         {renaming ? (
           <div className="mt-2 flex gap-2">
             <Input value={name} onChange={(e) => setName(e.target.value)} />
@@ -133,9 +141,9 @@ function WorkoutPage() {
           </div>
         ) : (
           <div className="mt-1 flex items-center justify-between gap-2">
-            <h2 className="truncate text-xl font-bold">{workout.name}</h2>
+            <h2 className="break-words text-xl font-black tracking-tight sm:text-2xl">{workout.name}</h2>
             <button
-              className="text-xs font-semibold text-primary"
+              className="shrink-0 rounded-full border border-primary/25 bg-primary/10 px-3 py-2 text-xs font-bold text-primary transition-colors hover:bg-primary/15"
               onClick={() => {
                 setName(workout.name);
                 setRenaming(true);
@@ -146,13 +154,17 @@ function WorkoutPage() {
           </div>
         )}
 
-        <p className="mt-4 text-xs font-semibold text-muted-foreground">Dias da semana</p>
-        <div className="mt-2 flex gap-1">
+        <div className="mt-5 rounded-2xl border border-border/70 bg-background/40 p-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-xs font-bold text-foreground">Dias da semana</p>
+            <span className="text-[10px] text-muted-foreground">Toque para selecionar</span>
+          </div>
+          <div className="grid grid-cols-7 gap-1.5">
           {WEEKDAYS.map((label, day) => (
             <button
               key={day}
               onClick={() => toggleWorkoutDay(workout.id, day)}
-              className={`h-9 flex-1 rounded-lg text-[11px] font-bold tap active:scale-95 ${
+              className={`h-9 min-w-0 rounded-xl text-[11px] font-extrabold tap active:scale-95 transition-colors ${
                 workout.days.includes(day)
                   ? "bg-primary text-primary-foreground"
                   : "bg-elevated text-muted-foreground"
@@ -161,13 +173,14 @@ function WorkoutPage() {
               {label}
             </button>
           ))}
+          </div>
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <label className="text-xs font-semibold text-muted-foreground">
             Descanso padrão
             <select
-              className="mt-1 h-10 w-full rounded-lg border border-border bg-elevated px-3 text-sm font-normal text-foreground"
+              className="mt-1 h-11 w-full rounded-xl border border-border/80 bg-elevated px-3 text-sm font-semibold text-foreground outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/15"
               value={currentRest}
               onChange={(e) => setRestSeconds(Number(e.target.value))}
               onBlur={() =>
@@ -186,7 +199,7 @@ function WorkoutPage() {
           <label className="text-xs font-semibold text-muted-foreground">
             Observações do treino
             <textarea
-              className="mt-1 min-h-10 w-full rounded-lg border border-border bg-elevated px-3 py-2 text-sm font-normal text-foreground"
+              className="mt-1 min-h-24 w-full resize-y rounded-xl border border-border/80 bg-elevated px-3 py-2 text-sm font-normal text-foreground outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/15"
               maxLength={1000}
               defaultValue={currentNotes}
               placeholder="Ex.: foco em técnica, amplitude..."
@@ -198,9 +211,9 @@ function WorkoutPage() {
           </label>
         </div>
 
-        <p className="mt-4 text-xs font-semibold text-muted-foreground">
-          Grupos musculares (automático)
-        </p>
+        <div className="mt-4 rounded-2xl border border-border/70 bg-background/40 p-3">
+          <p className="text-xs font-bold text-foreground">Grupos musculares</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">Atualizados automaticamente conforme os exercícios.</p>
         <div className="mt-2 flex flex-wrap gap-1.5">
           {groups.length ? (
             groups.map((g) => <Tag key={g}>{g}</Tag>)
@@ -210,15 +223,20 @@ function WorkoutPage() {
             </span>
           )}
         </div>
+          </div>
+        </div>
       </Card>
 
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-muted-foreground">
-          Exercícios ({workout.exerciseIds.length})
-        </h3>
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">Montagem do treino</p>
+          <h3 className="mt-1 text-lg font-black tracking-tight text-foreground">
+            Exercícios <span className="text-muted-foreground">({workout.exerciseIds.length})</span>
+          </h3>
+        </div>
         <Button
           variant="outline"
-          className="px-3 py-1.5 text-xs"
+          className="shrink-0 rounded-xl px-3 py-2 text-xs font-bold"
           onClick={() => {
             setSelectedExercises([]);
             setQuery("");
@@ -243,13 +261,12 @@ function WorkoutPage() {
             if (!ex) return null;
             const pr = prFor(id);
             return (
-              <div key={id} className="surface flex items-center gap-3 p-3">
+              <div key={id} className="group flex min-w-0 items-center gap-2.5 rounded-2xl border border-border/80 bg-card p-2.5 shadow-sm transition-colors hover:border-primary/25 sm:gap-3 sm:p-3">
                 <Link to="/exercicio/$exerciseId" params={{ exerciseId: id }}>
-                  <ExerciseMedia
-                    exercise={ex}
-                    className="h-14 w-14 shrink-0"
-                    rounded="rounded-lg"
-                  />
+                  <div className="relative shrink-0">
+                    <ExerciseMedia exercise={ex} className="h-14 w-14" rounded="rounded-xl" />
+                    <span className="absolute -left-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full border border-primary/30 bg-card px-1 text-[10px] font-extrabold text-primary">{index + 1}</span>
+                  </div>
                 </Link>
                 <div className="min-w-0 flex-1">
                   <Link to="/exercicio/$exerciseId" params={{ exerciseId: id }}>
@@ -264,7 +281,7 @@ function WorkoutPage() {
                   <div className="mt-1.5 flex items-center gap-2">
                     <span className="text-[11px] text-muted-foreground">Séries</span>
                     <button
-                      className="h-6 w-6 rounded-md bg-elevated text-sm font-bold"
+                      className="h-7 w-7 rounded-lg border border-border/70 bg-elevated text-sm font-extrabold transition-colors hover:border-primary/40 hover:bg-primary/10"
                       onClick={() =>
                         setTargetSets(workout.id, id, (workout.targetSets[id] ?? 3) - 1)
                       }
@@ -290,7 +307,7 @@ function WorkoutPage() {
                     aria-label={`Mover ${ex.name} para cima`}
                     disabled={index === 0}
                     onClick={() => moveExercise(index, -1)}
-                    className="h-8 w-8 rounded-lg bg-card text-sm font-bold text-muted-foreground disabled:opacity-30"
+                    className="h-8 w-8 rounded-xl border border-border/70 bg-elevated text-sm font-bold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary disabled:opacity-25"
                   >
                     <span aria-hidden="true">⌃</span>
                   </button>
@@ -305,7 +322,7 @@ function WorkoutPage() {
                   </button>
                   <button
                     type="button"
-                    className="mt-1 text-xs font-semibold text-destructive"
+                    className="mt-1 rounded-lg px-1 py-1 text-[10px] font-bold text-destructive transition-colors hover:bg-destructive/10"
                     onClick={() => removeExerciseFromWorkout(workout.id, id)}
                   >
                     Remover
@@ -317,9 +334,9 @@ function WorkoutPage() {
         </div>
       )}
 
-      <div className="fixed bottom-[72px] left-1/2 z-20 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2">
+      <div className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] left-1/2 z-20 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2">
         <Button
-          className="w-full py-3.5"
+          className="w-full rounded-2xl py-4 text-sm font-extrabold shadow-lg shadow-primary/20"
           disabled={workout.exerciseIds.length === 0}
           onClick={() => {
             if (activeOther) {
@@ -369,17 +386,21 @@ function WorkoutPage() {
       </Dialog>
       {picker && (
         <div className="fixed inset-0 z-40 flex items-end bg-black/70 backdrop-blur-sm">
-          <div className="mx-auto flex h-[85vh] w-full max-w-2xl flex-col rounded-t-2xl border-t border-border bg-card">
-            <div className="flex items-center justify-between border-b border-border p-4">
-              <p className="font-semibold">Adicionar exercício</p>
-              <button className="text-sm text-primary" onClick={() => setPicker(false)}>
+          <div className="mx-auto flex h-[88dvh] w-full max-w-2xl flex-col rounded-t-3xl border border-border/80 bg-card shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border/80 bg-gradient-to-r from-primary/10 to-card p-4 sm:p-5">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">Biblioteca</p>
+                <p className="mt-1 font-extrabold">Adicionar exercícios</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Selecione um ou mais movimentos para o treino.</p>
+              </div>
+              <button className="rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-primary" onClick={() => setPicker(false)}>
                 Fechar
               </button>
             </div>
             <div className="p-4 pb-2">
               <Input
                 autoFocus
-                placeholder="Buscar por nome, grupo ou equipamento"
+                placeholder="Buscar exercício, grupo ou equipamento"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
@@ -421,7 +442,7 @@ function WorkoutPage() {
                           : [...current, ex.id],
                       )
                     }
-                    className={`flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition-colors disabled:opacity-40 ${selected ? "border-primary/50 bg-primary/10" : "border-border bg-elevated"}`}
+                    className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-all disabled:opacity-40 ${selected ? "border-primary/60 bg-primary/10 shadow-sm shadow-primary/10" : "border-border/80 bg-elevated hover:border-primary/25"}`}
                   >
                     <ExerciseMedia
                       exercise={ex}
@@ -448,7 +469,7 @@ function WorkoutPage() {
                 </p>
               )}
             </div>
-            <div className="border-t border-border bg-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+            <div className="border-t border-border/80 bg-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-12px_28px_rgba(0,0,0,0.12)]">
               <Button
                 className="w-full"
                 disabled={selectedExercises.length === 0}
