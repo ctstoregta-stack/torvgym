@@ -158,7 +158,7 @@ export function RestTimer({
             <RestBtn
               label="+30s"
               ariaLabel="Aumentar 30 segundos"
-              onClick={() => updateRemaining(remaining + 30, rest.total + 30, true)}
+              onClick={() => updateRemaining(remaining + 30, rest.total + 30)}
             />
             <RestBtn
               label={rest.running ? "Pausar" : "Retomar"}
