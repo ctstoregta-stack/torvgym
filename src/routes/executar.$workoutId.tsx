@@ -587,11 +587,23 @@ function ExecutePage() {
                         aria-label={`Carga da série ${i + 1} (kg)`}
                         value={set.weight ?? ""}
                         placeholder="0"
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          const weight = e.target.value === "" ? null : Number(e.target.value);
+                          const bestOtherSet = Math.max(
+                            storedPR ?? 0,
+                            ...current.sets
+                              .filter((candidate, candidateIndex) =>
+                                candidateIndex !== i && candidate.completed && candidate.weight != null,
+                              )
+                              .map((candidate) => candidate.weight ?? 0),
+                          );
                           updateSet(current.exerciseId, i, {
-                            weight: e.target.value === "" ? null : Number(e.target.value),
-                          })
-                        }
+                            weight,
+                            ...(set.completed
+                              ? { isPR: weight != null && weight > bestOtherSet }
+                              : {}),
+                          });
+                        }}
                         className="h-12 w-full rounded-xl border border-input bg-card px-2 text-center text-lg font-semibold tabular-nums outline-none transition-colors focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/40"
                       />
                     </label>
