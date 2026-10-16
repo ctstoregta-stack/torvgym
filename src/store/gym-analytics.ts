@@ -921,7 +921,7 @@ export function workoutExerciseAdvancedRecommendationFor(
 }
 
 function roundLoad(value: number) {
-  return Math.round(value * 2) / 2;
+  return Math.round(value * 2 + 1e-9) / 2;
 }
 
 export function workoutExerciseRecommendationFor(
