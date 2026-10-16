@@ -499,6 +499,31 @@ function ExecutePage() {
                     {progressionPlan.reason}
                   </p>
                 )}
+                {progressionPlan && currentSetIndex >= 0 && (
+                  <div className="rounded-xl border border-primary/25 bg-primary/5 p-3">
+                    <p className="text-xs font-semibold">Meta opcional para a próxima série</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Nada será preenchido até você escolher aplicar a sugestão.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const patch: { weight?: number; reps?: number } = {};
+                        if (progressionPlan.targetWeight != null) patch.weight = progressionPlan.targetWeight;
+                        if (progressionPlan.targetReps != null) patch.reps = progressionPlan.targetReps;
+                        if (!Object.keys(patch).length) {
+                          toast.info("Não há uma meta de carga ou repetições para aplicar.");
+                          return;
+                        }
+                        updateSet(current.exerciseId, currentSetIndex, patch);
+                        toast.success("Meta aplicada à série atual");
+                      }}
+                      className="mt-2 min-h-10 w-full rounded-xl bg-primary px-3 py-2 text-sm font-bold text-primary-foreground transition active:scale-[0.99]"
+                    >
+                      Aplicar sugestão à série {currentSetIndex + 1}
+                    </button>
+                  </div>
+                )}
                 {progressionPlan && (
                   <p className="text-[11px] text-muted-foreground">
                     Tendência:{" "}

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   buildExerciseAnalyticsIndex,
   buildWorkoutExerciseAnalyticsIndex,
+  workoutExerciseRecommendationFor,
   sessionPRFor,
 } from "../src/store/gym-analytics.ts";
 import type { Session } from "../src/lib/types.ts";
@@ -163,4 +164,39 @@ test("comparativo retorna variação nula quando período anterior não tem base
   assert.equal(comparison.current.sessions, 0);
   assert.equal(comparison.previous.sessions, 0);
   assert.equal(comparison.changes.sessions, null);
+});
+
+
+test("recomendação de progressão usa o histórico do treino e ignora outro treino com o mesmo exercício", () => {
+  const data = [
+    makeSession("a1", "treino-a", "2026-09-01T10:00:00.000Z", [
+      { exerciseId: "supino", sets: [{ weight: 40, reps: 8, completed: true }] },
+    ]),
+    makeSession("a2", "treino-a", "2026-09-08T10:00:00.000Z", [
+      { exerciseId: "supino", sets: [{ weight: 45, reps: 8, completed: true }] },
+    ]),
+    makeSession("a3", "treino-a", "2026-09-15T10:00:00.000Z", [
+      { exerciseId: "supino", sets: [{ weight: 50, reps: 8, completed: true }] },
+    ]),
+    makeSession("b1", "treino-b", "2026-09-16T10:00:00.000Z", [
+      { exerciseId: "supino", sets: [{ weight: 100, reps: 8, completed: true }] },
+    ]),
+  ];
+  const recommendation = workoutExerciseRecommendationFor(data, "treino-a", "supino", "r1");
+  assert.ok(recommendation);
+  assert.equal(recommendation.targetWeight, 51.5);
+  assert.equal(recommendation.targetReps, 8);
+  assert.equal(recommendation.trend, "improving");
+});
+
+test("recomendação de progressão não sugere meta sem histórico concluído no contexto do treino", () => {
+  const recommendation = workoutExerciseRecommendationFor(
+    [makeSession("other", "treino-b", "2026-09-16T10:00:00.000Z", [
+      { exerciseId: "supino", sets: [{ weight: 100, reps: 8, completed: true }] },
+    ])],
+    "treino-a",
+    "supino",
+    "r1",
+  );
+  assert.equal(recommendation, null);
 });
