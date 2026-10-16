@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { TrainingPlannerPanel } from "@/components/TrainingPlannerPanel";
 import { Button, Card, EmptyState, Input, MutedTag, Tag } from "@/components/ui-kit";
 import {
   Dialog,
