@@ -144,3 +144,55 @@ test("aceita limpar campos numéricos, valida RPE e limita observações a 500 c
   assert.equal(cleared.entries[0]?.sets[0]?.reps, null);
   assert.equal(cleared.entries[0]?.sets[0]?.rpe, null);
 });
+
+test("recalcula recordes quando a carga de uma série concluída é alterada", () => {
+  const created = createWorkoutSession(
+    routine,
+    workout,
+    "session-pr-edit",
+    "2026-10-13T10:00:00.000Z",
+  );
+  const first = updateWorkoutSessionSet(
+    created,
+    "agachamento",
+    0,
+    { weight: 60, reps: 8, completed: true },
+    65,
+  );
+  const second = updateWorkoutSessionSet(
+    first,
+    "agachamento",
+    1,
+    { weight: 70, reps: 8, completed: true },
+    65,
+  );
+
+  assert.deepEqual(
+    second.entries[0]?.sets.map((set) => set.isPR),
+    [false, true],
+  );
+
+  const lowered = updateWorkoutSessionSet(
+    second,
+    "agachamento",
+    1,
+    { weight: 62.5 },
+    65,
+  );
+  assert.deepEqual(
+    lowered.entries[0]?.sets.map((set) => set.isPR),
+    [false, false],
+  );
+
+  const raised = updateWorkoutSessionSet(
+    lowered,
+    "agachamento",
+    1,
+    { weight: 67.5 },
+    65,
+  );
+  assert.deepEqual(
+    raised.entries[0]?.sets.map((set) => set.isPR),
+    [false, true],
+  );
+});
