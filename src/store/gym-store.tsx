@@ -21,7 +21,11 @@ import {
 } from "@/lib/storage";
 import { buildExerciseAnalyticsIndex, sessionPRFor } from "@/store/gym-analytics";
 import { validateExercise } from "@/lib/exercise-validation";
-import { duplicateRoutineTemplate } from "@/lib/routine-templates";
+import {
+  duplicateRoutineTemplate,
+  instantiateRoutineTemplate,
+  type PrebuiltRoutineTemplate,
+} from "@/lib/routine-templates";
 import {
   createEncryptedRecoveryPackage,
   createEncryptedSyncPackage,
@@ -116,6 +120,7 @@ type Ctx = {
   findWorkout: (workoutId: string) => { routine: Routine; workout: Workout } | null;
   // routines
   createRoutine: (name: string) => string;
+  createRoutineFromTemplate: (template: PrebuiltRoutineTemplate) => string;
   duplicateRoutine: (routineId: string) => string | null;
   renameRoutine: (id: string, name: string) => void;
   deleteRoutine: (id: string) => void;
@@ -396,6 +401,16 @@ export function GymProvider({ children }: { children: ReactNode }) {
         ...s,
         activeRoutineId: id,
         routines: [...s.routines, { id, name, createdAt: new Date().toISOString(), workouts: [] }],
+      }));
+      return id;
+    },
+    createRoutineFromTemplate: (template) => {
+      const id = uid("rot");
+      const routine = instantiateRoutineTemplate(template, id, () => uid("wk"));
+      setState((s) => ({
+        ...s,
+        activeRoutineId: id,
+        routines: [...s.routines, routine],
       }));
       return id;
     },

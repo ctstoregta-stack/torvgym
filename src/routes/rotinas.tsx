@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { muscleGroupsOf, useGym } from "@/store/gym-store";
 import { WEEKDAYS } from "@/lib/types";
+import { PREBUILT_ROUTINE_TEMPLATES } from "@/lib/routine-templates";
 
 export const Route = createFileRoute("/rotinas")({
   head: () => ({
@@ -39,6 +40,7 @@ function RoutinesPage() {
     activeRoutine,
     setActiveRoutine,
     createRoutine,
+    createRoutineFromTemplate,
     duplicateRoutine,
     renameRoutine,
     deleteRoutine,
@@ -82,6 +84,54 @@ function RoutinesPage() {
         </div>
       </section>
       <TrainingPlannerPanel />
+      <section className="mb-5">
+        <div className="mb-3">
+          <p className="text-sm font-extrabold">Planos pré-montados baseados em evidências</p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            Escolha uma divisão como ponto de partida. Os treinos são editáveis e incluem séries,
+            faixas de repetições, descanso e dias sugeridos.
+          </p>
+        </div>
+        <div className="grid gap-3 lg:grid-cols-3">
+          {PREBUILT_ROUTINE_TEMPLATES.map((template) => (
+            <Card key={template.id} className="flex min-w-0 flex-col border-border/80">
+              <div className="flex-1">
+                <p className="text-base font-extrabold">{template.name}</p>
+                <p className="mt-1 text-xs font-semibold text-primary">{template.frequency}</p>
+                <p className="mt-2 text-sm leading-5 text-muted-foreground">{template.description}</p>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  <MutedTag>{template.level}</MutedTag>
+                  <MutedTag>{template.workouts.length} treinos</MutedTag>
+                </div>
+                <p className="mt-3 text-xs leading-5">{template.focus}</p>
+                <ul className="mt-3 space-y-1.5 text-xs text-muted-foreground">
+                  {template.workouts.map((workout) => (
+                    <li key={workout.name} className="flex items-start gap-2">
+                      <span className="mt-0.5 text-primary" aria-hidden="true">•</span>
+                      <span>{workout.name} · {workout.exercises.length} exercícios</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <Button
+                className="mt-4 w-full"
+                onClick={() => {
+                  const id = createRoutineFromTemplate(template);
+                  setExpandedRoutines((current) => new Set([...current, id]));
+                }}
+              >
+                Criar e personalizar
+              </Button>
+            </Card>
+          ))}
+        </div>
+        <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
+          Base geral: sobrecarga progressiva, esforço alto com técnica consistente, volume semanal
+          ajustável e recuperação. A divisão não é mágica nem exclusiva para naturais; ajuste o plano
+          à experiência, disponibilidade, equipamento e recuperação.
+        </p>
+      </section>
+
       <Card className="mb-5 min-w-0 overflow-hidden border-primary/15">
         <div className="mb-3 flex items-center gap-2"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-lg" aria-hidden="true">✦</span><div><p className="text-sm font-extrabold">Nova rotina</p><p className="mt-0.5 text-xs text-muted-foreground">Comece com um plano que combine com você.</p></div></div>
         <div className="flex min-w-0 flex-col gap-2 min-[380px]:flex-row">
