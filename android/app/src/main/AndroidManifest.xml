@@ -3,6 +3,7 @@
 
     <application
         android:allowBackup="false"
+        android:usesCleartextTraffic="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@drawable/torvgym_logo"
@@ -38,7 +39,7 @@
                 android:value="manter um treino do TorvGym ativo e visível ao usuário enquanto o aplicativo estiver em segundo plano" />
         </service>
         <receiver android:name=".TorvGymReminderReceiver" android:enabled="true" android:exported="false"><intent-filter><action android:name="com.torvgym.app.action.TRAINING_REMINDER" /></intent-filter></receiver>
-        <receiver android:name=".TorvGymReminderBootReceiver" android:enabled="true" android:exported="true"><intent-filter><action android:name="android.intent.action.BOOT_COMPLETED" /></intent-filter></receiver>
+        <receiver android:name=".TorvGymReminderBootReceiver" android:enabled="true" android:exported="false"><intent-filter><action android:name="android.intent.action.BOOT_COMPLETED" /></intent-filter></receiver>
     </application>
 
     <!-- Permissions -->

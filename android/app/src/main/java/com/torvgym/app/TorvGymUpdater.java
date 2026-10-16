@@ -22,9 +22,9 @@ import com.getcapacitor.BridgeActivity;
 
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -43,6 +43,7 @@ final class TorvGymUpdater {
     private static final String PREF_PENDING_CLEANUP_DOWNLOAD_ID = "pending_cleanup_download_id";
     private static final String PREF_LAST_CHECK_MS = "last_check_ms";
     private static final long CHECK_INTERVAL_MS = 30L * 60L * 1000L;
+    private static final int MAX_RELEASE_RESPONSE_BYTES = 1_048_576;
     private static final Pattern VERSION_TAG = Pattern.compile("^v1\\.0\\.(\\d+)$");
 
     private final BridgeActivity activity;
@@ -107,14 +108,19 @@ final class TorvGymUpdater {
         try {
             if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) return null;
 
-            StringBuilder body = new StringBuilder();
-            try (InputStream stream = connection.getInputStream();
-                 BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
-                String line;
-                while ((line = reader.readLine()) != null) body.append(line);
+            ByteArrayOutputStream body = new ByteArrayOutputStream();
+            try (InputStream stream = connection.getInputStream()) {
+                byte[] buffer = new byte[8192];
+                int read;
+                int total = 0;
+                while ((read = stream.read(buffer)) != -1) {
+                    total += read;
+                    if (total > MAX_RELEASE_RESPONSE_BYTES) return null;
+                    body.write(buffer, 0, read);
+                }
             }
 
-            JSONObject json = new JSONObject(body.toString());
+            JSONObject json = new JSONObject(new String(body.toByteArray(), StandardCharsets.UTF_8));
             String tag = json.optString("tag_name", "");
             Matcher matcher = VERSION_TAG.matcher(tag);
             if (!matcher.matches()) return null;

@@ -82,6 +82,8 @@ jobs:
           test -f android/app/src/main/res/xml/data_extraction_rules.xml
           ! test -f android/app/src/main/res/xml/file_paths.xml
           grep -q 'android:allowBackup="false"' android/app/src/main/AndroidManifest.xml
+          grep -q 'android:usesCleartextTraffic="false"' android/app/src/main/AndroidManifest.xml
+          grep -q 'android:name=".TorvGymReminderBootReceiver" android:enabled="true" android:exported="false"' android/app/src/main/AndroidManifest.xml
           grep -q 'android:dataExtractionRules="@xml/data_extraction_rules"' android/app/src/main/AndroidManifest.xml
           grep -q 'android:fullBackupContent="@xml/backup_rules"' android/app/src/main/AndroidManifest.xml
 
