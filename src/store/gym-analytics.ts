@@ -408,6 +408,74 @@ export function buildPeriodAnalytics(
   return periods;
 }
 
+export type PeriodComparisonMetrics = {
+  sessions: number;
+  volume: number;
+  sets: number;
+  averageDurationSeconds: number;
+};
+
+export type PeriodComparison = {
+  days: number;
+  current: PeriodComparisonMetrics;
+  previous: PeriodComparisonMetrics;
+  changes: {
+    sessions: number | null;
+    volume: number | null;
+    sets: number | null;
+    averageDurationSeconds: number | null;
+  };
+};
+
+/**
+ * Compares a rolling period with the immediately preceding period of equal length.
+ * Only completed sessions with valid timestamps at or before the reference time count.
+ */
+export function buildPeriodComparison(
+  sessions: Session[],
+  days: number,
+  now = new Date(),
+): PeriodComparison {
+  const safeDays = Number.isFinite(days) ? Math.max(1, Math.floor(days)) : 30;
+  const referenceTime = now.getTime();
+  const currentStart = referenceTime - safeDays * 24 * 60 * 60 * 1000;
+  const previousStart = currentStart - safeDays * 24 * 60 * 60 * 1000;
+  const valid = sessions.filter((session) => {
+    if (!session.finishedAt) return false;
+    const timestamp = new Date(session.finishedAt).getTime();
+    return Number.isFinite(timestamp) && timestamp <= referenceTime;
+  });
+  const summarize = (items: Session[]): PeriodComparisonMetrics => ({
+    sessions: items.length,
+    volume: items.reduce((sum, session) => sum + sessionVolume(session), 0),
+    sets: items.reduce((sum, session) => sum + sessionSetCount(session), 0),
+    averageDurationSeconds: items.length
+      ? Math.round(items.reduce((sum, session) => sum + sessionDurationSeconds(session), 0) / items.length)
+      : 0,
+  });
+  const current = summarize(valid.filter((session) => {
+    const timestamp = new Date(session.finishedAt!).getTime();
+    return timestamp >= currentStart;
+  }));
+  const previous = summarize(valid.filter((session) => {
+    const timestamp = new Date(session.finishedAt!).getTime();
+    return timestamp >= previousStart && timestamp < currentStart;
+  }));
+  const change = (value: number, prior: number) => percentChange(value, prior);
+
+  return {
+    days: safeDays,
+    current,
+    previous,
+    changes: {
+      sessions: change(current.sessions, previous.sessions),
+      volume: change(current.volume, previous.volume),
+      sets: change(current.sets, previous.sets),
+      averageDurationSeconds: change(current.averageDurationSeconds, previous.averageDurationSeconds),
+    },
+  };
+}
+
 export type DashboardAnalytics = {
   totalSessions: number;
   totalVolume: number;

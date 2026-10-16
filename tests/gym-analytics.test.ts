@@ -126,3 +126,41 @@ test("dashboard calcula sequência consecutiva e PR mais recente", async () => {
     date: "2026-10-04T10:00:00.000Z",
   });
 });
+
+
+test("comparativo de período separa janelas equivalentes e ignora sessões futuras ou ativas", async () => {
+  const { buildPeriodComparison } = await import("../src/store/gym-analytics.ts");
+  const now = new Date("2026-10-16T12:00:00.000Z");
+  const data = [
+    makeSession("current-1", "w1", "2026-10-15T12:00:00.000Z", [
+      { exerciseId: "supino", sets: [{ weight: 50, reps: 10, completed: true }] },
+    ]),
+    makeSession("previous-1", "w1", "2026-10-05T12:00:00.000Z", [
+      { exerciseId: "supino", sets: [{ weight: 40, reps: 10, completed: true }] },
+    ]),
+    makeSession("future", "w1", "2026-10-20T12:00:00.000Z", [
+      { exerciseId: "supino", sets: [{ weight: 100, reps: 10, completed: true }] },
+    ]),
+    {
+      ...makeSession("active", "w1", "2026-10-15T10:00:00.000Z", [
+        { exerciseId: "supino", sets: [{ weight: 90, reps: 10, completed: true }] },
+      ]),
+      finishedAt: null,
+    },
+  ];
+  const comparison = buildPeriodComparison(data, 7, now);
+  assert.equal(comparison.current.sessions, 1);
+  assert.equal(comparison.current.volume, 500);
+  assert.equal(comparison.current.sets, 1);
+  assert.equal(comparison.previous.sessions, 1);
+  assert.equal(comparison.previous.volume, 400);
+  assert.equal(comparison.changes.volume, 25);
+});
+
+test("comparativo retorna variação nula quando período anterior não tem base", async () => {
+  const { buildPeriodComparison } = await import("../src/store/gym-analytics.ts");
+  const comparison = buildPeriodComparison([], 30, new Date("2026-10-16T12:00:00.000Z"));
+  assert.equal(comparison.current.sessions, 0);
+  assert.equal(comparison.previous.sessions, 0);
+  assert.equal(comparison.changes.sessions, null);
+});

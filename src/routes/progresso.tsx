@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { Session } from "@/lib/types";
 import { AppShell } from "@/components/AppShell";
 import { Button, Card, EmptyState, Tag } from "@/components/ui-kit";
 import {
   buildDashboardAnalytics,
+  buildPeriodComparison,
   buildPeriodAnalytics,
   buildPersonalRecords,
   exerciseProgressionFromHistory,
@@ -37,11 +38,16 @@ function formatDuration(seconds: number) {
 
 function ProgressPage() {
   const { ready, state, activeRoutine, getExercise } = useGym();
+  const [comparisonDays, setComparisonDays] = useState<7 | 30 | 90>(30);
   const completed = useMemo(
     () => state.sessions.filter((session) => session.finishedAt),
     [state.sessions],
   );
   const dashboard = useMemo(() => buildDashboardAnalytics(completed), [completed]);
+  const periodComparison = useMemo(
+    () => buildPeriodComparison(completed, comparisonDays),
+    [completed, comparisonDays],
+  );
   const goalInsights = useMemo(
     () => buildWeeklyGoalInsights(completed, state.goals),
     [completed, state.goals],
@@ -167,6 +173,64 @@ function ProgressPage() {
           value={`${Math.round(dashboard.volumeLast30Days).toLocaleString("pt-BR")} kg`}
         />
       </div>
+
+      <Card className="mt-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold">Comparativo de desempenho</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Compare o período atual com o período anterior de mesma duração.
+            </p>
+          </div>
+          <div className="flex rounded-xl bg-elevated p-1" role="group" aria-label="Período de comparação">
+            {([7, 30, 90] as const).map((days) => (
+              <button
+                key={days}
+                type="button"
+                aria-pressed={comparisonDays === days}
+                onClick={() => setComparisonDays(days)}
+                className={
+                  comparisonDays === days
+                    ? "rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
+                    : "rounded-lg px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                }
+              >
+                {days}d
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <PeriodComparisonMetric
+            label="Treinos"
+            current={periodComparison.current.sessions.toLocaleString("pt-BR")}
+            previous={periodComparison.previous.sessions.toLocaleString("pt-BR")}
+            change={periodComparison.changes.sessions}
+          />
+          <PeriodComparisonMetric
+            label="Volume"
+            current={`${Math.round(periodComparison.current.volume).toLocaleString("pt-BR")} kg`}
+            previous={`${Math.round(periodComparison.previous.volume).toLocaleString("pt-BR")} kg`}
+            change={periodComparison.changes.volume}
+          />
+          <PeriodComparisonMetric
+            label="Séries"
+            current={periodComparison.current.sets.toLocaleString("pt-BR")}
+            previous={periodComparison.previous.sets.toLocaleString("pt-BR")}
+            change={periodComparison.changes.sets}
+          />
+          <PeriodComparisonMetric
+            label="Duração média"
+            current={formatDuration(periodComparison.current.averageDurationSeconds)}
+            previous={formatDuration(periodComparison.previous.averageDurationSeconds)}
+            change={periodComparison.changes.averageDurationSeconds}
+          />
+        </div>
+        <p className="mt-3 text-[11px] text-muted-foreground">
+          Atual: últimos {comparisonDays} dias · Anterior: {comparisonDays} dias precedentes.
+          {" "}Percentuais aparecem apenas quando há uma base anterior válida.
+        </p>
+      </Card>
 
       <Card className="mt-4">
         <div className="flex items-start justify-between gap-3">
@@ -570,6 +634,35 @@ function ProgressPage() {
         </div>
       </Card>
     </AppShell>
+  );
+}
+
+function PeriodComparisonMetric({
+  label,
+  current,
+  previous,
+  change,
+}: {
+  label: string;
+  current: string;
+  previous: string;
+  change: number | null;
+}) {
+  return (
+    <div className="rounded-xl bg-elevated p-3">
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className="mt-1 text-lg font-bold tabular-nums">{current}</p>
+      <p className="mt-1 text-[10px] text-muted-foreground">Anterior: {previous}</p>
+      <p className="mt-2 text-[11px] font-semibold tabular-nums">
+        {change == null ? (
+          <span className="text-muted-foreground">Sem base comparável</span>
+        ) : (
+          <span className={change > 0 ? "text-emerald-400" : change < 0 ? "text-amber-400" : "text-muted-foreground"}>
+            {change > 0 ? "+" : ""}{change.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%
+          </span>
+        )}
+      </p>
+    </div>
   );
 }
 
