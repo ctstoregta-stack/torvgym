@@ -855,6 +855,7 @@ function ExecutePage() {
               variant="danger"
               className="w-full sm:w-auto"
               onClick={() => {
+                void stopNativeWorkoutNotification();
                 discardSession();
                 setDiscardConfirm(false);
                 navigate({ to: "/" });
