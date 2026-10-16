@@ -191,8 +191,8 @@ function ProgressPage() {
                 onClick={() => setComparisonDays(days)}
                 className={
                   comparisonDays === days
-                    ? "rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
-                    : "rounded-lg px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                    ? "rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                    : "rounded-lg px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
                 }
               >
                 {days}d
@@ -224,6 +224,7 @@ function ProgressPage() {
             current={formatDuration(periodComparison.current.averageDurationSeconds)}
             previous={formatDuration(periodComparison.previous.averageDurationSeconds)}
             change={periodComparison.changes.averageDurationSeconds}
+            changeIsNeutral
           />
         </div>
         <p className="mt-3 text-[11px] text-muted-foreground">
@@ -642,11 +643,13 @@ function PeriodComparisonMetric({
   current,
   previous,
   change,
+  changeIsNeutral = false,
 }: {
   label: string;
   current: string;
   previous: string;
   change: number | null;
+  changeIsNeutral?: boolean;
 }) {
   return (
     <div className="rounded-xl bg-elevated p-3">
@@ -657,7 +660,7 @@ function PeriodComparisonMetric({
         {change == null ? (
           <span className="text-muted-foreground">Sem base comparável</span>
         ) : (
-          <span className={change > 0 ? "text-emerald-400" : change < 0 ? "text-amber-400" : "text-muted-foreground"}>
+          <span className={changeIsNeutral ? "text-muted-foreground" : change > 0 ? "text-emerald-400" : change < 0 ? "text-amber-400" : "text-muted-foreground"}>
             {change > 0 ? "+" : ""}{change.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%
           </span>
         )}

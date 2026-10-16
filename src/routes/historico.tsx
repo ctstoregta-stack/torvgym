@@ -69,7 +69,7 @@ function HistoryPage() {
         />
       ) : (
         <>
-          <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+          <div className="mb-4 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filtrar histórico por período">
             {(
               [
                 [0, "Tudo"],
@@ -81,6 +81,7 @@ function HistoryPage() {
               <button
                 key={value}
                 type="button"
+                aria-pressed={range === value}
                 onClick={() => setRange(value)}
                 className={`min-h-10 shrink-0 rounded-full border px-4 text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${range === value ? "border-primary/40 bg-primary text-primary-foreground shadow-md shadow-primary/20" : "border-border/70 bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground"}`}
               >
@@ -129,7 +130,11 @@ function HistoryPage() {
                 </div>
                 <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold text-primary">{Math.min(sessions.length, 8)} sessões</span>
               </div>
-              <div className="relative h-48 w-full min-w-0 sm:h-56">
+              <div
+                className="relative h-48 w-full min-w-0 sm:h-56"
+                role="img"
+                aria-label={`Gráfico de volume dos ${Math.min(sessions.length, 8)} treinos concluídos mais recentes. Volume combinado: ${Math.round(sessions.slice(0, 8).reduce((sum, session) => sum + sessionVolume(session), 0)).toLocaleString("pt-BR")} kg.`}
+              >
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={sessions.slice(0, 8).reverse().map((session) => ({
