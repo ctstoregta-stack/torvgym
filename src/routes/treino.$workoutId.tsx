@@ -277,6 +277,7 @@ function WorkoutPage() {
                     {pr != null ? ` · PR ${pr}kg` : ""}
                     {" · "}
                     {workout.targetSets[id] ?? 3} séries
+                    {workout.targetReps?.[id] ? ` · ${workout.targetReps[id]!.min}–${workout.targetReps[id]!.max} reps` : ""}
                   </p>
                   <div className="mt-1.5 flex items-center gap-2">
                     <span className="text-[11px] text-muted-foreground">Séries</span>

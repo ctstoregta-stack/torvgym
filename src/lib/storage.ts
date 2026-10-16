@@ -79,13 +79,14 @@ function normalizeWorkout(input: unknown): Workout | null {
       )
     : {};
 
-  const workout: Workout = {
-    id,
-    name,
-    days: [...new Set(days)],
-    exerciseIds,
-    targetSets,
-  };
+  const rawTargetReps = input["targetReps"];
+  const targetReps = isRecord(rawTargetReps) ? Object.fromEntries(Object.entries(rawTargetReps).flatMap(([key, range]) => {
+    if (!isRecord(range)) return [];
+    const min = range["min"], max = range["max"];
+    if (typeof min !== "number" || typeof max !== "number" || !Number.isFinite(min) || !Number.isFinite(max) || min < 1 || max < min || max > 100) return [];
+    return [[key, { min: Math.round(min), max: Math.round(max) }]];
+  })) : {};
+  const workout: Workout = { id, name, days: [...new Set(days)], exerciseIds, targetSets, ...(Object.keys(targetReps).length ? { targetReps } : {}) };
   if (typeof input["restSeconds"] === "number" && Number.isFinite(input["restSeconds"])) {
     workout.restSeconds = Math.max(15, Math.min(600, Math.round(input["restSeconds"])));
   }

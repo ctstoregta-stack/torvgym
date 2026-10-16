@@ -445,6 +445,7 @@ function ExecutePage() {
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {ex.equipment} · {storedPR != null ? `PR ${storedPR} kg` : "Sem PR registrado"}
               </p>
+              {workoutConfig?.targetReps?.[ex.id] && <p className="mt-1 text-xs font-semibold text-primary">Meta do plano: {workoutConfig.targetReps[ex.id]!.min}–{workoutConfig.targetReps[ex.id]!.max} repetições</p>}
             </div>
           </div>
 

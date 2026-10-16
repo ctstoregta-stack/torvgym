@@ -18,6 +18,7 @@ export function duplicateRoutineTemplate(
       days: [...workout.days],
       exerciseIds: [...workout.exerciseIds],
       targetSets: { ...workout.targetSets },
+      ...(workout.targetReps ? { targetReps: Object.fromEntries(Object.entries(workout.targetReps).map(([id, range]) => [id, { ...range }])) } : {}),
       ...(workout.restSecondsByExercise
         ? { restSecondsByExercise: { ...workout.restSecondsByExercise } }
         : {}),

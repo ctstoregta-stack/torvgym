@@ -18,6 +18,7 @@ export type Workout = {
   exerciseIds: string[];
   /** target sets per exercise */
   targetSets: Record<string, number>;
+  targetReps?: Record<string, { min: number; max: number }>;
   restSeconds?: number;
   /** Descanso específico por exercício; quando ausente, usa restSeconds. */
   restSecondsByExercise?: Record<string, number>;

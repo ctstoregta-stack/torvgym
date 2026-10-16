@@ -80,6 +80,7 @@ function RoutinesPage() {
           <span className="rounded-full border border-border/70 bg-background/50 px-3 py-1.5 text-xs font-semibold">{state.routines.reduce((sum, routine) => sum + routine.workouts.length, 0)} treinos organizados</span>
         </div>
       </section>
+      <TrainingPlannerPanel />
       <Card className="mb-5 min-w-0 overflow-hidden border-primary/15">
         <div className="mb-3 flex items-center gap-2"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-lg" aria-hidden="true">✦</span><div><p className="text-sm font-extrabold">Nova rotina</p><p className="mt-0.5 text-xs text-muted-foreground">Comece com um plano que combine com você.</p></div></div>
         <div className="flex min-w-0 flex-col gap-2 min-[380px]:flex-row">
