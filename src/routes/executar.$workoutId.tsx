@@ -556,6 +556,7 @@ function ExecutePage() {
                       <input
                         type="number"
                         inputMode="decimal"
+                        min="0"
                         step="0.5"
                         aria-label={`Carga da série ${i + 1} (kg)`}
                         value={set.weight ?? ""}
@@ -576,6 +577,8 @@ function ExecutePage() {
                       <input
                         type="number"
                         inputMode="numeric"
+                        min="0"
+                        step="1"
                         aria-label={`Repetições da série ${i + 1}`}
                         value={set.reps ?? ""}
                         placeholder="0"

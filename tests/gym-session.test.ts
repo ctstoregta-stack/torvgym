@@ -95,3 +95,52 @@ test("finalização mantém apenas séries concluídas e rejeita sessão vazia",
   assert.equal(finished?.entries[0]?.sets.length, 1);
   assert.equal(finishWorkoutSession(created, "2026-10-13T10:30:00.000Z"), null);
 });
+
+
+test("ignora carga e repetições negativas ou inválidas sem corromper a série", () => {
+  const created = createWorkoutSession(routine, workout, "session-invalid", "2026-10-13T10:00:00.000Z");
+  const updated = updateWorkoutSessionSet(
+    created,
+    "agachamento",
+    0,
+    { weight: -10, reps: -2 },
+    0,
+  );
+
+  assert.equal(updated.entries[0]?.sets[0]?.weight, null);
+  assert.equal(updated.entries[0]?.sets[0]?.reps, null);
+});
+
+test("aceita limpar campos numéricos, valida RPE e limita observações a 500 caracteres", () => {
+  const created = createWorkoutSession(routine, workout, "session-fields", "2026-10-13T10:00:00.000Z");
+  const populated = updateWorkoutSessionSet(
+    created,
+    "agachamento",
+    0,
+    { weight: 40, reps: 8, rpe: 8, note: "Observação" },
+    0,
+  );
+  const invalid = updateWorkoutSessionSet(
+    populated,
+    "agachamento",
+    0,
+    { weight: Number.NaN, reps: 1.5, rpe: 11, note: "x".repeat(600) },
+    0,
+  );
+
+  assert.equal(invalid.entries[0]?.sets[0]?.weight, 40);
+  assert.equal(invalid.entries[0]?.sets[0]?.reps, 8);
+  assert.equal(invalid.entries[0]?.sets[0]?.rpe, 8);
+  assert.equal(invalid.entries[0]?.sets[0]?.note?.length, 500);
+
+  const cleared = updateWorkoutSessionSet(
+    invalid,
+    "agachamento",
+    0,
+    { weight: null, reps: null, rpe: null },
+    0,
+  );
+  assert.equal(cleared.entries[0]?.sets[0]?.weight, null);
+  assert.equal(cleared.entries[0]?.sets[0]?.reps, null);
+  assert.equal(cleared.entries[0]?.sets[0]?.rpe, null);
+});

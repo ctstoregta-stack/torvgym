@@ -24,6 +24,25 @@ export function createWorkoutSession(
   };
 }
 
+function sanitizeSetPatch(patch: Partial<SetLog>): Partial<SetLog> {
+  const safe: Partial<SetLog> = {};
+
+  if (patch.weight === null || (typeof patch.weight === "number" && Number.isFinite(patch.weight) && patch.weight >= 0)) {
+    safe.weight = patch.weight;
+  }
+  if (patch.reps === null || (typeof patch.reps === "number" && Number.isInteger(patch.reps) && patch.reps >= 0)) {
+    safe.reps = patch.reps;
+  }
+  if (patch.rpe === null || (typeof patch.rpe === "number" && Number.isInteger(patch.rpe) && patch.rpe >= 1 && patch.rpe <= 10)) {
+    safe.rpe = patch.rpe;
+  }
+  if (typeof patch.completed === "boolean") safe.completed = patch.completed;
+  if (typeof patch.isPR === "boolean") safe.isPR = patch.isPR;
+  if (typeof patch.note === "string") safe.note = patch.note.slice(0, 500);
+
+  return safe;
+}
+
 export function updateWorkoutSessionSet(
   session: Session,
   exerciseId: string,
@@ -31,11 +50,12 @@ export function updateWorkoutSessionSet(
   patch: Partial<SetLog>,
   historicalBest: number,
 ): Session {
+  const safePatch = sanitizeSetPatch(patch);
   const nextEntries = session.entries.map((entry) =>
     entry.exerciseId === exerciseId
       ? {
           ...entry,
-          sets: entry.sets.map((set, i) => (i === index ? { ...set, ...patch } : set)),
+          sets: entry.sets.map((set, i) => (i === index ? { ...set, ...safePatch } : set)),
         }
       : entry,
   );
