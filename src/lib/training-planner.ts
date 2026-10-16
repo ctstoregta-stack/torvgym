@@ -13,7 +13,7 @@ export type PlannerOptions = {
   priorityMuscles?: string[];
 };
 export type PlanExercise = { exerciseId: string; sets: number; min: number; max: number; rest: number };
-export type PlanWorkout = { name: string; days: number[]; focus: string; exercises: PlanExercise[] };
+export type PlanWorkout = { name: string; days: number[]; focus: string; exercises: PlanExercise[]; estimatedMinutes: number };
 
 const trainingDays: Record<number, number[]> = {
   2: [1, 4], 3: [1, 3, 5], 4: [1, 2, 4, 5], 5: [1, 2, 3, 5, 6], 6: [1, 2, 3, 4, 5, 6],
@@ -88,7 +88,8 @@ export function buildTrainingPlan(exercises: Exercise[], options: PlannerOptions
     const equipment = normalize(exercise.equipment);
     const category = normalize(exercise.category);
     const bodyweight = equipment.includes("peso corporal") || equipment === "corporal";
-    if (category === "cardio" || category === "mobilidade") return false;
+    if (category === "mobilidade") return false;
+    if (category === "cardio" && options.goal !== "conditioning") return false;
     if (options.equipment === "gym") return true;
     if (options.equipment === "bodyweight") return bodyweight;
     return bodyweight || equipment.includes("halter") || equipment.includes("banco") || equipment.includes("caneleira");
@@ -100,11 +101,11 @@ export function buildTrainingPlan(exercises: Exercise[], options: PlannerOptions
 
   const workouts: PlanWorkout[] = split.workouts.map((workout, index) => {
     const chosen: PlanExercise[] = [];
-    const categories = [...workout.cats];
+    const categories = options.goal === "conditioning" ? ["Cardio", ...workout.cats] : [...workout.cats];
     while (categories.length < limit) categories.push(...workout.cats);
     for (const category of categories) {
       if (chosen.length >= limit) break;
-      const candidates = pool.filter((exercise) => exercise.category === category);
+      const candidates = pool.filter((exercise) => normalize(exercise.category) === normalize(category));
       const unused = candidates.filter((exercise) => !used.has(exercise.id) && !chosen.some((item) => item.exerciseId === exercise.id));
       const available = unused.length ? unused : candidates.filter((exercise) => !chosen.some((item) => item.exerciseId === exercise.id));
       if (!available.length) continue;
@@ -116,12 +117,22 @@ export function buildTrainingPlan(exercises: Exercise[], options: PlannerOptions
       chosen.push({ exerciseId: selected.id, sets: prescription.sets, min: prescription.min, max: prescription.max, rest: prescription.rest });
     }
     const focus = [...new Set(chosen.map((item) => pool.find((exercise) => exercise.id === item.exerciseId)?.category).filter((value): value is string => Boolean(value)))].join(" · ");
-    return { name: workout.name, days: [(trainingDays[frequency] ?? trainingDays[3]!)[index] ?? 1], focus, exercises: chosen };
+    const estimatedSeconds = chosen.reduce((seconds, item) => {
+      const exerciseSeconds = item.sets * item.min * (options.goal === "strength" ? 5 : options.goal === "conditioning" ? 3 : 4);
+      const restSeconds = Math.max(0, item.sets - 1) * item.rest;
+      return seconds + exerciseSeconds + restSeconds + 45;
+    }, 0);
+    return { name: workout.name, days: [(trainingDays[frequency] ?? trainingDays[3]!)[index] ?? 1], focus, exercises: chosen, estimatedMinutes: Math.ceil(estimatedSeconds / 60) };
   });
 
   const total = workouts.reduce((sum, workout) => sum + workout.exercises.length, 0);
   if (total < workouts.length * Math.min(4, limit)) warnings.push("Há poucas opções compatíveis para alguns grupos musculares; revise o plano antes de salvar.");
   if (!total) warnings.push("Nenhum exercício compatível foi encontrado para os equipamentos selecionados.");
+  const exerciseIds = workouts.flatMap((workout) => workout.exercises.map((item) => item.exerciseId));
+  if (new Set(exerciseIds).size < exerciseIds.length) warnings.push("O catálogo não tem variedade suficiente para evitar repetições entre todos os treinos. Revise os exercícios repetidos antes de salvar.");
+  const overTime = workouts.filter((workout) => workout.exercises.length > 0 && workout.estimatedMinutes > options.minutes);
+  if (overTime.length) warnings.push(`A duração estimada ultrapassa o tempo selecionado em: ${overTime.map((workout) => `${workout.name} (${workout.estimatedMinutes} min)`).join(", ")}. Considere reduzir exercícios ou ajustar o tempo.`);
+  if (options.goal === "conditioning" && !pool.some((exercise) => normalize(exercise.category) === "cardio")) warnings.push("Não há exercícios de cardio compatíveis no catálogo; o plano usará apenas exercícios de resistência muscular.");
   if (priorities.length) warnings.push("Os músculos prioritários influenciam a escolha dos exercícios disponíveis; confira a prévia e ajuste livremente depois de salvar.");
   return { title: split.title, goal: prescription.label, reps: prescription.min + "–" + prescription.max, rest: prescription.rest, workouts, warnings };
 }

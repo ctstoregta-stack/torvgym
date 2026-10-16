@@ -70,3 +70,39 @@ test("variação altera a seleção e banco vazio produz aviso", () => {
   assert.equal(empty.workouts.flatMap((workout) => workout.exercises).length, 0);
   assert.ok(empty.warnings.some((warning) => warning.includes("Nenhum exercício")));
 });
+
+test("objetivo de condicionamento inclui cardio quando o catálogo oferece opções", () => {
+  const plan = buildTrainingPlan([
+    ...database,
+    exercise("cardio-bike", "Cardio", "Bicicleta ergométrica"),
+  ], { goal: "conditioning", level: "intermediate", frequency: 2, minutes: 45, equipment: "gym" });
+  assert.ok(plan.workouts.every((workout) => workout.exercises.some((item) => item.exerciseId === "cardio-bike")));
+  assert.ok(!plan.warnings.some((warning) => warning.includes("Não há exercícios de cardio")));
+});
+
+test("avisa quando a variedade do catálogo força repetição entre treinos", () => {
+  const plan = buildTrainingPlan([
+    exercise("only-chest", "Peito"),
+  ], { goal: "hypertrophy", level: "intermediate", frequency: 2, minutes: 30, equipment: "gym" });
+  assert.ok(plan.warnings.some((warning) => warning.includes("evitar repetições")));
+});
+
+test("estima duração por treino e avisa quando ultrapassa o tempo disponível", () => {
+  const plan = buildTrainingPlan(database, {
+    goal: "strength", level: "advanced", frequency: 2, minutes: 30, equipment: "gym",
+  });
+  assert.ok(plan.workouts.every((workout) => Number.isFinite(workout.estimatedMinutes) && workout.estimatedMinutes >= 0));
+  assert.ok(plan.warnings.some((warning) => warning.includes("duração estimada ultrapassa")));
+});
+
+test("categorias são comparadas sem diferença de acentuação", () => {
+  const plan = buildTrainingPlan([
+    exercise("chest", "Peito"),
+    exercise("back", "Costas"),
+    exercise("legs", "Pernas"),
+    exercise("shoulders", "Ombros"),
+    exercise("arms", "Braços"),
+    exercise("abs", "Abdômen"),
+  ], { goal: "hypertrophy", level: "beginner", frequency: 2, minutes: 45, equipment: "gym" });
+  assert.ok(plan.workouts.some((workout) => workout.exercises.length > 0));
+});
