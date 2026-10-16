@@ -82,7 +82,7 @@ function HistoryPage() {
                 key={value}
                 type="button"
                 onClick={() => setRange(value)}
-                className={`min-h-10 shrink-0 rounded-full border px-4 text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${range === value ? "border-primary/40 bg-primary text-primary-foreground shadow-md shadow-primary/20" : "border-border/70 bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground"}`
+                className={`min-h-10 shrink-0 rounded-full border px-4 text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${range === value ? "border-primary/40 bg-primary text-primary-foreground shadow-md shadow-primary/20" : "border-border/70 bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground"}`}
               >
                 {label}
               </button>
