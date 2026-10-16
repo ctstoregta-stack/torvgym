@@ -1,4 +1,5 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { getHardwareBackTarget } from "@/lib/hardware-back-navigation";
 import type { ReactNode } from "react";
 import { useGym } from "@/store/gym-store";
 
@@ -20,32 +21,39 @@ export function AppShell({
   action?: ReactNode;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const hardwareBackTarget = getHardwareBackTarget(pathname);
+  const resolvedBack: { to: string; params?: Record<string, string> } | undefined =
+    hardwareBackTarget ? { to: hardwareBackTarget } : back;
+  const headerTitle = title ?? getPageTitle(pathname);
   const { state } = useGym();
   const active = state.activeSession;
 
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col bg-background">
-      {(title || back) && (
+      {(headerTitle || resolvedBack) && (
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/75">
-          {back && (
-            <Link
-              to={back.to}
-              params={back.params as never}
-              className="-ml-1 flex h-9 w-9 items-center justify-center rounded-full bg-card text-muted-foreground tap active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+          {resolvedBack && (
+            <button
+              type="button"
+              onClick={() => {
+                if (resolvedBack.to.startsWith("/treino/")) {
+                  const workoutId = resolvedBack.to.slice("/treino/".length);
+                  void navigate({ to: "/treino/$workoutId", params: { workoutId }, replace: true });
+                  return;
+                }
+                void navigate({ to: resolvedBack.to as never, params: resolvedBack.params as never, replace: true });
+              }}
+              className="-ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border/70 bg-card text-foreground shadow-sm transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary tap active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
               aria-label="Voltar"
+              title="Voltar"
             >
-              <svg
-                viewBox="0 0 24 24"
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.25">
                 <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </Link>
+            </button>
           )}
-          <h1 className="min-w-0 flex-1 truncate text-lg font-semibold">{title}</h1>
+          <h1 className="min-w-0 flex-1 truncate text-lg font-semibold">{headerTitle}</h1>
           {action}
         </header>
       )}
@@ -100,6 +108,21 @@ export function AppShell({
       </nav>
     </div>
   );
+}
+
+function getPageTitle(pathname: string) {
+  if (pathname === "/configuracoes") return "Configurações";
+  if (pathname === "/conquistas") return "Conquistas";
+  if (pathname === "/corpo") return "Peso e medidas";
+  if (pathname === "/historico") return "Histórico";
+  if (pathname === "/exercicios") return "Exercícios";
+  if (pathname.startsWith("/exercicio/")) return "Exercício";
+  if (pathname === "/progresso") return "Progresso";
+  if (pathname === "/relatorios") return "Relatórios";
+  if (pathname === "/rotinas") return "Rotinas";
+  if (pathname === "/perfil") return "Perfil";
+  if (pathname.startsWith("/treino/") || pathname.startsWith("/executar/")) return "Treino";
+  return undefined;
 }
 
 function HomeIcon() {

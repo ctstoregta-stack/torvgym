@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { Button, Card, EmptyState } from "@/components/ui-kit";
 import { useGym } from "@/store/gym-store";
 import { sessionDurationSeconds, sessionSetCount, sessionVolume } from "@/store/gym-analytics";
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export const Route = createFileRoute("/historico")({
   head: () => ({
@@ -82,7 +82,7 @@ function HistoryPage() {
                 key={value}
                 type="button"
                 onClick={() => setRange(value)}
-                className={`min-h-10 shrink-0 rounded-full px-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${range === value ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
+                className={`min-h-10 shrink-0 rounded-full border px-4 text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${range === value ? "border-primary/40 bg-primary text-primary-foreground shadow-md shadow-primary/20" : "border-border/70 bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground"}`
               >
                 {label}
               </button>
@@ -112,59 +112,48 @@ function HistoryPage() {
           </div>
 
           {sessions.length > 1 && (
-            <Card className="my-4 p-3">
-              <p className="mb-1 text-sm font-semibold">Evolução dos últimos treinos</p>
-              <p className="mb-3 text-xs text-muted-foreground">Volume de cada sessão concluída.</p>
-              <div className="h-44 w-full">
+            <Card className="relative my-4 min-w-0 overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-4 sm:p-5">
+              <div className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-primary/10 blur-3xl" />
+              <div className="relative mb-4 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-primary">Desempenho</p>
+                  <h2 className="mt-1 text-base font-black tracking-tight sm:text-lg">Evolução do volume</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">Compare a carga total movimentada em cada sessão.</p>
+                </div>
+                <span className="shrink-0 rounded-xl border border-primary/20 bg-primary/10 px-2.5 py-2 text-[10px] font-extrabold text-primary">ÚLTIMOS 8</span>
+              </div>
+              <div className="relative mb-3 flex items-end justify-between gap-3 rounded-xl border border-border/60 bg-background/40 px-3 py-2.5">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Volume no período</p>
+                  <p className="mt-0.5 text-xl font-black tabular-nums">{Math.round(sessions.slice(0, 8).reduce((sum, session) => sum + sessionVolume(session), 0)).toLocaleString("pt-BR")} <span className="text-xs font-bold text-muted-foreground">kg</span></p>
+                </div>
+                <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold text-primary">{Math.min(sessions.length, 8)} sessões</span>
+              </div>
+              <div className="relative h-48 w-full min-w-0 sm:h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={sessions
-                      .slice(0, 8)
-                      .reverse()
-                      .map((session) => ({
-                        name: new Date(session.finishedAt!).toLocaleDateString("pt-BR", {
-                          day: "2-digit",
-                          month: "2-digit",
-                        }),
-                        volume: Math.round(sessionVolume(session)),
-                      }))}
+                    data={sessions.slice(0, 8).reverse().map((session) => ({
+                      name: new Date(session.finishedAt!).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+                      volume: Math.round(sessionVolume(session)),
+                    }))}
+                    margin={{ top: 8, right: 4, left: 0, bottom: 0 }}
+                    barCategoryGap="28%"
                   >
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                    <YAxis hide />
+                    <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 5" opacity={0.55} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickMargin={10} />
+                    <YAxis hide domain={[0, "dataMax + 1"]} />
                     <Tooltip
-                      cursor={false}
-                      contentStyle={{
-                        background: "#000",
-                        border: "none",
-                        borderRadius: "12px",
-                        boxShadow: "0 10px 28px rgba(0, 0, 0, 0.45)",
-                        padding: "10px 14px",
-                      }}
-                      labelStyle={{
-                        color: "#a1a1aa",
-                        fontSize: "11px",
-                        fontWeight: 500,
-                        marginBottom: "5px",
-                      }}
-                      itemStyle={{
-                        color: "#fff",
-                        fontSize: "18px",
-                        fontWeight: 800,
-                        lineHeight: 1.2,
-                        padding: 0,
-                      }}
-                      formatter={(value) => [`${Number(value).toLocaleString("pt-BR")} kg`, ""]}
+                      cursor={{ fill: "transparent" }}
+                      contentStyle={{ background: "#050505", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "14px", boxShadow: "0 14px 32px rgba(0,0,0,0.45)", padding: "10px 14px" }}
+                      labelStyle={{ color: "#a1a1aa", fontSize: "11px", fontWeight: 600, marginBottom: "5px" }}
+                      itemStyle={{ color: "#fff", fontSize: "18px", fontWeight: 800, lineHeight: 1.2, padding: 0 }}
+                      formatter={(value) => [`${Number(value).toLocaleString("pt-BR")} kg`, "Volume"]}
                     />
-                    <Bar
-                      dataKey="volume"
-                      fill="var(--primary)"
-                      radius={[6, 6, 0, 0]}
-                      activeBar={false}
-                      isAnimationActive={false}
-                    />
+                    <Bar dataKey="volume" name="Volume" fill="var(--primary)" radius={[8, 8, 3, 3]} maxBarSize={34} activeBar={false} isAnimationActive={false} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+              <p className="relative mt-1 text-center text-[10px] text-muted-foreground">Cada coluna representa um treino concluído.</p>
             </Card>
           )}
 
