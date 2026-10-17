@@ -73,71 +73,31 @@ function RoutinesPage() {
 
   return (
     <AppShell title="Rotinas">
-      <section className="relative isolate mb-5 overflow-hidden rounded-3xl border border-primary/25 bg-gradient-to-br from-primary/20 via-card to-card p-5 sm:p-6">
-        <div className="pointer-events-none absolute -right-8 -top-10 -z-10 h-32 w-32 rounded-full bg-primary/15 blur-2xl" />
-        <p className="text-[11px] font-bold uppercase tracking-[0.17em] text-primary">Planeje sua semana</p>
-        <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">Seu treino, do seu jeito.</h2>
-        <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Organize suas rotinas, distribua os treinos pelos dias e deixe tudo pronto para a próxima sessão.</p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <span className="rounded-full border border-border/70 bg-background/50 px-3 py-1.5 text-xs font-semibold">{state.routines.length} rotina{state.routines.length === 1 ? "" : "s"}</span>
-          <span className="rounded-full border border-border/70 bg-background/50 px-3 py-1.5 text-xs font-semibold">{state.routines.reduce((sum, routine) => sum + routine.workouts.length, 0)} treinos organizados</span>
-        </div>
-      </section>
-      <TrainingPlannerPanel />
       <section className="mb-5">
-        <div className="mb-3">
-          <p className="text-sm font-extrabold">Planos pré-montados baseados em evidências</p>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            Escolha uma divisão como ponto de partida. Os treinos são editáveis e incluem séries,
-            faixas de repetições, descanso e dias sugeridos.
-          </p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-xl font-extrabold tracking-tight">Suas rotinas</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {state.routines.length} rotina{state.routines.length === 1 ? "" : "s"} · {state.routines.reduce((sum, routine) => sum + routine.workouts.length, 0)} treinos
+            </p>
+          </div>
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 5h16M4 12h16M4 19h10" strokeLinecap="round" />
+            </svg>
+          </span>
         </div>
-        <div className="grid gap-3 lg:grid-cols-3">
-          {PREBUILT_ROUTINE_TEMPLATES.map((template) => (
-            <Card key={template.id} className="flex min-w-0 flex-col border-border/80">
-              <div className="flex-1">
-                <p className="text-base font-extrabold">{template.name}</p>
-                <p className="mt-1 text-xs font-semibold text-primary">{template.frequency}</p>
-                <p className="mt-2 text-sm leading-5 text-muted-foreground">{template.description}</p>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  <MutedTag>{template.level}</MutedTag>
-                  <MutedTag>{template.workouts.length} treinos</MutedTag>
-                </div>
-                <p className="mt-3 text-xs leading-5">{template.focus}</p>
-                <ul className="mt-3 space-y-1.5 text-xs text-muted-foreground">
-                  {template.workouts.map((workout) => (
-                    <li key={workout.name} className="flex items-start gap-2">
-                      <span className="mt-0.5 text-primary" aria-hidden="true">•</span>
-                      <span>{workout.name} · {workout.exercises.length} exercícios</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <Button
-                className="mt-4 w-full"
-                onClick={() => {
-                  const id = createRoutineFromTemplate(template);
-                  setExpandedRoutines((current) => new Set([...current, id]));
-                }}
-              >
-                Criar e personalizar
-              </Button>
-            </Card>
-          ))}
-        </div>
-        <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
-          Base geral: sobrecarga progressiva, esforço alto com técnica consistente, volume semanal
-          ajustável e recuperação. A divisão não é mágica nem exclusiva para naturais; ajuste o plano
-          à experiência, disponibilidade, equipamento e recuperação.
-        </p>
       </section>
 
-      <Card className="mb-5 min-w-0 overflow-hidden border-primary/15">
-        <div className="mb-3 flex items-center gap-2"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-lg" aria-hidden="true">✦</span><div><p className="text-sm font-extrabold">Nova rotina</p><p className="mt-0.5 text-xs text-muted-foreground">Comece com um plano que combine com você.</p></div></div>
+      <Card className="mb-4 min-w-0 overflow-hidden border-primary/20">
+        <div className="mb-3">
+          <p className="text-sm font-extrabold">Criar uma rotina</p>
+          <p className="mt-1 text-xs text-muted-foreground">Comece do zero ou escolha um plano pronto.</p>
+        </div>
         <div className="flex min-w-0 flex-col gap-2 min-[380px]:flex-row">
           <Input
             value={newRoutine}
-            placeholder="Ex.: Hipertrofia - Foco em Força"
+            placeholder="Nome da rotina"
             onChange={(e) => setNewRoutine(e.target.value)}
           />
           <Button
@@ -151,6 +111,84 @@ function RoutinesPage() {
           </Button>
         </div>
       </Card>
+
+      <details className="surface group mb-4 overflow-hidden rounded-2xl border border-border/80">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 tap">
+          <span className="flex min-w-0 items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary" aria-hidden="true">✦</span>
+            <span className="min-w-0">
+              <span className="block text-sm font-bold">Planos pré-montados</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">3 divisões de treino para personalizar</span>
+            </span>
+          </span>
+          <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </summary>
+        <div className="border-t border-border/70 p-3 sm:p-4">
+          <p className="mb-3 text-xs leading-5 text-muted-foreground">
+            Sugestões iniciais com séries, faixas de repetições e descanso. Ajuste o volume e a frequência à sua experiência e recuperação.
+          </p>
+          <div className="grid gap-3 lg:grid-cols-3">
+            {PREBUILT_ROUTINE_TEMPLATES.map((template) => (
+              <Card key={template.id} className="flex min-w-0 flex-col border-border/80">
+                <div className="flex-1">
+                  <p className="text-sm font-extrabold">{template.name}</p>
+                  <p className="mt-1 text-xs font-semibold text-primary">{template.frequency}</p>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">{template.description}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <MutedTag>{template.level}</MutedTag>
+                    <MutedTag>{template.workouts.length} treinos</MutedTag>
+                  </div>
+                  <details className="mt-3">
+                    <summary className="cursor-pointer text-xs font-semibold text-primary">Ver divisão dos treinos</summary>
+                    <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground">
+                      {template.workouts.map((workout) => (
+                        <li key={workout.name}>{workout.name} · {workout.exercises.length} exercícios</li>
+                      ))}
+                    </ul>
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">{template.focus}</p>
+                  </details>
+                </div>
+                <Button
+                  className="mt-4 w-full"
+                  onClick={() => {
+                    const id = createRoutineFromTemplate(template);
+                    setExpandedRoutines((current) => new Set([...current, id]));
+                  }}
+                >
+                  Criar este plano
+                </Button>
+              </Card>
+            ))}
+          </div>
+          <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
+            Base geral: progressão gradual, técnica consistente, volume ajustável e recuperação. Nenhuma divisão é obrigatória ou exclusiva para naturais.
+          </p>
+        </div>
+      </details>
+
+      <details className="surface group mb-5 overflow-hidden rounded-2xl border border-border/80">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 tap">
+          <span className="flex min-w-0 items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-elevated text-muted-foreground" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 5h16M4 12h16M4 19h16" strokeLinecap="round" />
+              </svg>
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-bold">Planejamento semanal</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">Ver conflitos e organizar a semana</span>
+            </span>
+          </span>
+          <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </summary>
+        <div className="border-t border-border/70 p-3 sm:p-4">
+          <TrainingPlannerPanel />
+        </div>
+      </details>
 
       {state.routines.length === 0 && (
         <EmptyState
