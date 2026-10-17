@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { duplicateRoutineTemplate } from "../src/lib/routine-templates.ts";
@@ -41,15 +42,15 @@ test("duplicação de rotina preserva configurações sem reutilizar IDs ou refe
   assert.deepEqual(source.workouts[0]?.targetSets, { supino: 4 });
 });
 
-
-import { EXERCISE_DB } from "../src/data/exercises.ts";
 import {
   PREBUILT_ROUTINE_TEMPLATES,
   instantiateRoutineTemplate,
 } from "../src/lib/routine-templates.ts";
 
 test("modelos pré-montados usam exercícios existentes e parâmetros válidos", () => {
-  const exerciseIds = new Set(EXERCISE_DB.map((exercise) => exercise.id));
+  // Parse IDs from source instead of importing the app module, which uses the Vite-only @/ alias.
+  const exerciseSource = readFileSync(new URL("../src/data/exercises.ts", import.meta.url), "utf8");
+  const exerciseIds = new Set([...exerciseSource.matchAll(/\bid:\s*"([^"]+)"/g)].map((match) => match[1]));
   assert.ok(PREBUILT_ROUTINE_TEMPLATES.length >= 3);
   for (const template of PREBUILT_ROUTINE_TEMPLATES) {
     assert.ok(template.workouts.length >= 3);
